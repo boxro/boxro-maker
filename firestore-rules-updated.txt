@@ -1,0 +1,25 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 커뮤니티 디자인 (공개)
+    match /communityDesigns/{document} {
+      allow read: if true; // 모든 사용자가 읽기 가능
+      allow write: if request.auth != null; // 로그인된 사용자만 쓰기 가능
+    }
+    
+    // 사용자 개인 디자인
+    match /userDesigns/{document} {
+      // 새 문서 생성 시 (create)는 request.resource.data를 사용
+      allow create: if request.auth != null && request.resource.data.authorId == request.auth.uid;
+      // 기존 문서 읽기/업데이트/삭제 시 (read, update, delete)는 resource.data를 사용
+      allow read, update, delete: if request.auth != null && resource.data.authorId == request.auth.uid;
+    }
+    
+    // 매거진 글 (관리자만 작성, 모든 사용자 읽기)
+    match /magazineArticles/{document} {
+      allow read: if true; // 모든 사용자가 읽기 가능
+      allow write: if request.auth != null && 
+        (request.auth.token.email in ["admin@boxro.com", "dongwoo.kang@boxro.com", "beagle3651@gmail.com", "boxro.crafts@gmail.com"]); // 관리자만 쓰기 가능
+    }
+  }
+}
