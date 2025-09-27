@@ -12,7 +12,10 @@ import {
   Plus,
   Trash2,
   Eye,
-  MessageCircle
+  MessageCircle,
+  Lock,
+  Calendar,
+  FileText
 } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/lib/firebase';
@@ -45,6 +48,8 @@ export default function MyDesignsPage() {
   const [designs, setDesigns] = useState<UserDesign[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [designToDelete, setDesignToDelete] = useState<string | null>(null);
 
 
   // Firebase에서 사용자의 디자인 가져오기
@@ -97,18 +102,27 @@ export default function MyDesignsPage() {
     }
   };
 
-  // 디자인 삭제
-  const deleteDesign = async (designId: string) => {
-    if (!user) return;
-    
-    if (!confirm('정말로 이 디자인을 삭제하시겠습니까?')) {
-      return;
-    }
+  // 디자인 삭제 확인 모달 열기
+  const handleDeleteClick = (designId: string) => {
+    setDesignToDelete(designId);
+    setShowDeleteModal(true);
+  };
+
+  // 디자인 삭제 취소
+  const handleDeleteCancel = () => {
+    setShowDeleteModal(false);
+    setDesignToDelete(null);
+  };
+
+  // 디자인 삭제 실행
+  const deleteDesign = async () => {
+    if (!user || !designToDelete) return;
 
     try {
-      await deleteDoc(doc(db, 'userDesigns', designId));
-      setDesigns(prevDesigns => prevDesigns.filter(d => d.id !== designId));
-      alert('디자인이 삭제되었습니다.');
+      await deleteDoc(doc(db, 'userDesigns', designToDelete));
+      setDesigns(prevDesigns => prevDesigns.filter(d => d.id !== designToDelete));
+      setShowDeleteModal(false);
+      setDesignToDelete(null);
     } catch (error) {
       console.error('삭제 실패:', error);
       alert('삭제 중 오류가 발생했습니다.');
@@ -170,7 +184,7 @@ export default function MyDesignsPage() {
     <div 
       className="min-h-screen py-16 md:py-24"
       style={{
-        background: 'linear-gradient(100deg, #2563eb, #7c3aed, #ec4899)',
+        background: 'linear-gradient(130deg, #2563eb, #7c3aed, #ec4899)',
         touchAction: 'pan-y',
         overscrollBehavior: 'none'
       }}
@@ -181,8 +195,8 @@ export default function MyDesignsPage() {
       <div className="max-w-7xl mx-auto px-0 md:px-8">
         <div className="mb-6 mt-10 px-4 md:px-0">
           <PageHeader 
-            title="내 작품"
-            description="내가 만든 박스카 디자인을 모아두고, 언제든 꺼내 보고 자랑할 수 있어요."
+            title="나만의 박스카 ✨"
+            description="내가 만든 박스카가 여기 모여 있어요! 언제든 친구들에게 자랑해보세요."
           />
         </div>
 
@@ -190,7 +204,7 @@ export default function MyDesignsPage() {
           <Link href="/draw">
             <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-full px-6 py-3">
               <Plus className="w-4 h-4 mr-2" />
-              새 디자인 만들기
+              나만의 박스카 만들기
             </Button>
           </Link>
         </div>
@@ -229,14 +243,8 @@ export default function MyDesignsPage() {
           <Card className="bg-white border-2 border-white/30 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden py-5 w-full rounded-2xl">
             <CardContent className="text-center py-12">
               <Car className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-[16px] font-semibold text-gray-900 mb-2">내가 만든 박스카 디자인이 없습니다.</h3>
-              <p className="text-[14px] text-gray-600 mb-6">첫 번째로 박스카 디자인을 만들어보세요!</p>
-              <Link href="/draw">
-                <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-full px-6 py-3">
-                  <Plus className="w-4 h-4 mr-2" />
-                  새 디자인 만들기
-                </Button>
-              </Link>
+              <h3 className="text-[16px] font-semibold text-gray-900 mb-2">와! 아직 빈 공간이에요</h3>
+              <p className="text-[14px] text-gray-600">멋진 첫 번째 박스카를 만들어보세요!</p>
             </CardContent>
           </Card>
         ) : (
@@ -248,16 +256,19 @@ export default function MyDesignsPage() {
                     <CardTitle className="text-lg" title={design.name}>
                       {design.name.length > 20 ? `${design.name.substring(0, 20)}...` : design.name}
                     </CardTitle>
-                    <div className="flex gap-2">
-                      {design.isPublic && (
-                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          공개
-                        </span>
-                      )}
-                    </div>
                   </div>
                   <div className="text-sm text-gray-500 mb-2">
-                    {new Date(design.createdAt).toLocaleDateString()}
+                    {design.isPublic ? (
+                      <div className="flex items-center gap-1">
+                        <Share2 className="w-4 h-4 text-green-600" />
+                        <span className="text-green-600 font-medium">공개</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1">
+                        <Lock className="w-4 h-4 text-gray-500" />
+                        <span className="text-gray-500 font-medium">비공개</span>
+                      </div>
+                    )}
                   </div>
                   {design.description && (
                     <p className="text-sm text-gray-600 mb-2 line-clamp-2">
@@ -303,45 +314,55 @@ export default function MyDesignsPage() {
                   </div>
                   
                   <div className="flex justify-between items-center text-sm text-gray-500 mb-4">
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-1">
-                        <Heart className="w-4 h-4" />
-                        {design.likes || 0}
+                    {design.isPublic ? (
+                      // 공개된 경우: 소셜 통계 표시
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-1">
+                          <Heart className="w-4 h-4" />
+                          {design.likes || 0}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Download className="w-4 h-4" />
+                          {design.downloads || 0}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Eye className="w-4 h-4" />
+                          {design.views || 0}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <MessageCircle className="w-4 h-4" />
+                          {design.comments || 0}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Download className="w-4 h-4" />
-                        {design.downloads || 0}
+                    ) : (
+                      // 비공개인 경우: 도안 페이지 수만 표시
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-1">
+                          <FileText className="w-4 h-4" />
+                          {design.blueprintImages?.length || 0}페이지
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Eye className="w-4 h-4" />
-                        {design.views || 0}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <MessageCircle className="w-4 h-4" />
-                        {design.comments || 0}
-                      </div>
-                    </div>
+                    )}
                   </div>
                   
              <div className="flex gap-2">
                <Button 
                  size="sm" 
                  variant="outline" 
-                 className="flex-1"
+                 className="flex-1 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-gray-700 hover:bg-white/30 transition-all duration-200"
+                 disabled={design.isPublic}
                  onClick={() => {
-                   // 공유 기능 - 클립보드에 링크 복사
-                   const shareUrl = `${window.location.origin}/community?design=${design.id}`;
-                   navigator.clipboard.writeText(shareUrl);
-                   alert('공유 링크가 클립보드에 복사되었습니다!');
+                   // 커뮤니티 공유 기능 (실제 구현 필요)
+                   alert('커뮤니티 공유 기능은 준비 중입니다.');
                  }}
                >
                  <Share2 className="w-4 h-4 mr-1" />
-                 공유
+                 {design.isPublic ? '이미 공유됨' : '커뮤니티 공유'}
                </Button>
                <Button 
                  size="sm" 
                  variant="outline" 
-                 className="flex-1"
+                 className="flex-1 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-gray-700 hover:bg-white/30 transition-all duration-200"
                  onClick={() => {
                    // PDF 다운로드 기능 - blueprintImages가 있으면 PDF로 다운로드
                    if (design.blueprintImages && design.blueprintImages.length > 0) {
@@ -360,8 +381,8 @@ export default function MyDesignsPage() {
                     <Button 
                       size="sm" 
                       variant="destructive" 
-                      className="w-full"
-                      onClick={() => deleteDesign(design.id)}
+                      className="w-full rounded-full bg-red-500/20 backdrop-blur-sm border border-red-300/30 text-red-700 hover:bg-red-500/30 transition-all duration-200"
+                      onClick={() => handleDeleteClick(design.id)}
                     >
                       <Trash2 className="w-4 h-4 mr-1" />
                       삭제
@@ -373,6 +394,38 @@ export default function MyDesignsPage() {
           </div>
         )}
       </div>
+
+      {/* 삭제 확인 모달 */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-gradient-to-br from-purple-900/20 via-blue-900/20 to-pink-900/20 backdrop-blur-md z-50 flex items-center justify-center">
+          <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-6 max-w-sm w-full mx-6">
+            <div className="text-center">
+              <div className="text-2xl mb-4">✨</div>
+              <h3 className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-pink-600 bg-clip-text text-transparent mb-2">
+                삭제하면 되돌릴 수 없어요
+              </h3>
+              <p className="text-gray-600 text-sm mb-4">
+                계속 진행할까요?
+              </p>
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={handleDeleteCancel}
+                  className="flex-1 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300"
+                >
+                  아니요, 남겨둘래요
+                </Button>
+                <Button
+                  onClick={deleteDesign}
+                  className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                >
+                  네, 삭제할래요
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

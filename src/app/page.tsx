@@ -25,7 +25,7 @@ import CommonFooter from "@/components/CommonFooter";
 export default function HomePage() {
 
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(100deg, #2563eb, #7c3aed, #ec4899)' }}>
+    <div className="min-h-screen" style={{ background: 'linear-gradient(130deg, #2563eb, #7c3aed, #ec4899)' }}>
       {/* Common Header */}
       <CommonHeader />
 

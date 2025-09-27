@@ -1,29 +1,45 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function AuthPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isLogin, setIsLogin] = useState(true);
   
-  const { user, signInWithEmail, signUpWithEmail, signInWithGoogle } = useAuth();
+  const { user, loading, signInWithEmail, signUpWithEmail, signInWithGoogle } = useAuth();
   const router = useRouter();
 
   // 로그인된 사용자가 있으면 홈으로 리다이렉트
-  if (user && user.email) {
-    // useEffect를 사용하여 리다이렉트 처리
-    React.useEffect(() => {
+  useEffect(() => {
+    if (user && user.email) {
       router.push('/');
-    }, [router]);
-    
+    }
+  }, [user, router]);
+
+  // 로그인된 사용자가 있으면 로딩 화면 표시
+  if (user && user.email) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div 
+        className="min-h-screen flex items-center justify-center"
+        style={{
+          background: 'linear-gradient(130deg, #2563eb, #7c3aed, #ec4899)',
+          touchAction: 'pan-y',
+          overscrollBehavior: 'none'
+        }}
+      >
         <div className="text-center">
+          <Image 
+            src="/fly-boxro.png" 
+            alt="Boxro" 
+            width={200} 
+            height={200} 
+            className="mx-auto mb-6"
+          />
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">홈으로 이동 중...</p>
         </div>
@@ -34,7 +50,6 @@ export default function AuthPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
 
     try {
       if (isLogin) {
@@ -46,21 +61,17 @@ export default function AuthPage() {
     } catch (error: any) {
       console.error('인증 오류:', error);
       setError('로그인 중 오류가 발생했습니다. 다시 시도해주세요.');
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleGoogleLogin = async () => {
     try {
       setError('');
-      setLoading(true);
       await signInWithGoogle();
       // Google 로그인 성공 시 리다이렉트는 onAuthStateChanged에서 처리됨
     } catch (error: any) {
       console.error('Google 로그인 오류:', error);
       setError('Google 로그인 중 오류가 발생했습니다.');
-      setLoading(false);
     }
   };
 
@@ -71,15 +82,29 @@ export default function AuthPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
+    <div 
+      className="min-h-screen flex flex-col items-center justify-center py-12 px-4"
+      style={{
+        background: 'linear-gradient(130deg, #2563eb, #7c3aed, #ec4899)',
+        touchAction: 'pan-y',
+        overscrollBehavior: 'none'
+      }}
+    >
+      <Image 
+        src="/fly-boxro.png" 
+        alt="Boxro" 
+        width={240} 
+        height={240} 
+        className="mx-auto mb-6 w-[192px] h-[192px] md:w-[240px] md:h-[240px]"
+      />
       <div className="w-full max-w-md bg-white rounded-lg shadow-md p-6">
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-xl font-bold text-gray-900 md:text-2xl" style={{fontFamily: 'CookieRun, sans-serif'}}>
             {isLogin ? '로그인' : '회원가입'}
           </h1>
           <p className="text-gray-600 mt-2">
             {isLogin 
-              ? 'Boxro Maker에 오신 것을 환영합니다!' 
+              ? '' 
               : '새 계정을 만들어 시작해보세요!'
             }
           </p>

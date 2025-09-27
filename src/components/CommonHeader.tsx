@@ -37,6 +37,9 @@ export default function CommonHeader({ className = "" }: CommonHeaderProps) {
       setIsScrolled(scrollTop > 25);
     };
 
+    // 초기 스크롤 상태 확인
+    handleScroll();
+    
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -53,17 +56,24 @@ export default function CommonHeader({ className = "" }: CommonHeaderProps) {
 
   return (
     <header 
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${className} ${
-        isScrolled 
-          ? 'backdrop-blur-md' 
-          : 'bg-transparent'
-      }`}
-      style={isScrolled ? { 
-        background: 'linear-gradient(100deg, #2563eb, #7c3aed, #b842c1)',
-        opacity: 0.9
-      } : {}}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${className}`}
     >
-      <div className="max-w-7xl mx-auto px-4 py-4">
+      {/* 헤더 배경 - 별도 div로 분리 */}
+      <div 
+        className={`absolute inset-0 transition-all duration-300 ${
+          isScrolled 
+            ? 'backdrop-blur-md' 
+            : ''
+        }`}
+        style={isScrolled ? { 
+          background: 'linear-gradient(130deg, #2563eb, #7140ed)',
+          opacity: 0.95
+        } : {
+          background: 'linear-gradient(130deg, #2563eb, #7140ed)',
+          opacity: 0.1
+        }}
+      />
+      <div className="relative max-w-7xl mx-auto px-4 py-4">
         <div className="flex justify-between items-center">
           {/* Left: Logo/Brand */}
           <Link href="/" className="flex items-center" style={{gap: '10px'}}>
@@ -83,108 +93,66 @@ export default function CommonHeader({ className = "" }: CommonHeaderProps) {
           <div className="relative">
             <button
               onClick={toggleMenu}
-              className={`p-2 rounded-lg transition-all duration-200 ${
-                isScrolled 
-                  ? 'bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30' 
-                  : 'bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30'
-              }`}
+              className="p-2 rounded-lg transition-all duration-200 bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30"
             >
               {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
             
             {/* Dropdown Menu */}
             {isMenuOpen && (
-              <div className={`absolute top-full right-0 mt-2 w-64 rounded-lg shadow-xl transition-all duration-200 ${
-                isScrolled 
-                  ? 'bg-white/90 backdrop-blur-sm border border-white/30' 
-                  : 'bg-white/90 backdrop-blur-sm border border-white/30'
-              }`}>
+              <div className="absolute top-full right-0 mt-2 w-64 rounded-lg shadow-xl transition-all duration-200 bg-white border border-gray-200">
                 <div className="p-4">
                   <h3 className="text-lg font-semibold mb-3 px-3 font-cookie-run text-gray-800">
                     메뉴
                   </h3>
                   <nav className="space-y-2">
-                    <Link href="/draw" className={`block px-3 py-2 rounded-md transition-colors ${
-                      isScrolled 
-                        ? 'text-gray-300 hover:bg-gray-700/50' 
-                        : 'text-gray-700 hover:bg-purple-100'
-                    }`}>
+                    <Link href="/draw" className="block px-3 py-2 rounded-md transition-colors text-gray-700 hover:bg-purple-100">
                       <div className="flex items-center gap-3">
                         <Palette className="w-4 h-4" />
                         <span>박스카 그리기</span>
                       </div>
                     </Link>
-                    <Link href="/my-designs" className={`block px-3 py-2 rounded-md transition-colors ${
-                      isScrolled 
-                        ? 'text-gray-300 hover:bg-gray-700/50' 
-                        : 'text-gray-700 hover:bg-purple-100'
-                    }`}>
+                    <Link href="/my-designs" className="block px-3 py-2 rounded-md transition-colors text-gray-700 hover:bg-purple-100">
                       <div className="flex items-center gap-3">
                         <Heart className="w-4 h-4" />
-                        <span>내 작품</span>
+                        <span>나만의 박스카</span>
                       </div>
                     </Link>
-                    <Link href="/community" className={`block px-3 py-2 rounded-md transition-colors ${
-                      isScrolled 
-                        ? 'text-gray-300 hover:bg-gray-700/50' 
-                        : 'text-gray-700 hover:bg-purple-100'
-                    }`}>
+                    <Link href="/community" className="block px-3 py-2 rounded-md transition-colors text-gray-700 hover:bg-purple-100">
                       <div className="flex items-center gap-3">
                         <Users className="w-4 h-4" />
                         <span>커뮤니티</span>
                       </div>
                     </Link>
-                    <Link href="/magazine" className={`block px-3 py-2 rounded-md transition-colors ${
-                      isScrolled 
-                        ? 'text-gray-300 hover:bg-gray-700/50' 
-                        : 'text-gray-700 hover:bg-purple-100'
-                    }`}>
+                    <Link href="/magazine" className="block px-3 py-2 rounded-md transition-colors text-gray-700 hover:bg-purple-100">
                       <div className="flex items-center gap-3">
                         <BookOpen className="w-4 h-4" />
                         <span>매거진</span>
                       </div>
                     </Link>
-                    <Link href="/remote-control" className={`block px-3 py-2 rounded-md transition-colors ${
-                      isScrolled 
-                        ? 'text-gray-300 hover:bg-gray-700/50' 
-                        : 'text-gray-700 hover:bg-purple-100'
-                    }`}>
+                    <Link href="/remote-control" className="block px-3 py-2 rounded-md transition-colors text-gray-700 hover:bg-purple-100">
                       <div className="flex items-center gap-3">
                         <Smartphone className="w-4 h-4" />
                         <span>무선조종 앱</span>
                       </div>
                     </Link>
-                    <Link href="/store" className={`block px-3 py-2 rounded-md transition-colors ${
-                      isScrolled 
-                        ? 'text-gray-300 hover:bg-gray-700/50' 
-                        : 'text-gray-700 hover:bg-purple-100'
-                    }`}>
+                    <Link href="/store" className="block px-3 py-2 rounded-md transition-colors text-gray-700 hover:bg-purple-100">
                       <div className="flex items-center gap-3">
                         <ShoppingBag className="w-4 h-4" />
                         <span>박스로 스토어</span>
                       </div>
                     </Link>
                     {user ? (
-                      <div className={`border-t pt-2 mt-2 ${
-                        isScrolled ? 'border-gray-600' : 'border-gray-300'
-                      }`}>
+                      <div className="border-t border-gray-300 pt-2 mt-2">
                         <button
                           onClick={handleLogout}
-                          className={`block w-full text-left px-3 py-2 rounded-md transition-colors ${
-                            isScrolled 
-                              ? 'text-gray-300 hover:bg-red-900/50' 
-                              : 'text-gray-700 hover:bg-red-100'
-                          }`}
+                          className="block w-full text-left px-3 py-2 rounded-md transition-colors text-gray-700 hover:bg-red-100"
                         >
                           로그아웃
                         </button>
                       </div>
                     ) : (
-                      <Link href="/auth" className={`block px-3 py-2 rounded-md transition-colors ${
-                        isScrolled 
-                          ? 'text-gray-300 hover:bg-gray-700/50' 
-                          : 'text-gray-700 hover:bg-purple-100'
-                      }`}>
+                      <Link href="/auth" className="block px-3 py-2 rounded-md transition-colors text-gray-700 hover:bg-purple-100">
                         <div className="flex items-center gap-3">
                           <span className="font-bold text-gray-700">←</span>
                           <span>로그인</span>

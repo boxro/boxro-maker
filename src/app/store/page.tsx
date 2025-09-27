@@ -182,7 +182,7 @@ export default function StorePage() {
     <div 
       className="min-h-screen py-16 md:py-24"
       style={{
-        background: 'linear-gradient(100deg, #2563eb, #7c3aed, #ec4899)',
+        background: 'linear-gradient(130deg, #2563eb, #7c3aed, #ec4899)',
         touchAction: 'pan-y',
         overscrollBehavior: 'none'
       }}

@@ -42,6 +42,7 @@ import {
 
 import ThreeDRenderer from '@/components/ThreeDRenderer';
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from '@/contexts/AuthContext';
 import { analyzeCarShape } from '@/lib/carShapeAnalyzer';
 import { mapAnalysisToTemplate } from '@/lib/carTemplateMapper';
@@ -61,6 +62,7 @@ const PRIMARY_BUTTON_STYLES_SMALL = "bg-gradient-to-r from-purple-500 to-pink-50
 
 export default function DrawPage() {
   const { user } = useAuth();
+  const router = useRouter();
   const [currentStep, setCurrentStep] = useState<'draw' | 'preview' | 'decorate' | 'export'>('draw');
   const [currentTool, setCurrentTool] = useState<DrawingTool>('pen');
   const [lineWidth, setLineWidth] = useState(3);
@@ -79,6 +81,7 @@ export default function DrawPage() {
   const [shareTags, setShareTags] = useState('');
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingSaveTitle, setPendingSaveTitle] = useState('');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   
   // 꾸미기 기능을 위한 상태들
   const [carColor, setCarColor] = useState('#FFFFFF');
@@ -158,8 +161,16 @@ export default function DrawPage() {
   }, [isMobile]);
 
 
-  // 3D 렌더러 참조
+  // 3D 렌더러 참조 (도안용)
   const threeDRendererRef = useRef<{ 
+    getRenderer: () => THREE.WebGLRenderer | null;
+    getScene: () => THREE.Scene | null;
+    getCamera: () => THREE.PerspectiveCamera | null;
+    forceRender: () => void;
+  }>(null);
+
+  // 3D 렌더러 참조 (썸네일용)
+  const thumbnailRendererRef = useRef<{ 
     getRenderer: () => THREE.WebGLRenderer | null;
     getScene: () => THREE.Scene | null;
     getCamera: () => THREE.PerspectiveCamera | null;
@@ -169,7 +180,6 @@ export default function DrawPage() {
   // 3D 렌더링 스냅샷 캡처 함수 (Promise 기반)
   const captureSnapshot = useCallback((): Promise<string | null> => {
     return new Promise((resolve) => {
-      
       const tryCapture = (attempts = 0) => {
         const renderer = threeDRendererRef.current?.getRenderer();
         
@@ -177,22 +187,13 @@ export default function DrawPage() {
           if (attempts < 15) {
             setTimeout(() => tryCapture(attempts + 1), 1000);
           } else {
+            console.error('❌ 도안용 렌더러를 찾을 수 없습니다');
             resolve(null);
           }
           return;
         }
-
+        
         try {
-          // 렌더러가 실제로 렌더링을 완료했는지 확인
-          if (renderer.domElement.width === 0 || renderer.domElement.height === 0) {
-            if (attempts < 15) {
-              setTimeout(() => tryCapture(attempts + 1), 1000);
-            } else {
-              resolve(null);
-            }
-            return;
-          }
-          
           // 렌더러 강제 렌더링
           if (threeDRendererRef.current?.forceRender) {
             threeDRendererRef.current.forceRender();
@@ -201,21 +202,11 @@ export default function DrawPage() {
           // 더 긴 대기 후 캡처
           setTimeout(() => {
             try {
-              const dataURL = renderer.domElement.toDataURL('image/png', 0.9);
-              
-              // 데이터 URL이 유효한지 확인
-              if (dataURL === 'data:,' || dataURL.length < 100) {
-                if (attempts < 15) {
-                  setTimeout(() => tryCapture(attempts + 1), 1000);
-                } else {
-                  resolve(null);
-                }
-                return;
-              }
-              
+              const dataURL = renderer.domElement.toDataURL('image/png');
+              console.log('✅ 도안용 스냅샷 캡처 성공');
               resolve(dataURL);
             } catch (error) {
-              console.error('❌ 스냅샷 캡처 실패:', error);
+              console.error('❌ 도안용 스냅샷 캡처 실패:', error);
               if (attempts < 15) {
                 setTimeout(() => tryCapture(attempts + 1), 1000);
               } else {
@@ -224,7 +215,7 @@ export default function DrawPage() {
             }
           }, 300);
         } catch (error) {
-          console.error('❌ 스냅샷 캡처 실패:', error);
+          console.error('❌ 도안용 스냅샷 캡처 실패:', error);
           if (attempts < 15) {
             setTimeout(() => tryCapture(attempts + 1), 1000);
           } else {
@@ -236,6 +227,57 @@ export default function DrawPage() {
       tryCapture();
     });
   }, [threeDRendererRef]);
+
+  // 썸네일용 스냅샷 캡처 함수
+  const captureThumbnailSnapshot = useCallback((): Promise<string | null> => {
+    return new Promise((resolve) => {
+      const tryCapture = (attempts = 0) => {
+        const renderer = thumbnailRendererRef.current?.getRenderer();
+        
+        if (!renderer || !renderer.domElement) {
+          if (attempts < 15) {
+            setTimeout(() => tryCapture(attempts + 1), 1000);
+          } else {
+            console.error('❌ 썸네일용 렌더러를 찾을 수 없습니다');
+            resolve(null);
+          }
+          return;
+        }
+        
+        try {
+          // 렌더러 강제 렌더링
+          if (thumbnailRendererRef.current?.forceRender) {
+            thumbnailRendererRef.current.forceRender();
+          }
+          
+          // 더 긴 대기 후 캡처
+          setTimeout(() => {
+            try {
+              const dataURL = renderer.domElement.toDataURL('image/png');
+              console.log('✅ 썸네일용 스냅샷 캡처 성공');
+              resolve(dataURL);
+            } catch (error) {
+              console.error('❌ 썸네일용 스냅샷 캡처 실패:', error);
+              if (attempts < 15) {
+                setTimeout(() => tryCapture(attempts + 1), 1000);
+              } else {
+                resolve(null);
+              }
+            }
+          }, 300);
+        } catch (error) {
+          console.error('❌ 썸네일용 스냅샷 캡처 실패:', error);
+          if (attempts < 15) {
+            setTimeout(() => tryCapture(attempts + 1), 1000);
+          } else {
+            resolve(null);
+          }
+        }
+      };
+      
+      tryCapture();
+    });
+  }, [thumbnailRendererRef]);
 
   // 공통 헤더/푸터 함수 (원래 서식 복원)
   const drawCommonHeaderFooter = async (ctx: CanvasRenderingContext2D, a4Width: number, a4Height: number) => {
@@ -493,8 +535,8 @@ export default function DrawPage() {
         carShapePoints = createSedanShape();
     }
 
-    // 스냅샷 먼저 캡처 (렌더러가 준비될 때까지 잠시 대기)
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    // 스냅샷 먼저 캡처 (렌더러 초기화 대기)
+    await new Promise(resolve => setTimeout(resolve, 2000)); // 2초 대기
     const snapshotDataUrl = await captureSnapshot();
     
     if (!snapshotDataUrl) {
@@ -520,24 +562,23 @@ export default function DrawPage() {
       // 텍스트는 스냅샷 위치와 무관하게 고정값 사용
       // 모바일과 데스크톱 도면은 동일해야 함
       // 
-      // 스냅샷 위치: 모바일/데스크톱 Y=280px (동일)
-      // 스냅샷 크기: 모바일 1.04배, 데스크톱 2.0배
+      // 스냅샷 위치: 모바일/데스크톱 Y=330px (동일)
+      // 스냅샷 크기: 모바일 1.00배, 데스크톱 1.93배
       // 텍스트 위치: Y=1000px, Y=1030px (고정값)
       // 3D 렌더러 카메라: camera.position.set(-6.6, 2.5, 4.8) 고정
       // 그리드 색상: 0xF0F0F0, 0xF5F5F5 (연한 회색)
       // 
       // 나중에 다시 조정할 때 이 설정을 참고할 것!
       
-      // 3D 렌더링 스냅샷 영역 (중앙) - 원본 비율 유지하며 크기 조정
+      // 3D 렌더링 스냅샷 영역 (중앙) - 원본 크기 그대로 (테스트용)
       const isMobile = window.innerWidth < 768;
-      // 스냅샷 크기 조정 (비율 유지)
-      const baseWidth = snapshotImg.naturalWidth;
-      const baseHeight = snapshotImg.naturalHeight;
-      const scale = isMobile ? 1.04 : 2.0; // 모바일: 1% 키움 (1.03→1.04), 데스크톱: 2배
-      const snapshotWidth = baseWidth * scale;
-      const snapshotHeight = baseHeight * scale;
+      // 스냅샷 원본 크기 그대로 사용 (사이즈 조정 없음)
+      const snapshotWidth = snapshotImg.naturalWidth;
+      const snapshotHeight = snapshotImg.naturalHeight;
       const snapshotX = (a4Width - snapshotWidth) / 2;
-      const snapshotY = isMobile ? 280 : 280; // 모바일: 10px 아래로 (270→280), 데스크톱: 원복 (180→280)
+      const snapshotY = 330; // 280 + 50
+      
+      console.log('📸 스냅샷 원본 크기:', snapshotWidth, 'x', snapshotHeight);
       
       
               // 3D 렌더링 스냅샷 그리기
@@ -3695,6 +3736,60 @@ export default function DrawPage() {
     }
   };
 
+  // 썸네일 생성 함수 (스냅샷을 크롭하고 리사이징) - 도안과 분리된 전용 함수
+  const createThumbnailFromSnapshot = (snapshotDataUrl: string): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(snapshotDataUrl);
+          return;
+        }
+
+        // 스냅샷 크기 디버깅
+        console.log('📸 썸네일용 스냅샷 크기:', img.width, 'x', img.height);
+        
+        // 썸네일 전용 크롭 사이즈 (모바일/데스크톱 동일)
+        const cropSize = 800;
+        
+        // 스냅샷의 더 작은 쪽을 기준으로 정사각형 크롭
+        const maxCropSize = Math.min(img.width, img.height);
+        const actualCropSize = Math.min(cropSize, maxCropSize);
+        
+        console.log('✂️ 썸네일 크롭 사이즈:', actualCropSize, '(요청:', cropSize, ', 스냅샷:', img.width, 'x', img.height, ', 최대:', maxCropSize, ')');
+        
+        // 썸네일 전용 크롭 위치 (Y축 위로 100px, X축 왼쪽으로 40px)
+        const centerX = (img.width - actualCropSize) / 2;
+        const centerY = (img.height - actualCropSize) / 2;
+        const cropX = centerX - 40;
+        const cropY = centerY - 100;
+        
+        console.log('📍 썸네일 크롭 위치 계산:');
+        console.log('  - 스냅샷 크기:', img.width, 'x', img.height);
+        console.log('  - 크롭 사이즈:', actualCropSize);
+        console.log('  - 중앙 위치:', centerX, centerY);
+        console.log('  - 최종 크롭 위치:', cropX, cropY);
+        console.log('  - 크롭 영역:', `${cropX},${cropY} ~ ${cropX + actualCropSize},${cropY + actualCropSize}`);
+        
+        // 캔버스 크기를 300x300으로 설정
+        canvas.width = 300;
+        canvas.height = 300;
+        
+        // 크롭된 이미지를 300x300으로 리사이징하여 그리기
+        ctx.drawImage(
+          img,
+          cropX, cropY, actualCropSize, actualCropSize,  // 소스 크롭 영역
+          0, 0, 300, 300  // 대상 캔버스 영역
+        );
+        
+        resolve(canvas.toDataURL('image/jpeg', 0.8));
+      };
+      img.src = snapshotDataUrl;
+    });
+  };
+
   // 이미지 압축 함수
   const compressImage = (imageDataUrl: string, quality: number = 0.7): Promise<string> => {
     return new Promise((resolve) => {
@@ -3729,7 +3824,7 @@ export default function DrawPage() {
     });
   };
 
-  // 내작품 버튼 클릭 핸들러 (컨펌 후 바로 저장)
+  // 나만의 박스카 버튼 클릭 핸들러 (컨펌 후 바로 저장)
   const handleSaveToMyDesigns = async () => {
     if (!user) {
       alert('로그인이 필요합니다.');
@@ -3741,19 +3836,51 @@ export default function DrawPage() {
       return;
     }
 
-    // 자동 생성된 제목 생성
-    const carTypeNames = {
-      'sedan': '세단',
-      'suv': 'SUV',
-      'truck': '트럭',
-      'hatchback': '해치백',
-      'coupe': '쿠페'
+    // 동적 제목 생성 함수
+    const generateFunTitle = (carType: string) => {
+      const adjectives = {
+        'sedan-type1': ['부릉부릉 너무 귀여운', '씽씽 달리는', '방긋 웃는', '깜찍발랄한', '콩콩 튀는'],
+        'sedan-type2': ['든든하게 달리는', '똑똑하고 멋진', '반짝반짝 빛나는', '여유로운', '묵직하게 힘찬'],
+        'sports': ['번쩍번쩍 멋있는', '쌩쌩 신나는', '슝슝 달려가는', '짜릿하게 질주하는', '번개처럼 빠른'],
+        'suv': ['우당탕탕 용감한', '씩씩하게 달리는', '어디든 갈 수 있는', '힘센', '모험심 가득한'],
+        'truck': ['든든하게 짐을 싣는', '빵빵 힘찬', '우직한', '무거운 것도 척척', '으랏차차 힘센'],
+        'bus': ['즐겁게 달리는', '방긋 인사하는', '신나게 출발하는', '콩닥콩닥 두근거리는', '꽉 찬 웃음의'],
+        'bus-square': ['네모네모 귀여운', '사각사각 멋진', '반듯반듯 착한', '네모난 세상', '네모로 즐거운']
+      };
+      
+      const carTypeNames = {
+        'sedan-type1': '꼬마세단',
+        'sedan-type2': '큰세단', 
+        'sports': '스포츠카',
+        'suv': 'SUV',
+        'truck': '빵빵트럭',
+        'bus': '통통버스',
+        'bus-square': '네모버스'
+      };
+      
+      const typeAdjectives = adjectives[carType as keyof typeof adjectives] || adjectives['sedan-type1'];
+      const typeName = carTypeNames[carType as keyof typeof carTypeNames] || '꼬마세단';
+      
+      const randomAdjective = typeAdjectives[Math.floor(Math.random() * typeAdjectives.length)];
+      return `${randomAdjective} ${typeName}`;
     };
-    const currentCarType = selectedCarType || drawingAnalysis?.analysis?.carType || 'sedan';
-    const carTypeName = carTypeNames[currentCarType as keyof typeof carTypeNames] || '세단';
-    const now = new Date();
-    const dateStr = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')}`;
-    const autoTitle = `${carTypeName}_${dateStr}`;
+
+    // 분석된 차종을 제목 생성용 차종으로 매핑
+    const mapAnalyzedCarType = (analyzedType: string) => {
+      const mapping: { [key: string]: string } = {
+        'sedan': 'sedan-type1',
+        'suv': 'suv',
+        'truck': 'truck',
+        'bus': 'bus',
+        'sports': 'sports'
+      };
+      return mapping[analyzedType] || 'sedan-type1';
+    };
+
+    // 동적 제목 생성
+    const currentCarType = selectedCarType || drawingAnalysis?.analysis?.classification?.carType || 'sedan';
+    const mappedCarType = mapAnalyzedCarType(currentCarType);
+    const autoTitle = generateFunTitle(mappedCarType);
 
     // 확인 모달 표시
     setPendingSaveTitle(autoTitle);
@@ -3794,9 +3921,9 @@ export default function DrawPage() {
         blueprintImages.map(img => compressImage(img, 0.6))
       );
       
-      // 3D 스냅샷을 썸네일로 사용
-      const snapshot = await captureSnapshot();
-      const thumbnail = snapshot ? await compressImage(snapshot, 0.5) : await compressImage(blueprintImages[0], 0.5);
+      // 3D 스냅샷을 썸네일로 사용 (크롭 및 리사이징)
+      const snapshot = await captureThumbnailSnapshot();
+      const thumbnail = snapshot ? await createThumbnailFromSnapshot(snapshot) : await compressImage(blueprintImages[0], 0.5);
       
       // 태그는 빈 배열로 설정
       const tagsArray: string[] = [];
@@ -3823,7 +3950,7 @@ export default function DrawPage() {
 
       const docRef = await addDoc(collection(db, 'userDesigns'), userDesignData);
       
-      alert('내 작품에 성공적으로 저장되었습니다!');
+      setShowSuccessModal(true);
     } catch (error) {
       console.error('저장 실패:', error);
       if (error instanceof Error && error.message.includes('size')) {
@@ -5528,17 +5655,47 @@ export default function DrawPage() {
 
   const renderExportStep = () => (
     <div className="space-y-4">
-      {/* 숨겨진 3D 렌더러 (스냅샷 캡처용) */}
+      {/* 메인 3D 렌더러 (도안용) */}
       <div className="hidden">
         <ThreeDRenderer 
           ref={threeDRendererRef}
           carType={(() => {
             const finalCarType = selectedCarType || drawingAnalysis?.analysis?.carType || "sedan";
-            console.log('🎯 스냅샷용 렌더러에 전달되는 carType:', finalCarType);
+            console.log('🎯 도안용 렌더러에 전달되는 carType:', finalCarType);
             return finalCarType;
           })()} 
           drawingAnalysis={drawingAnalysis}
-          fill={true}
+          fill={false}
+          width={1200}
+          height={800}
+          scale={isMobile ? 1.2 : 1.0}
+          isMobile={isMobile}
+          carColor={carColor}
+          roofColor={roofColor}
+          headlightColor={headlightColor}
+          taillightColor={taillightColor}
+          selectedBadge={selectedBadge}
+          selectedGrille={selectedGrille}
+          selectedHeadlight={selectedHeadlight}
+          selectedTaillight={selectedTaillight}
+          selectedPlate={selectedPlate}
+          selectedWheel={selectedWheel}
+        />
+      </div>
+      
+      {/* 숨겨진 3D 렌더러 (썸네일용) */}
+      <div className="hidden">
+        <ThreeDRenderer 
+          ref={thumbnailRendererRef}
+          carType={(() => {
+            const finalCarType = selectedCarType || drawingAnalysis?.analysis?.carType || "sedan";
+            console.log('🎯 썸네일용 렌더러에 전달되는 carType:', finalCarType);
+            return finalCarType;
+          })()} 
+          drawingAnalysis={drawingAnalysis}
+          fill={false}
+          width={1200}
+          height={800}
           scale={isMobile ? 1.2 : 1.0}
           isMobile={isMobile}
           carColor={carColor}
@@ -5702,11 +5859,11 @@ export default function DrawPage() {
         <Button 
           onClick={handleSaveToMyDesigns}
           disabled={!blueprintGenerated || blueprintImages.length === 0}
-          title={!blueprintGenerated || blueprintImages.length === 0 ? "먼저 도안을 생성해주세요" : "내 작품에 저장하기"}
+          title={!blueprintGenerated || blueprintImages.length === 0 ? "먼저 도안을 생성해주세요" : "나만의 박스카에 저장하기"}
           className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-full w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Heart className="w-4 h-4 md:w-5 md:h-5" />
-          <span className="text-xs md:text-sm font-medium">내작품</span>
+          <span className="text-xs md:text-sm font-medium">나만의박스카</span>
         </Button>
         <Button 
           onClick={() => setShowCommunityShareModal(true)}
@@ -5726,7 +5883,7 @@ export default function DrawPage() {
     <div 
       className="min-h-screen py-16 md:py-24"
       style={{
-        background: 'linear-gradient(100deg, #2563eb, #7c3aed, #ec4899)',
+        background: 'linear-gradient(130deg, #2563eb, #7c3aed, #ec4899)',
         touchAction: 'pan-y',
         overscrollBehavior: 'none'
       }}
@@ -5941,11 +6098,11 @@ export default function DrawPage() {
           <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-6 max-w-sm w-full mx-6">
             <div className="text-center">
               <div className="text-2xl mb-4">✨</div>
-              <h3 className="text-base font-bold text-gray-900 mb-2">
+              <h3 className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-pink-600 bg-clip-text text-transparent mb-2">
                 멋진 작품이네요!
               </h3>
-              <p className="text-sm text-gray-600 mb-4">
-                내 작품에 저장할까요?
+              <p className="text-gray-600 text-sm mb-4">
+                나만의 박스카에 저장할까요?
               </p>
               <div className="flex gap-3">
                 <Button
@@ -5960,6 +6117,41 @@ export default function DrawPage() {
                   className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
                 >
                   저장하기
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 저장 성공 모달 */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-gradient-to-br from-purple-900/20 via-blue-900/20 to-pink-900/20 backdrop-blur-md z-50 flex items-center justify-center">
+          <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-6 max-w-sm w-full mx-6">
+            <div className="text-center">
+              <div className="text-2xl mb-4">✨</div>
+              <h3 className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-pink-600 bg-clip-text text-transparent mb-2">
+                나만의 박스카에 성공적으로 저장되었습니다!
+              </h3>
+              <p className="text-gray-600 text-sm mb-4">
+                이제 나만의 박스카에서 확인할 수 있어요
+              </p>
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowSuccessModal(false)}
+                  className="flex-1 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300"
+                >
+                  나중에
+                </Button>
+                <Button
+                  onClick={() => {
+                    setShowSuccessModal(false);
+                    router.push('/my-designs');
+                  }}
+                  className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                >
+                  나만의 박스카 보러가기
                 </Button>
               </div>
             </div>

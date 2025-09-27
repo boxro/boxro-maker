@@ -11,7 +11,7 @@ import PageHeader from '@/components/PageHeader';
 const MagazinePageClient = dynamic(() => import('./MagazinePageClient'), {
   ssr: false,
   loading: () => (
-    <div className="min-h-screen py-16" style={{background: 'linear-gradient(100deg, #2563eb, #7c3aed, #ec4899)'}}>
+    <div className="min-h-screen py-16" style={{background: 'linear-gradient(130deg, #2563eb, #7c3aed, #ec4899)'}}>
       <CommonHeader />
       <div className="max-w-7xl mx-auto px-4 md:px-8">
         <div className="mb-6 mt-10">

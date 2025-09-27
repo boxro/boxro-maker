@@ -1027,7 +1027,14 @@ export default function TemplatesPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div 
+      className="min-h-screen"
+      style={{
+        background: 'linear-gradient(130deg, #2563eb, #7c3aed, #ec4899)',
+        touchAction: 'pan-y',
+        overscrollBehavior: 'none'
+      }}
+    >
       <CommonHeader />
       <div className="p-8">
         <div className="max-w-6xl mx-auto">
