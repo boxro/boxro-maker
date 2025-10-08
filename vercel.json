@@ -1,5 +1,5 @@
 {
   "framework": "nextjs",
-  "buildCommand": "rm -rf node_modules package-lock.json .next out dist && npm config set registry https://registry.npmjs.org/ && npm install && npm run build",
-  "installCommand": "rm -rf node_modules package-lock.json .next out dist && npm config set registry https://registry.npmjs.org/ && npm install"
+  "buildCommand": "rm -rf node_modules package-lock.json .next out dist .vercel && npm config set registry https://registry.npmjs.org/ && npm install && npm run build",
+  "installCommand": "rm -rf node_modules package-lock.json .next out dist .vercel && npm config set registry https://registry.npmjs.org/ && npm install"
 }

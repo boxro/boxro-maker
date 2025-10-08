@@ -1,5 +1,6 @@
 'use client';
 
+// 최신 버전: 2025-10-09 01:30
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useScrollLock } from '@/hooks/useScrollLock';
