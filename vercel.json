@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm cache clean --force && npm install --registry https://registry.npmjs.org/ && npm run build",
-  "installCommand": "npm cache clean --force && npm install --registry https://registry.npmjs.org/",
+  "buildCommand": "yarn install && yarn build",
+  "installCommand": "yarn install",
   "framework": "nextjs"
 }
