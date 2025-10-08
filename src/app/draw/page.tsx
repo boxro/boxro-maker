@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import Head from 'next/head';
 import { createPortal } from 'react-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -5880,14 +5881,20 @@ export default function DrawPage() {
   );
 
   return (
-    <div 
-      className="min-h-screen py-16 md:py-24"
-      style={{
-        background: 'linear-gradient(130deg, #2563eb, #7c3aed, #ec4899)',
-        touchAction: 'pan-y',
-        overscrollBehavior: 'none'
-      }}
-    >
+    <>
+      <Head>
+        <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+        <meta httpEquiv="Pragma" content="no-cache" />
+        <meta httpEquiv="Expires" content="0" />
+      </Head>
+      <div 
+        className="min-h-screen py-16 md:py-24"
+        style={{
+          background: 'linear-gradient(130deg, #2563eb, #7c3aed, #ec4899)',
+          touchAction: 'pan-y',
+          overscrollBehavior: 'none'
+        }}
+      >
       {/* Common Header */}
       <CommonHeader />
       
@@ -6158,7 +6165,8 @@ export default function DrawPage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }
 
