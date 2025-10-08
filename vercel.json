@@ -1,5 +1,5 @@
 {
   "framework": "nextjs",
-  "buildCommand": "NPM_CONFIG_REGISTRY=https://registry.npmjs.org/ npm install && npm run build",
-  "installCommand": "NPM_CONFIG_REGISTRY=https://registry.npmjs.org/ npm install"
+  "buildCommand": "rm -rf node_modules package-lock.json && npm config set registry https://registry.npmjs.org/ && npm install && npm run build",
+  "installCommand": "rm -rf node_modules package-lock.json && npm config set registry https://registry.npmjs.org/ && npm install"
 }
