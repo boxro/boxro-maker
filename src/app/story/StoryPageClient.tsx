@@ -231,6 +231,11 @@ export default function StoryPageClient() {
   // 오류 모달 상태
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  
+  // 로그인 유도 모달 상태
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [loginModalType, setLoginModalType] = useState<'like' | 'share' | 'boxroTalk'>('like');
+  const [loginModalArticleId, setLoginModalArticleId] = useState<string | null>(null);
 
   // 관리자 이메일 목록
   const adminEmails = [
@@ -362,10 +367,31 @@ export default function StoryPageClient() {
     }
   };
 
+  // 로그인 유도 모달 열기
+  const openLoginModal = (type: 'like' | 'share' | 'boxroTalk', articleId: string) => {
+    setLoginModalType(type);
+    setLoginModalArticleId(articleId);
+    setShowLoginModal(true);
+  };
+
+  // 로그인 유도 모달 닫기
+  const closeLoginModal = () => {
+    setShowLoginModal(false);
+    setLoginModalType('like');
+    setLoginModalArticleId(null);
+  };
+
+  // 로그인 후 원래 기능 실행
+  const handleLoginAndAction = () => {
+    closeLoginModal();
+    // 로그인 페이지로 이동
+    router.push('/auth');
+  };
+
   // 좋아요 토글
   const toggleLike = async (articleId: string) => {
     if (!user) {
-      alert('로그인하면 좋아요를 누를 수 있어요 👍');
+      openLoginModal('like', articleId);
       return;
     }
 
@@ -421,7 +447,7 @@ export default function StoryPageClient() {
   // 공유하기
   const shareArticle = async (article: StoryArticle) => {
     if (!user) {
-      alert('멋진 작품, 로그인하면 바로 공유할 수 있어요 🚀');
+      openLoginModal('share', article.id);
       return;
     }
 
@@ -479,7 +505,7 @@ export default function StoryPageClient() {
   // 박스로 톡 모달 열기
   const openBoxroTalksModal = async (article: StoryArticle) => {
     if (!user) {
-      alert('생각을 남기려면 로그인해주세요 ✨');
+      openLoginModal('boxroTalk', article.id);
       return;
     }
     
@@ -1345,6 +1371,51 @@ export default function StoryPageClient() {
               >
                 확인
               </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 로그인 유도 모달 */}
+      {showLoginModal && (
+        <div className="fixed inset-0 bg-gradient-to-br from-purple-900/20 via-blue-900/20 to-pink-900/20 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 max-w-md w-full mx-6">
+            <div className="p-6">
+              <div className="text-center">
+                <div className="flex justify-center mb-2">
+                  <div className="text-[30px]">
+                    {loginModalType === 'like' && '👍'}
+                    {loginModalType === 'share' && '✨'}
+                    {loginModalType === 'boxroTalk' && '✨'}
+                  </div>
+                </div>
+                <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+                  {loginModalType === 'like' && '좋아요'}
+                  {loginModalType === 'share' && '공유하기'}
+                  {loginModalType === 'boxroTalk' && '박스로 톡'}
+                </h3>
+                <p className="text-gray-800 text-sm mb-6">
+                  {loginModalType === 'like' && '로그인하면 좋아요를 누를 수 있어요'}
+                  {loginModalType === 'share' && '멋진 작품, 로그인하면 바로 공유할 수 있어요'}
+                  {loginModalType === 'boxroTalk' && '함께 이야기하려면 로그인해보세요'}
+                </p>
+                
+                <div className="flex gap-3 mt-6">
+                  <Button
+                    variant="outline"
+                    onClick={closeLoginModal}
+                    className="flex-1 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-full"
+                  >
+                    나중에 할래
+                  </Button>
+                  <Button
+                    onClick={handleLoginAndAction}
+                    className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-full"
+                  >
+                    지금 로그인하기
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         </div>

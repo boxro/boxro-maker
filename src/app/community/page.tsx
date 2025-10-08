@@ -332,6 +332,10 @@ export default function GalleryPage() {
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   
+  // 안내 모달 상태
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  const [infoMessage, setInfoMessage] = useState('');
+  
 
 
   // 관리자 권한 체크
@@ -1367,12 +1371,14 @@ export default function GalleryPage() {
     console.log('Upload state:', { uploadFile: !!uploadFile, uploadTitle });
     
     if (!uploadFile) {
-      alert('멋진 사진을 선택해 주세요.');
+      setInfoMessage('내 박스카 작품 사진을 선택해주세요.');
+      setShowInfoModal(true);
       return;
     }
     
     if (!uploadTitle.trim()) {
-      alert('작품 이야기를 함께 적어주세요.');
+      setInfoMessage('박스카 작품에 담긴 이야기를 함께 적어주세요.');
+      setShowInfoModal(true);
       return;
     }
 
@@ -2321,10 +2327,10 @@ export default function GalleryPage() {
           <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 max-w-md w-full mx-6">
             <div className="p-6">
               <div className="text-center">
-                <div className="flex justify-center mb-4">
-                  <div className="text-4xl">
+                <div className="flex justify-center mb-2">
+                  <div className="text-[30px]">
                     {loginModalType === 'like' && '👍'}
-                    {loginModalType === 'share' && '🚀'}
+                    {loginModalType === 'share' && '✨'}
                     {loginModalType === 'comment' && '✨'}
                     {loginModalType === 'download' && '📥'}
                   </div>
@@ -2338,7 +2344,7 @@ export default function GalleryPage() {
                 <p className="text-gray-800 text-sm mb-6">
                   {loginModalType === 'like' && '로그인하면 좋아요를 누를 수 있어요'}
                   {loginModalType === 'share' && '멋진 작품, 로그인하면 바로 공유할 수 있어요'}
-                  {loginModalType === 'comment' && '생각을 남기려면 로그인해주세요'}
+                  {loginModalType === 'comment' && '함께 이야기하려면 로그인해보세요'}
                   {loginModalType === 'download' && '로그인하면 도안을 내려받을 수 있어요'}
                 </p>
                 
@@ -2346,13 +2352,13 @@ export default function GalleryPage() {
                   <Button
                     variant="outline"
                     onClick={closeLoginModal}
-                    className="flex-1 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300"
+                    className="flex-1 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-full"
                   >
                     나중에 할래
                   </Button>
                   <Button
                     onClick={handleLoginAndAction}
-                    className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+                    className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-full"
                   >
                     지금 로그인하기
                   </Button>
@@ -2394,6 +2400,34 @@ export default function GalleryPage() {
           {showFloatingMenu ? <X className="w-6 h-6" /> : <Plus className="w-6 h-6" />}
         </Button>
       </div>
+
+      {/* 안내 모달 */}
+      {showInfoModal && (
+        <div className="fixed inset-0 bg-gradient-to-br from-purple-900/20 via-blue-900/20 to-pink-900/20 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 max-w-sm w-full mx-6">
+            <div className="p-6">
+              <div className="text-center">
+                <div className="flex justify-center mb-2">
+                  <div className="text-[30px]">✨</div>
+                </div>
+                <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+                  {infoMessage.includes('사진') ? '사진을 선택해주세요' : '작품 이야기를 적어주세요'}
+                </h3>
+                <p className="text-gray-800 text-sm mb-6">
+                  {infoMessage}
+                </p>
+                
+                <Button
+                  onClick={() => setShowInfoModal(false)}
+                  className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-full"
+                >
+                  확인
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 오류 모달 */}
       <ErrorModal

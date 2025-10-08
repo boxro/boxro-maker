@@ -26,7 +26,7 @@ export default function DrawSplashScreen({ onClose, onSignUp }: DrawSplashScreen
       <Card className="w-full max-w-lg bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden py-0">
         <CardContent className="p-0">
           {/* 닫기 버튼 */}
-          <div className="absolute top-4 right-4 z-10">
+          <div className="absolute top-2 right-4 z-10">
             <button
               onClick={onClose}
               className="text-gray-500 hover:text-gray-700 text-2xl font-bold flex-shrink-0"

@@ -194,6 +194,10 @@ export default function StoryArticlePage() {
   // 오류 모달 상태
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  
+  // 로그인 유도 모달 상태
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [loginModalType, setLoginModalType] = useState<'like' | 'share' | 'boxroTalk'>('like');
 
   // 이모지 클릭 핸들러
   const handleEmojiClick = (emoji: string) => {
@@ -370,10 +374,28 @@ export default function StoryArticlePage() {
     fetchArticle();
   }, [fetchArticle]);
 
+  // 로그인 유도 모달 열기
+  const openLoginModal = (type: 'like' | 'share' | 'boxroTalk') => {
+    setLoginModalType(type);
+    setShowLoginModal(true);
+  };
+
+  // 로그인 유도 모달 닫기
+  const closeLoginModal = () => {
+    setShowLoginModal(false);
+  };
+
+  // 로그인 후 원래 기능 실행
+  const handleLoginAndAction = () => {
+    closeLoginModal();
+    // 로그인 페이지로 이동
+    router.push('/auth');
+  };
+
   // 좋아요 토글
   const toggleLike = async () => {
     if (!user) {
-      alert('로그인하면 좋아요를 누를 수 있어요 👍');
+      openLoginModal('like');
       return;
     }
 
@@ -424,7 +446,7 @@ export default function StoryArticlePage() {
   // 공유하기
   const shareArticle = async () => {
     if (!user) {
-      alert('멋진 작품, 로그인하면 바로 공유할 수 있어요 🚀');
+      openLoginModal('share');
       return;
     }
 
@@ -642,7 +664,7 @@ export default function StoryArticlePage() {
     return (
       <CommonBackground>
         <CommonHeader />
-        <div className="max-w-7xl mx-auto px-0 md:px-8 flex-1">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 flex-1">
           <div className="mt-10">
             <Card className="bg-white border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden py-5 w-full rounded-2xl">
               <CardContent className="text-center py-12">
@@ -683,7 +705,7 @@ export default function StoryArticlePage() {
   return (
     <CommonBackground>
       <CommonHeader />
-      <div className="max-w-7xl mx-auto px-0 md:px-8 flex-1">
+      <div className="max-w-7xl mx-auto px-4 md:px-8 flex-1">
         {/* 글 내용 */}
         <div className="mt-12">
           <Card className="bg-white/97 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden w-full rounded-2xl pt-0 pb-6 border-0">
@@ -732,7 +754,7 @@ export default function StoryArticlePage() {
             
             {/* 스토어 바로가기 버튼 */}
             {article.storeUrl && article.storeUrl.trim() && (
-              <div className="mt-8 mb-6 w-full md:w-4/5 mx-auto">
+              <div className="mt-8 mb-6 w-full md:w-1/3 mx-auto">
                 <Button
                   onClick={() => {
                     window.open(article.storeUrl, '_blank');
@@ -775,7 +797,7 @@ export default function StoryArticlePage() {
               <button 
                 onClick={() => {
                   if (!user) {
-                    alert('생각을 남기려면 로그인해주세요 ✨');
+                    openLoginModal('boxroTalk');
                     return;
                   }
                   openBoxroTalksModal();
@@ -791,7 +813,7 @@ export default function StoryArticlePage() {
               <div 
                 className={`w-[60px] h-[60px] rounded-full p-0 flex flex-col items-center justify-center gap-1 ${isViewed
                   ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
-                  : 'bg-white/80 backdrop-blur-sm border-2 border-gray-100 text-gray-800'
+                  : 'bg-white border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 text-gray-800 shadow-sm'
                 }`}
               >
                 <Eye className={`w-5 h-5 ${isViewed ? 'text-white' : 'text-gray-500'}`} />
@@ -804,7 +826,7 @@ export default function StoryArticlePage() {
 
 
         {/* 버튼들 */}
-        <div className="mt-6 px-4 md:px-0">
+        <div className="mt-5 md:mt-6 px-4 md:px-0">
           <div className="flex justify-between items-center">
             <Link href="/store">
               <Button 
@@ -1069,6 +1091,51 @@ export default function StoryArticlePage() {
       )}
 
       {/* 오류 모달 */}
+      {/* 로그인 유도 모달 */}
+      {showLoginModal && (
+        <div className="fixed inset-0 bg-gradient-to-br from-purple-900/20 via-blue-900/20 to-pink-900/20 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 max-w-md w-full mx-6">
+            <div className="p-6">
+              <div className="text-center">
+                <div className="flex justify-center mb-2">
+                  <div className="text-[30px]">
+                    {loginModalType === 'like' && '👍'}
+                    {loginModalType === 'share' && '✨'}
+                    {loginModalType === 'boxroTalk' && '✨'}
+                  </div>
+                </div>
+                <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+                  {loginModalType === 'like' && '좋아요'}
+                  {loginModalType === 'share' && '공유하기'}
+                  {loginModalType === 'boxroTalk' && '박스로 톡'}
+                </h3>
+                <p className="text-gray-800 text-sm mb-6">
+                  {loginModalType === 'like' && '로그인하면 좋아요를 누를 수 있어요'}
+                  {loginModalType === 'share' && '멋진 작품, 로그인하면 바로 공유할 수 있어요'}
+                  {loginModalType === 'boxroTalk' && '함께 이야기하려면 로그인해보세요'}
+                </p>
+                
+                <div className="flex gap-3 mt-6">
+                  <Button
+                    variant="outline"
+                    onClick={closeLoginModal}
+                    className="flex-1 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-full"
+                  >
+                    나중에 할래
+                  </Button>
+                  <Button
+                    onClick={handleLoginAndAction}
+                    className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-full"
+                  >
+                    지금 로그인하기
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <ErrorModal
         isOpen={showErrorModal}
         onClose={() => setShowErrorModal(false)}

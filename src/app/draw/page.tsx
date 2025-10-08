@@ -4610,7 +4610,7 @@ export default function DrawPage() {
                   className="ml-2 text-blue-600 hover:text-blue-800 transition-colors duration-200 bg-blue-50 hover:bg-blue-100 rounded-full p-1"
                   title="AI 알고리즘 설명 보기"
                 >
-                  <Sparkles className="w-5 h-5" />
+                  <Sparkles className="w-[18px] h-[18px] animate-pulse" />
                 </button>
               </CardTitle>
               {/* 안내 문구 */}
@@ -6354,9 +6354,9 @@ export default function DrawPage() {
           <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 max-w-md w-full mx-6">
             <div className="p-6">
               <div className="text-center">
-                <div className="flex justify-center mb-4">
-                  <div className="text-4xl">
-                    {loginModalType === 'share' && '🚀'}
+                <div className="flex justify-center mb-2">
+                  <div className="text-[30px]">
+                    {loginModalType === 'share' && '✨'}
                     {loginModalType === 'download' && '📥'}
                   </div>
                 </div>
@@ -6373,15 +6373,15 @@ export default function DrawPage() {
                   <Button
                     variant="outline"
                     onClick={closeLoginModal}
-                    className="flex-1 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300"
+                    className="flex-1 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-full"
                   >
                     나중에 할래
                   </Button>
                   <Button
                     onClick={handleLoginAndAction}
-                    className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+                    className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-full"
                   >
-                    로그인하기
+                    지금 로그인하기
                   </Button>
                 </div>
               </div>
