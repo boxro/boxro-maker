@@ -323,7 +323,12 @@ export default function StoryArticlePage() {
       }
     } catch (error) {
       console.error('글 로드 실패:', error);
-      setError('글을 불러오는데 실패했습니다.');
+      console.error('Firebase 설정 확인:', {
+        apiKey: !!process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+        authDomain: !!process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+        projectId: !!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
+      });
+      setError('글을 불러오는데 실패했습니다. Firebase 설정을 확인해주세요.');
     } finally {
       setLoading(false);
     }

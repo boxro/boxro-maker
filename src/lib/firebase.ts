@@ -24,6 +24,11 @@ if (!firebaseConfig.apiKey || !firebaseConfig.authDomain || !firebaseConfig.proj
     NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: !!firebaseConfig.messagingSenderId,
     NEXT_PUBLIC_FIREBASE_APP_ID: !!firebaseConfig.appId,
   });
+  
+  // 환경변수가 없으면 빈 객체 반환
+  if (typeof window !== 'undefined') {
+    alert('Firebase 설정이 누락되었습니다. 관리자에게 문의하세요.');
+  }
 }
 
 // Firebase 앱 초기화
