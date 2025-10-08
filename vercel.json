@@ -1,5 +1,10 @@
 {
-  "buildCommand": "npm install --registry https://registry.npmjs.org/ && npm run build",
-  "installCommand": "npm install --registry https://registry.npmjs.org/",
-  "framework": "nextjs"
+  "buildCommand": "npm ci && npm run build",
+  "installCommand": "npm ci",
+  "framework": "nextjs",
+  "functions": {
+    "app/**": {
+      "runtime": "nodejs18.x"
+    }
+  }
 }
