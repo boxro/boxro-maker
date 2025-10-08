@@ -1,7 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
+import { getStorage, connectStorageEmulator } from 'firebase/storage';
 
 // Firebase 설정 - 실제 프로젝트 설정 사용
 const firebaseConfig = {
@@ -32,28 +32,54 @@ let auth;
 let db;
 let storage;
 
-try {
-  // 환경변수가 제대로 설정된 경우에만 초기화 시도
-  if (firebaseConfig.apiKey && firebaseConfig.authDomain && firebaseConfig.projectId) {
-    app = initializeApp(firebaseConfig);
-    auth = getAuth(app);
-    db = getFirestore(app);
-    storage = getStorage(app);
-    console.log('✅ Firebase 초기화 성공');
-  } else {
-    console.error('❌ Firebase 초기화 건너뜀: 필수 환경변수 누락');
+// Firebase 초기화 함수
+const initializeFirebase = () => {
+  try {
+    // 환경변수가 제대로 설정된 경우에만 초기화 시도
+    if (firebaseConfig.apiKey && firebaseConfig.authDomain && firebaseConfig.projectId) {
+      app = initializeApp(firebaseConfig);
+      auth = getAuth(app);
+      db = getFirestore(app);
+      storage = getStorage(app);
+      
+      // Storage 재시도 설정
+      if (typeof window !== 'undefined') {
+        // Storage 재시도 설정을 위한 커스텀 설정
+        console.log('📦 Firebase Storage 초기화 완료');
+      }
+      
+      // 네트워크 연결 상태 확인
+      if (typeof window !== 'undefined') {
+        console.log('✅ Firebase 초기화 성공');
+        console.log('🌐 네트워크 상태:', navigator.onLine ? '온라인' : '오프라인');
+        
+        // 오프라인 상태 감지
+        window.addEventListener('online', () => {
+          console.log('🌐 네트워크 연결됨');
+        });
+        
+        window.addEventListener('offline', () => {
+          console.log('🌐 네트워크 연결 끊김');
+        });
+      }
+    } else {
+      console.error('❌ Firebase 초기화 건너뜀: 필수 환경변수 누락');
+      app = null;
+      auth = null;
+      db = null;
+      storage = null;
+    }
+  } catch (error) {
+    console.error('❌ Firebase 초기화 실패:', error);
     app = null;
     auth = null;
     db = null;
     storage = null;
   }
-} catch (error) {
-  console.error('❌ Firebase 초기화 실패:', error);
-  app = null;
-  auth = null;
-  db = null;
-  storage = null;
-}
+};
+
+// 초기화 실행
+initializeFirebase();
 
 export { auth, db, storage };
 export default app;

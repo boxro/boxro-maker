@@ -1,0 +1,9 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 임시 개발용 규칙 - 모든 권한 허용
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}

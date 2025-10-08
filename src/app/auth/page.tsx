@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
+import CommonBackground from "@/components/CommonBackground";
 
 export default function AuthPage() {
   const [email, setEmail] = useState('');
@@ -14,24 +15,29 @@ export default function AuthPage() {
   const { user, loading, signInWithEmail, signUpWithEmail, signInWithGoogle } = useAuth();
   const router = useRouter();
 
-  // 로그인된 사용자가 있으면 홈으로 리다이렉트
+  // URL 파라미터 확인하여 회원가입 모드로 설정
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const mode = urlParams.get('mode');
+    if (mode === 'signup') {
+      setIsLogin(false);
+    }
+  }, []);
+
+  // 로그인된 사용자가 있으면 이전 페이지로 리다이렉트
   useEffect(() => {
     if (user && user.email) {
-      router.push('/');
+      // URL 파라미터에서 returnUrl 확인, 없으면 홈으로
+      const urlParams = new URLSearchParams(window.location.search);
+      const returnUrl = urlParams.get('returnUrl') || '/';
+      router.push(returnUrl);
     }
   }, [user, router]);
 
   // 로그인된 사용자가 있으면 로딩 화면 표시
   if (user && user.email) {
     return (
-      <div 
-        className="min-h-screen flex items-center justify-center"
-        style={{
-          background: 'linear-gradient(130deg, #2563eb, #7c3aed, #ec4899)',
-          touchAction: 'pan-y',
-          overscrollBehavior: 'none'
-        }}
-      >
+      <CommonBackground className="flex items-center justify-center">
         <div className="text-center">
           <Image 
             src="/fly-boxro.png" 
@@ -43,7 +49,7 @@ export default function AuthPage() {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">홈으로 이동 중...</p>
         </div>
-      </div>
+      </CommonBackground>
     );
   }
 
@@ -82,14 +88,7 @@ export default function AuthPage() {
   });
 
   return (
-    <div 
-      className="min-h-screen flex flex-col items-center justify-center py-12 px-4"
-      style={{
-        background: 'linear-gradient(130deg, #2563eb, #7c3aed, #ec4899)',
-        touchAction: 'pan-y',
-        overscrollBehavior: 'none'
-      }}
-    >
+    <CommonBackground className="flex flex-col items-center justify-center py-12 px-4">
       <Image 
         src="/fly-boxro.png" 
         alt="Boxro" 
@@ -102,12 +101,12 @@ export default function AuthPage() {
           <h1 className="text-xl font-bold text-gray-900 md:text-2xl" style={{fontFamily: 'CookieRun, sans-serif'}}>
             {isLogin ? '로그인' : '회원가입'}
           </h1>
-          <p className="text-gray-600 mt-2">
-            {isLogin 
-              ? '' 
-              : '새 계정을 만들어 시작해보세요!'
-            }
-          </p>
+                <p className="text-gray-600 mt-2">
+                  {isLogin 
+                    ? '' 
+                    : ''
+                  }
+                </p>
         </div>
         
         {error && (
@@ -150,7 +149,7 @@ export default function AuthPage() {
               placeholder="이메일을 입력하세요"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-[15px]"
               required
             />
           </div>
@@ -165,7 +164,7 @@ export default function AuthPage() {
               placeholder="비밀번호를 입력하세요"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-[15px]"
               required
             />
           </div>
@@ -188,6 +187,6 @@ export default function AuthPage() {
           </button>
         </div>
       </div>
-    </div>
+    </CommonBackground>
   );
 }

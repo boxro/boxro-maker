@@ -4,6 +4,9 @@ import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import CommonHeader from '@/components/CommonHeader';
+import CommonBackground from '@/components/CommonBackground';
+import PageHeader from '@/components/PageHeader';
+import CommonFooter from '@/components/CommonFooter';
 
 interface TemplateViewerProps {
   boxcarType: string;
@@ -1027,21 +1030,14 @@ export default function TemplatesPage() {
   ];
 
   return (
-    <div 
-      className="min-h-screen"
-      style={{
-        background: 'linear-gradient(130deg, #2563eb, #7c3aed, #ec4899)',
-        touchAction: 'pan-y',
-        overscrollBehavior: 'none'
-      }}
-    >
+    <CommonBackground>
       <CommonHeader />
       <div className="p-8">
-        <div className="max-w-6xl mx-auto">
-          <h1 className="text-3xl font-bold text-center mb-8">차종별 템플릿 미리보기</h1>
-          <p className="text-center text-gray-600 mb-8">
-            각 차종의 3D 모델을 확인하고 모양을 결정해보세요.
-          </p>
+        <div className="max-w-6xl mx-auto flex-1">
+          <PageHeader 
+            title="차종별 템플릿 미리보기"
+            description="각 차종의 3D 모델을 확인하고 모양을 결정해보세요."
+          />
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {templates.map((template) => (
@@ -1258,6 +1254,7 @@ export default function TemplatesPage() {
         </div>
         </div>
       </div>
-    </div>
+      <CommonFooter />
+    </CommonBackground>
   );
 }

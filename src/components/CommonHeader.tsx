@@ -9,11 +9,13 @@ import {
   Play,
   Users,
   Heart,
-  Smartphone,
   ShoppingBag,
   Menu,
   X,
-  BookOpen
+  BookOpen,
+  Settings,
+  User,
+  Home
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -25,6 +27,12 @@ export default function CommonHeader({ className = "" }: CommonHeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const { user, logout } = useAuth();
+
+  // 관리자 권한 체크
+  const isAdmin = user?.email === "admin@boxro.com" || 
+                  user?.email === "dongwoo.kang@boxro.com" || 
+                  user?.email === "beagle3651@gmail.com" || 
+                  user?.email === "boxro.crafts@gmail.com";
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -44,11 +52,36 @@ export default function CommonHeader({ className = "" }: CommonHeaderProps) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // 메뉴 외부 클릭 시 메뉴 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isMenuOpen) {
+        const target = event.target as Element;
+        const menuContainer = target.closest('.menu-container');
+        
+        // 메뉴 컨테이너 외부를 클릭한 경우 메뉴 닫기
+        if (!menuContainer) {
+          setIsMenuOpen(false);
+        }
+      }
+    };
+
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isMenuOpen]);
+
   const handleLogout = async () => {
     try {
       await logout();
       setIsMenuOpen(false);
       console.log('로그아웃 성공');
+      // 로그아웃 후 홈으로 리다이렉트
+      window.location.href = '/';
     } catch (error) {
       console.error('로그아웃 실패:', error);
     }
@@ -84,13 +117,13 @@ export default function CommonHeader({ className = "" }: CommonHeaderProps) {
               height={50} 
               className="w-[50px] h-[50px]"
             />
-            <span className="text-[24px]" style={{fontFamily: 'CookieRun, sans-serif', color: '#ffac00'}}>
-              <span style={{fontWeight: 700}}>박스로</span>&nbsp;<span style={{fontWeight: 400}}>메이커</span>
+            <span className="text-[28px]" style={{fontFamily: 'CookieRun, sans-serif', color: '#ffac00', letterSpacing: '-0.03em'}}>
+              <span style={{fontWeight: 700}}>BOXRO</span>
             </span>
           </Link>
 
           {/* Right: Hamburger Menu */}
-          <div className="relative">
+          <div className="menu-container relative">
             <button
               onClick={toggleMenu}
               className="p-2 rounded-lg transition-all duration-200 bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30"
@@ -100,50 +133,55 @@ export default function CommonHeader({ className = "" }: CommonHeaderProps) {
             
             {/* Dropdown Menu */}
             {isMenuOpen && (
-              <div className="absolute top-full right-0 mt-2 w-64 rounded-lg shadow-xl transition-all duration-200 bg-white border border-gray-200">
+              <div className="menu-dropdown absolute top-full right-0 mt-2 w-64 rounded-lg shadow-xl transition-all duration-200 bg-white border border-gray-200">
                 <div className="p-4">
-                  <h3 className="text-lg font-semibold mb-3 px-3 font-cookie-run text-gray-800">
-                    메뉴
-                  </h3>
                   <nav className="space-y-2">
-                    <Link href="/draw" className="block px-3 py-2 rounded-md transition-colors text-gray-700 hover:bg-purple-100">
+                    <Link href="/" onClick={() => setIsMenuOpen(false)} className="block px-3 py-2 rounded-md transition-colors text-gray-700 hover:bg-purple-100">
+                      <div className="flex items-center gap-3">
+                        <Home className="w-4 h-4" />
+                        <span>홈</span>
+                      </div>
+                    </Link>
+                    <Link href="/draw" onClick={() => setIsMenuOpen(false)} className="block px-3 py-2 rounded-md transition-colors text-gray-700 hover:bg-purple-100">
                       <div className="flex items-center gap-3">
                         <Palette className="w-4 h-4" />
                         <span>박스카 그리기</span>
                       </div>
                     </Link>
-                    <Link href="/my-designs" className="block px-3 py-2 rounded-md transition-colors text-gray-700 hover:bg-purple-100">
-                      <div className="flex items-center gap-3">
-                        <Heart className="w-4 h-4" />
-                        <span>나만의 박스카</span>
-                      </div>
-                    </Link>
-                    <Link href="/community" className="block px-3 py-2 rounded-md transition-colors text-gray-700 hover:bg-purple-100">
+                    <Link href="/gallery" onClick={() => setIsMenuOpen(false)} className="block px-3 py-2 rounded-md transition-colors text-gray-700 hover:bg-purple-100">
                       <div className="flex items-center gap-3">
                         <Users className="w-4 h-4" />
-                        <span>커뮤니티</span>
+                        <span>박스카 갤러리</span>
                       </div>
                     </Link>
-                    <Link href="/magazine" className="block px-3 py-2 rounded-md transition-colors text-gray-700 hover:bg-purple-100">
+                    <Link href="/story" onClick={() => setIsMenuOpen(false)} className="block px-3 py-2 rounded-md transition-colors text-gray-700 hover:bg-purple-100">
                       <div className="flex items-center gap-3">
                         <BookOpen className="w-4 h-4" />
-                        <span>매거진</span>
+                        <span>박스카 이야기</span>
                       </div>
                     </Link>
-                    <Link href="/remote-control" className="block px-3 py-2 rounded-md transition-colors text-gray-700 hover:bg-purple-100">
-                      <div className="flex items-center gap-3">
-                        <Smartphone className="w-4 h-4" />
-                        <span>무선조종 앱</span>
-                      </div>
-                    </Link>
-                    <Link href="/store" className="block px-3 py-2 rounded-md transition-colors text-gray-700 hover:bg-purple-100">
+                    <Link href="/store" onClick={() => setIsMenuOpen(false)} className="block px-3 py-2 rounded-md transition-colors text-gray-700 hover:bg-purple-100">
                       <div className="flex items-center gap-3">
                         <ShoppingBag className="w-4 h-4" />
                         <span>박스로 스토어</span>
                       </div>
                     </Link>
+                    {isAdmin && (
+                      <Link href="/admin" onClick={() => setIsMenuOpen(false)} className="block px-3 py-2 rounded-md transition-colors text-gray-700 hover:bg-red-100">
+                        <div className="flex items-center gap-3">
+                          <Settings className="w-4 h-4" />
+                          <span className="font-semibold text-red-600">관리자</span>
+                        </div>
+                      </Link>
+                    )}
                     {user ? (
                       <div className="border-t border-gray-300 pt-2 mt-2">
+                        <Link href="/profile/edit" onClick={() => setIsMenuOpen(false)} className="block px-3 py-2 rounded-md transition-colors text-gray-700 hover:bg-purple-100">
+                          <div className="flex items-center gap-3">
+                            <User className="w-4 h-4" />
+                            <span>프로필 수정</span>
+                          </div>
+                        </Link>
                         <button
                           onClick={handleLogout}
                           className="block w-full text-left px-3 py-2 rounded-md transition-colors text-gray-700 hover:bg-red-100"
@@ -152,7 +190,7 @@ export default function CommonHeader({ className = "" }: CommonHeaderProps) {
                         </button>
                       </div>
                     ) : (
-                      <Link href="/auth" className="block px-3 py-2 rounded-md transition-colors text-gray-700 hover:bg-purple-100">
+                      <Link href="/auth" onClick={() => setIsMenuOpen(false)} className="block px-3 py-2 rounded-md transition-colors text-gray-700 hover:bg-purple-100">
                         <div className="flex items-center gap-3">
                           <span className="font-bold text-gray-700">←</span>
                           <span>로그인</span>

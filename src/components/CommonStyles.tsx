@@ -1,5 +1,5 @@
 // 공통 스타일 상수들 (박스카 그리기 페이지 기준)
-export const COMMON_CARD_STYLES = "bg-white/90 backdrop-blur-sm border-2 border-white/30 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden py-5 w-full rounded-2xl";
+export const COMMON_CARD_STYLES = "bg-white/90 backdrop-blur-sm border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden py-5 w-full rounded-2xl";
 export const COMMON_CARD_HEADER_STYLES = "text-gray-800 px-4 md:px-8 pb-0";
 export const COMMON_CARD_TITLE_STYLES = "text-lg flex items-center";
 

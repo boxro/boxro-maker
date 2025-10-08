@@ -59,7 +59,7 @@ export default function MagazinePageClient() {
       const articlesRef = collection(db, 'magazine');
       
       if (process.env.NODE_ENV === 'development') {
-        console.log('매거진 글 목록을 불러오는 중...');
+        console.log('박스카 이야기 글 목록을 불러오는 중...');
       }
       
       const q = query(articlesRef, orderBy('createdAt', 'desc'));
@@ -90,10 +90,10 @@ export default function MagazinePageClient() {
       setLoading(false);
       
       if (process.env.NODE_ENV === 'development') {
-        console.log('매거진 글 목록 로드 완료:', articlesData.length, '개');
+        console.log('박스카 이야기 글 목록 로드 완료:', articlesData.length, '개');
       }
     } catch (error) {
-      console.error('매거진 글 목록 로드 실패:', error);
+      console.error('박스카 이야기 글 목록 로드 실패:', error);
       setLoading(false);
     }
   };
@@ -142,11 +142,11 @@ export default function MagazinePageClient() {
         <div className="pt-20">
           <div className="max-w-7xl mx-auto px-4 md:px-8">
             <div className="mb-6 mt-10">
-              <h1 className="text-[24px] font-bold text-white mb-2" style={{fontFamily: 'CookieRun, sans-serif'}}>매거진</h1>
+              <h1 className="text-[24px] font-bold text-white mb-2" style={{fontFamily: 'CookieRun, sans-serif'}}>박스카 이야기</h1>
               <p className="text-white/90 text-[14px]">자동차 디자인과 창작의 모든 것을 만나보세요</p>
             </div>
             <div className="text-center">
-              <p className="text-white">매거진을 불러오는 중...</p>
+              <p className="text-white">박스카 이야기를 불러오는 중...</p>
             </div>
           </div>
         </div>
@@ -162,7 +162,7 @@ export default function MagazinePageClient() {
       <div className="pt-20">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="mb-6 mt-10">
-            <h1 className="text-[24px] font-bold text-white mb-2" style={{fontFamily: 'CookieRun, sans-serif'}}>매거진</h1>
+            <h1 className="text-[24px] font-bold text-white mb-2" style={{fontFamily: 'CookieRun, sans-serif'}}>박스카 이야기</h1>
             <p className="text-white/90 text-[14px]">자동차 디자인과 창작의 모든 것을 만나보세요</p>
           </div>
           

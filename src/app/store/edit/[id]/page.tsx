@@ -1,0 +1,1141 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import ErrorModal from "@/components/ErrorModal";
+import RichTextEditor from "@/components/RichTextEditor";
+import { 
+  ArrowLeft,
+  Save,
+  ShoppingBag,
+  X
+} from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useStory } from "@/contexts/StoryContext";
+import CommonHeader from "@/components/CommonHeader";
+import CommonBackground from "@/components/CommonBackground";
+import PageHeader from "@/components/PageHeader";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+
+interface StoryArticle {
+  id: string;
+  title: string;
+  content: string;
+  author: string;
+  authorEmail: string;
+  authorId: string;
+  thumbnail: string;
+  summary: string;
+  tags: string[];
+  views: number;
+  likes: number;
+  isPublished: boolean;
+  showOnHome?: boolean;
+  cardTitle?: string;
+  cardDescription?: string;
+  cardThumbnail?: string;
+  cardBackgroundColor?: string;
+  viewTopImage?: string;
+  createdAt: any;
+  updatedAt: any;
+}
+
+// content에서 base64 이미지 추출 함수
+
+export default function EditStoryPage() {
+  const { id } = useParams();
+  const { user } = useAuth();
+  const { articles, updateArticle } = useStory();
+  const router = useRouter();
+  const [article, setArticle] = useState<StoryArticle | null>(null);
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  
+  // content 변경 디버깅
+  const handleContentChange = (newContent: string) => {
+    setContent(newContent);
+  };
+  const [summary, setSummary] = useState("");
+  const [price, setPrice] = useState("");
+  const [storeUrl, setStoreUrl] = useState("");
+  const [thumbnail, setThumbnail] = useState("");
+  const [isPublished, setIsPublished] = useState(false);
+  const [showOnHome, setShowOnHome] = useState(false);
+  const [cardTitle, setCardTitle] = useState("");
+  const [cardDescription, setCardDescription] = useState("");
+  const [cardThumbnail, setCardThumbnail] = useState("");
+  const [cardTitleColor, setCardTitleColor] = useState("#ffffff");
+  const [cardDescriptionColor, setCardDescriptionColor] = useState("#ffffff");
+  const [titleColor, setTitleColor] = useState("#000000");
+  const [summaryColor, setSummaryColor] = useState("#000000");
+  const [priceColor, setPriceColor] = useState("#fa2c37");
+  const [cardBackgroundColor, setCardBackgroundColor] = useState("#ffffff");
+  const [homeCardBackgroundColor, setHomeCardBackgroundColor] = useState("#3b82f6");
+  const [cardTextPosition, setCardTextPosition] = useState(4); // 0-75, 기본값 4 (하단)
+  const [viewTopImage, setViewTopImage] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  
+  // 오류 모달 상태
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  // 이미지 리사이즈 함수 (투명도 감지)
+  const resizeImage = (file: File, maxWidth: number = 800): Promise<string> => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      img.onload = () => {
+        let { width, height } = img;
+        
+        // 가로가 maxWidth보다 큰 경우에만 리사이즈
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        ctx?.drawImage(img, 0, 0, width, height);
+        
+        // 투명도가 있는 이미지인지 확인
+        const imageData = ctx?.getImageData(0, 0, width, height);
+        const hasTransparency = imageData?.data.some((_, index) => index % 4 === 3 && imageData.data[index] < 255);
+        
+        // 투명도가 있으면 PNG, 없으면 JPG 사용
+        if (hasTransparency) {
+          resolve(canvas.toDataURL('image/png', 1.0));
+        } else {
+          resolve(canvas.toDataURL('image/jpeg', 0.9));
+        }
+      };
+      
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
+  // 에디터용 이미지 업로드 함수
+  const handleEditorImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        setErrorMessage('이미지 파일만 업로드할 수 있습니다.');
+        setShowErrorModal(true);
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        setErrorMessage('이미지 크기는 5MB 이하여야 합니다.');
+        setShowErrorModal(true);
+        return;
+      }
+
+      try {
+        const resizedImage = await resizeImage(file, 800);
+        setUploadedImages(prev => [...prev, resizedImage]);
+      } catch (error) {
+        console.error('이미지 처리 실패:', error);
+        setErrorMessage('이미지 처리 중 오류가 발생했습니다.');
+        setShowErrorModal(true);
+      }
+    }
+  };
+
+  // 이미지 삭제 함수
+  const removeEditorImage = (index: number) => {
+    const imageToRemove = uploadedImages[index];
+    setUploadedImages(prev => prev.filter((_, i) => i !== index));
+    
+    // 에디터에서도 해당 이미지 제거
+    if (imageToRemove && content.includes(imageToRemove)) {
+      // 정규표현식 대신 문자열 치환 사용
+      const updatedContent = content.replace(`src="${imageToRemove}"`, 'src=""');
+      setContent(updatedContent);
+    }
+  };
+
+  // content에서 base64 이미지 추출 함수
+  const extractImagesFromContent = (content: string): string[] => {
+    if (!content) return [];
+    
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(content, 'text/html');
+    const images = doc.querySelectorAll('img');
+    const base64Images: string[] = [];
+    
+    images.forEach((img) => {
+      const src = img.getAttribute('src');
+      if (src && src.startsWith('data:image/')) {
+        base64Images.push(src);
+      }
+    });
+    
+    return base64Images;
+  };
+
+  // 관리자 이메일 목록
+  const adminEmails = [
+    "admin@boxro.com",
+    "dongwoo.kang@boxro.com",
+    "beagle3651@gmail.com",
+    "boxro.crafts@gmail.com"
+  ];
+
+  // 관리자 권한 확인
+  useEffect(() => {
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+    
+    if (!adminEmails.includes(user.email || "")) {
+      setErrorMessage('박스로 스토어 도안 편집 권한이 없습니다.');
+      setShowErrorModal(true);
+      router.push('/store');
+      return;
+    }
+  }, [user, router]);
+
+  // 기존 글 데이터 로드
+  const fetchArticle = async () => {
+    try {
+      setLoading(true);
+      
+      // Firebase에서 스토어 아이템 데이터 가져오기
+      const articleRef = doc(db, 'storeItems', id as string);
+      const articleSnap = await getDoc(articleRef);
+      
+      if (articleSnap.exists()) {
+        const articleData = {
+          id: articleSnap.id,
+          ...articleSnap.data()
+        } as StoryArticle;
+        
+        setArticle(articleData);
+        setTitle(articleData.title);
+        setContent(articleData.content);
+        setSummary(articleData.summary);
+        setPrice(articleData.price || '');
+        setStoreUrl(articleData.storeUrl || '');
+        setThumbnail(articleData.thumbnail || '');
+        setIsPublished(articleData.isPublished);
+        setShowOnHome(articleData.showOnHome || false);
+        setCardTitle(articleData.cardTitle || '');
+        setCardDescription(articleData.cardDescription || '');
+        setCardThumbnail(articleData.cardThumbnail || '');
+        setCardTitleColor(articleData.cardTitleColor || '#ffffff');
+        setCardDescriptionColor(articleData.cardDescriptionColor || '#ffffff');
+        setCardBackgroundColor(articleData.cardBackgroundColor || '#ffffff');
+        setHomeCardBackgroundColor(articleData.homeCardBackgroundColor || '#3b82f6');
+        setCardTextPosition(articleData.textPosition || 4);
+        setTitleColor(articleData.titleColor || '#000000');
+        setSummaryColor(articleData.summaryColor || '#000000');
+        setPriceColor(articleData.priceColor || '#000000');
+        setViewTopImage(articleData.viewTopImage || '');
+        
+        // 기존 content에서 base64 이미지들 추출하여 uploadedImages에 설정
+        const existingImages = extractImagesFromContent(articleData.content);
+        setUploadedImages(existingImages);
+      } else {
+        setErrorMessage('글이 존재하지 않습니다.');
+        setShowErrorModal(true);
+        router.push('/store');
+      }
+    } catch (error) {
+      console.error('글 로드 실패:', error);
+      setErrorMessage('글을 불러오는데 실패했습니다.');
+      setShowErrorModal(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (id) {
+      fetchArticle();
+    }
+  }, [id]);
+
+  // 이미지 업로드 처리
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      try {
+        // 이미지 압축 (최대 800px, 품질 80%)
+        const compressedImage = await compressImage(file, 800, 0.8);
+        setThumbnail(compressedImage);
+      } catch (error) {
+        console.error('이미지 압축 실패:', error);
+        setErrorMessage('이미지 업로드 중 오류가 발생했습니다.');
+        setShowErrorModal(true);
+      }
+    }
+  };
+
+  // 뷰 상단 이미지 업로드 처리
+  const handleViewTopImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      try {
+        // 이미지 압축 (최대 1200px, 품질 85%)
+        const compressedImage = await compressImage(file, 1200, 0.85);
+        setViewTopImage(compressedImage);
+      } catch (error) {
+        console.error('이미지 압축 실패:', error);
+        setErrorMessage('이미지 업로드 중 오류가 발생했습니다.');
+        setShowErrorModal(true);
+      }
+    }
+  };
+
+  // 이미지 압축 함수 (투명도 감지)
+  const compressImage = (file: File, maxWidth: number = 800, quality: number = 0.8): Promise<string> => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      img.onload = () => {
+        // 비율 유지하면서 크기 조정
+        const ratio = Math.min(maxWidth / img.width, maxWidth / img.height);
+        canvas.width = img.width * ratio;
+        canvas.height = img.height * ratio;
+        
+        // 이미지 그리기
+        ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+        
+        // 투명도가 있는 이미지인지 확인
+        const imageData = ctx?.getImageData(0, 0, canvas.width, canvas.height);
+        const hasTransparency = imageData?.data.some((_, index) => index % 4 === 3 && imageData.data[index] < 255);
+        
+        // 투명도가 있으면 PNG, 없으면 JPG 사용
+        if (hasTransparency) {
+          resolve(canvas.toDataURL('image/png', 1.0));
+        } else {
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        }
+      };
+      
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
+  const handleCardThumbnailUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      try {
+        // 이미지 압축 (최대 800px, 품질 80%)
+        const compressedImage = await compressImage(file, 800, 0.8);
+        setCardThumbnail(compressedImage);
+      } catch (error) {
+        console.error('이미지 압축 실패:', error);
+        setErrorMessage('이미지 업로드 중 오류가 발생했습니다.');
+        setShowErrorModal(true);
+      }
+    }
+  };
+
+  // 태그 배열로 변환
+
+  // 글 저장
+  const saveArticle = async () => {
+    if (!user || !article) return;
+    
+    if (!title.trim()) {
+      alert('제목을 입력해주세요.');
+      return;
+    }
+    
+    // content는 선택사항이므로 validation 제거
+    
+    // summary는 선택사항이므로 validation 제거
+
+    try {
+      setSaving(true);
+      
+      // 사용자의 최신 닉네임 가져오기
+      let userNickname = user.displayName || 'Anonymous';
+      try {
+        const userRef = doc(db, 'users', user.uid);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          userNickname = userData.authorNickname || userData.displayName || user.displayName || 'Anonymous';
+        }
+      } catch (error) {
+        console.warn('사용자 닉네임 조회 실패, 기본값 사용:', error);
+      }
+      
+      const articleData = {
+        title: title.trim(),
+        content: content.trim() || '',
+        summary: summary.trim() || '',
+        price: price.trim() || '',
+        storeUrl: storeUrl.trim() || '',
+        thumbnail: thumbnail || '',
+        tags: [],
+        isPublished: true,
+        showOnHome: showOnHome,
+        cardTitle: cardTitle.trim() || '',
+        cardDescription: cardDescription.trim() || '',
+        cardThumbnail: cardThumbnail || '',
+        cardTitleColor: cardTitleColor,
+        cardDescriptionColor: cardDescriptionColor,
+        cardBackgroundColor: cardBackgroundColor,
+        homeCardBackgroundColor: homeCardBackgroundColor,
+        textPosition: cardTextPosition,
+        titleColor: titleColor,
+        summaryColor: summaryColor,
+        priceColor: priceColor,
+        viewTopImage: viewTopImage,
+        authorNickname: userNickname,
+        updatedAt: new Date()
+      };
+
+      // Firebase에서 스토어 아이템 업데이트
+      const articleRef = doc(db, 'storeItems', article.id);
+      await updateDoc(articleRef, articleData);
+      
+      // 홈 카드 정보 업데이트 (홈카드 정보가 완전할 때만)
+      if (showOnHome && cardTitle.trim() && cardDescription.trim() && cardThumbnail) {
+        // 기존 홈 카드 찾기
+        const { query, where, getDocs, addDoc, updateDoc, collection } = await import("firebase/firestore");
+        const homeCardsQuery = query(
+          collection(db, 'homeCards'),
+          where('source', '==', 'storeItems'),
+          where('sourceId', '==', article.id)
+        );
+        const homeCardsSnapshot = await getDocs(homeCardsQuery);
+        
+        const homeCardData = {
+          source: 'storeItems',
+          sourceId: article.id,
+          cardTitle: cardTitle.trim() || '',
+          cardDescription: cardDescription.trim() || '',
+          cardThumbnail: cardThumbnail || '',
+          cardTitleColor: cardTitleColor,
+          cardDescriptionColor: cardDescriptionColor,
+          cardBackgroundColor: cardBackgroundColor,
+          textPosition: cardTextPosition,
+          isVisible: true,
+          updatedAt: new Date()
+        };
+        
+        if (homeCardsSnapshot.empty) {
+          // 홈 카드가 없으면 새로 생성
+          await addDoc(collection(db, 'homeCards'), {
+            ...homeCardData,
+            order: 0,
+            createdAt: new Date()
+          });
+          console.log('홈 카드 생성 완료');
+        } else {
+          // 홈 카드가 있으면 업데이트
+          const homeCardRef = homeCardsSnapshot.docs[0].ref;
+          await updateDoc(homeCardRef, homeCardData);
+          console.log('홈 카드 업데이트 완료');
+        }
+      }
+      
+      alert('도안이 성공적으로 수정되었습니다!');
+      router.push('/store');
+      
+    } catch (error) {
+      console.error('저장 실패:', error);
+      setErrorMessage('저장 중 오류가 발생했습니다.');
+      setShowErrorModal(true);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-800">글을 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-800">로그인이 필요합니다.</p>
+          <Link href="/login">
+            <Button className="mt-4">로그인하기</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (!article) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-800">글을 찾을 수 없습니다.</p>
+          <Link href="/store">
+            <Button className="mt-4 bg-white border border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 rounded-full px-8 py-3 text-gray-800">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              목록으로
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <CommonBackground>
+      <CommonHeader />
+      <div className="max-w-7xl mx-auto px-0 md:px-8 flex-1">
+        <div className="mt-10 px-4 md:px-0">
+          <PageHeader 
+            title="도안 수정"
+            description="박스카 이야기를 수정해보세요"
+          />
+        </div>
+
+        {/* 편집 폼 */}
+        <Card className="bg-white/95 backdrop-blur-sm border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden py-5 w-full rounded-2xl">
+          <CardHeader>
+            <CardTitle className="text-[18px]">도안 수정</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* 기본 정보 박스 */}
+            <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+              <h3 className="font-medium text-gray-800 mb-4" style={{ fontSize: '16px' }}>
+                기본 정보
+              </h3>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* 입력 폼 */}
+                <div className="space-y-4">
+                {/* 제목 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-800 mb-2">
+                    도안 제목
+                  </label>
+                  <div className="bg-transparent p-4 rounded-lg border border-gray-300">
+                    <input
+                      type="text"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      placeholder="도안 카드에 표시될 제목"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] mb-3 bg-white"
+                    />
+                    <div className="flex gap-2">
+                      <input 
+                        type="color" 
+                        value={titleColor}
+                        onChange={(e) => setTitleColor(e.target.value)}
+                        className="w-12 h-10 border-0 rounded-md cursor-pointer"
+                      />
+                      <input 
+                        type="text" 
+                        value={titleColor}
+                        onChange={(e) => setTitleColor(e.target.value)}
+                        placeholder="#000000"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] bg-white"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 요약 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-800 mb-2">
+                    도안 설명
+                  </label>
+                  <div className="bg-transparent p-4 rounded-lg border border-gray-300">
+                    <textarea
+                      value={summary}
+                      onChange={(e) => setSummary(e.target.value)}
+                      placeholder="도안 카드에 표시될 설명"
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] mb-2 bg-white"
+                    />
+                    <div className="flex gap-2">
+                      <input 
+                        type="color" 
+                        value={summaryColor}
+                        onChange={(e) => setSummaryColor(e.target.value)}
+                        className="w-12 h-10 border-0 rounded-md cursor-pointer"
+                      />
+                      <input 
+                        type="text" 
+                        value={summaryColor}
+                        onChange={(e) => setSummaryColor(e.target.value)}
+                        placeholder="#000000"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] bg-white"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 가격 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-800 mb-2">
+                    도안 가격
+                  </label>
+                  <div className="bg-transparent p-4 rounded-lg border border-gray-300">
+                    <input
+                      type="text"
+                      value={price}
+                      onChange={(e) => setPrice(e.target.value)}
+                      placeholder="도안 가격을 입력하세요 (예: 5,000원)"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] mb-3 bg-white"
+                    />
+                    <div className="flex gap-2">
+                      <input 
+                        type="color" 
+                        value={priceColor}
+                        onChange={(e) => setPriceColor(e.target.value)}
+                        className="w-12 h-10 border-0 rounded-md cursor-pointer"
+                      />
+                      <input 
+                        type="text" 
+                        value={priceColor}
+                        onChange={(e) => setPriceColor(e.target.value)}
+                        placeholder="#000000"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] bg-white"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 스토어 URL */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-800 mb-2">
+                    스토어 바로가기 URL
+                  </label>
+                  <div className="bg-transparent p-4 rounded-lg border border-gray-300">
+                    <input
+                      type="url"
+                      value={storeUrl}
+                      onChange={(e) => setStoreUrl(e.target.value)}
+                      placeholder="스토어 바로가기 URL을 입력하세요 (예: https://boxro.crafts)"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] bg-white"
+                    />
+                  </div>
+                </div>
+
+                {/* 썸네일 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-800 mb-2">
+                    도안 썸네일 (카드 이미지)
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] bg-white"
+                    />
+                    {thumbnail && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          console.log('썸네일 삭제 전:', thumbnail);
+                          setThumbnail('');
+                          console.log('썸네일 삭제 후:', '');
+                        }}
+                        className="px-3 py-2 bg-sky-500 hover:bg-sky-600 text-white text-sm rounded-md transition-colors"
+                      >
+                        삭제
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* 도안 배경 색상 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-800 mb-2">
+                    도안 배경 색상
+                  </label>
+                  <div className="bg-transparent p-4 rounded-lg border border-gray-300">
+                    <div className="flex gap-2">
+                      <input 
+                        type="color" 
+                        value={cardBackgroundColor}
+                        onChange={(e) => setCardBackgroundColor(e.target.value)}
+                        className="w-12 h-10 border-0 rounded-md cursor-pointer"
+                      />
+                      <input 
+                        type="text" 
+                        value={cardBackgroundColor}
+                        onChange={(e) => setCardBackgroundColor(e.target.value)}
+                        placeholder="#ffffff"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] bg-white"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                </div>
+
+                {/* 미리보기 */}
+                <div className="flex justify-center">
+                  <div 
+                    className="group shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden w-[325px] rounded-2xl relative"
+                    style={{ backgroundColor: cardBackgroundColor || 'rgba(255, 255, 255, 0.97)' }}
+                  >
+                    {/* 썸네일 */}
+                    {thumbnail && (
+                      <div className="w-full overflow-hidden">
+                        <img 
+                          src={thumbnail} 
+                          alt={title || "박스카 이야기"}
+                          className="w-full h-auto object-contain transition-transform duration-300 group-hover:scale-[1.03]"
+                        />
+                      </div>
+                    )}
+                    
+                    {/* 제목과 요약 */}
+                    <div className="px-7 py-4">
+                      <h4 
+                        className="text-lg font-semibold mb-4 mt-2"
+                        style={{ color: titleColor }}
+                      >
+                        {(title || "제목을 입력하세요").length > 20 ? `${(title || "제목을 입력하세요").substring(0, 20)}...` : (title || "제목을 입력하세요")}
+                      </h4>
+                      {summary && (
+                        <p 
+                          className="text-sm mb-3 whitespace-pre-wrap"
+                          style={{ color: summaryColor }}
+                        >
+                          {summary}
+                        </p>
+                      )}
+                      {price && (
+                        <p 
+                          className="text-lg font-semibold mb-3"
+                          style={{ color: priceColor }}
+                        >
+                          {price}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 뷰 상단 이미지 */}
+            <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+              <h3 className="font-medium text-gray-800 mb-4" style={{ fontSize: '16px' }}>
+                뷰 상단 이미지
+              </h3>
+              <div>
+                <label className="block text-sm font-medium text-gray-800 mb-2">
+                  뷰 상단 이미지
+                </label>
+                <div className="bg-transparent p-4 rounded-lg border border-gray-300">
+                  <div className="flex gap-2 mb-3">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleViewTopImageUpload}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] bg-white"
+                    />
+                    {viewTopImage && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          console.log('뷰 상단 이미지 삭제 전:', viewTopImage);
+                          setViewTopImage('');
+                          console.log('뷰 상단 이미지 삭제 후:', '');
+                        }}
+                        className="px-3 py-2 bg-sky-500 hover:bg-sky-600 text-white text-sm rounded-md transition-colors"
+                      >
+                        삭제
+                      </button>
+                    )}
+                  </div>
+                  {viewTopImage && (
+                    <div className="mt-3">
+                      <img
+                        src={viewTopImage}
+                        alt="뷰 상단 이미지 미리보기"
+                        className="w-full h-auto max-h-64 object-contain rounded-lg border border-gray-200"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* 내용 */}
+            <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+              <h3 className="font-medium text-gray-800 mb-4" style={{ fontSize: '16px' }}>
+                내용
+              </h3>
+              
+              {/* 이미지 업로더 */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-800 mb-3">이미지 업로드</label>
+                <div className="p-4 bg-white rounded-lg border border-gray-200">
+                <div className="flex flex-col gap-4">
+                  {/* 파일 선택 버튼과 업로드된 이미지들을 같은 줄에 배치 */}
+                  <div className="flex items-start gap-4">
+                    {/* 파일 선택 버튼 */}
+                    <div className="flex-shrink-0">
+                      <label>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleEditorImageUpload}
+                          className="hidden"
+                          id="image-upload"
+                        />
+                        <div className="w-20 h-20 bg-blue-50 hover:bg-blue-100 border-2 border-blue-300 rounded-lg flex flex-col items-center justify-center cursor-pointer transition-colors">
+                          <div className="text-blue-600 text-2xl mb-1">📷</div>
+                          <div className="text-blue-700 text-xs font-medium">선택</div>
+                        </div>
+                      </label>
+                    </div>
+                    
+                    {/* 업로드된 이미지들 - 가로 정렬 */}
+                    {uploadedImages.length > 0 && (
+                      <div className="flex gap-3 overflow-x-auto pb-2 flex-1">
+                        {uploadedImages.map((image, index) => (
+                          <div key={index} className="flex items-center gap-2 flex-shrink-0">
+                            <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
+                              <img 
+                                src={image} 
+                                alt={`업로드된 이미지 ${index + 1}`}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div className="flex flex-col gap-1">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(image);
+                                  alert('이미지 URL이 클립보드에 복사되었습니다!');
+                                }}
+                                className="px-2 py-1 bg-green-500 hover:bg-green-600 text-white text-xs rounded transition-colors"
+                              >
+                                복사
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => removeEditorImage(index)}
+                                className="px-2 py-1 bg-orange-500 hover:bg-orange-600 text-white text-xs rounded transition-colors"
+                              >
+                                삭제
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <p className="text-xs text-gray-500 text-center">이미지를 업로드한 후 URL을 복사하여 에디터에 붙여넣으세요.</p>
+                </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-800 mb-2">
+                  에디터
+                </label>
+            <RichTextEditor
+              content={content}
+              onChange={handleContentChange}
+              placeholder="박스카 이야기의 본문을 작성하세요..."
+            />
+                <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                  <div className="text-sm text-blue-800">
+                    <div className="space-y-1 text-xs">
+                      <p>• <span className="font-bold">H1</span>: CookieRun, 20px (제목)</p>
+                      <p>• <span className="font-bold">H2</span>: CookieRun, 18px (부제목)</p>
+                      <p>• <span className="font-bold">H3</span>: Inter, 16px (소제목)</p>
+                      <p>• <span className="font-bold">기본글꼴</span>: Inter, 14px (본문)</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 홈 카드 노출 옵션 */}
+            <div className="pt-6">
+              <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                <div className="mb-4">
+                  <h3 className="font-medium text-gray-800 mb-4" style={{ fontSize: '16px' }}>
+                    홈 카드 정보
+                  </h3>
+                  
+                  {/* 홈카드 노출 토글 스위치 */}
+                  <div className="flex items-center justify-between mb-6">
+                    <label className="text-sm font-medium text-gray-700">
+                      홈카드에 노출하기
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowOnHome(!showOnHome)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        showOnHome ? 'bg-blue-600' : 'bg-gray-200'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          showOnHome ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                  </div>
+                </div>
+
+                {/* 홈카드 정보 입력 필드들 - 토글이 켜졌을 때만 활성화 */}
+                {showOnHome && (
+                  <div className="space-y-4 p-4 bg-blue-50 rounded-lg">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                      {/* 입력 폼 */}
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-800 mb-2">
+                            카드 제목 *
+                          </label>
+                          <div className="bg-transparent p-4 rounded-lg border border-gray-300">
+                            <input 
+                              type="text" 
+                              value={cardTitle}
+                              onChange={(e) => setCardTitle(e.target.value)}
+                              placeholder="홈 카드에 표시될 제목을 입력하세요"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] mb-3 bg-white"
+                              required={showOnHome}
+                            />
+                            <div className="flex gap-2">
+                              <input 
+                                type="color" 
+                                value={cardTitleColor}
+                                onChange={(e) => setCardTitleColor(e.target.value)}
+                                className="w-12 h-10 border-0 rounded-md cursor-pointer"
+                              />
+                              <input 
+                                type="text" 
+                                value={cardTitleColor}
+                                onChange={(e) => setCardTitleColor(e.target.value)}
+                                placeholder="#ffffff"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] bg-white"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-800 mb-2">
+                            카드 설명 *
+                          </label>
+                          <div className="bg-transparent p-4 rounded-lg border border-gray-300">
+                            <textarea 
+                              value={cardDescription}
+                              onChange={(e) => setCardDescription(e.target.value)}
+                              placeholder="홈 카드에 표시될 설명을 입력하세요"
+                              rows={3}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] mb-2 bg-white"
+                              required={showOnHome}
+                            />
+                            <div className="flex gap-2">
+                              <input 
+                                type="color" 
+                                value={cardDescriptionColor}
+                                onChange={(e) => setCardDescriptionColor(e.target.value)}
+                                className="w-12 h-10 border-0 rounded-md cursor-pointer"
+                              />
+                              <input 
+                                type="text" 
+                                value={cardDescriptionColor}
+                                onChange={(e) => setCardDescriptionColor(e.target.value)}
+                                placeholder="#ffffff"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] bg-white"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* 텍스트 위치 조절 */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-800 mb-2">텍스트 위치</label>
+                          <div className="bg-transparent p-4 rounded-lg border border-gray-300">
+                            <div className="flex items-center gap-3">
+                              <span className="text-sm text-gray-600 w-12">위</span>
+                              <input
+                                type="range"
+                                min="0"
+                                max="75"
+                                value={cardTextPosition}
+                                onChange={(e) => setCardTextPosition(Number(e.target.value))}
+                                className="flex-1 h-2 appearance-none cursor-pointer"
+                                style={{
+                                  background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(cardTextPosition / 75) * 100}%, #e5e7eb ${(cardTextPosition / 75) * 100}%, #e5e7eb 100%)`,
+                                  borderRadius: '8px'
+                                }}
+                              />
+                              <span className="text-sm text-gray-600 w-12">아래</span>
+                            </div>
+                            <div className="text-center mt-2">
+                              <span className="text-xs text-gray-500">{cardTextPosition}%</span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* 홈카드 배경 색상 */}
+                        <div className="mt-6">
+                          <label className="block text-sm font-medium text-gray-700 mb-2">홈카드 배경 색상</label>
+                          <div className="bg-transparent p-4 rounded-lg border border-gray-300">
+                            <div className="flex gap-2">
+                              <input 
+                                type="color" 
+                                value={homeCardBackgroundColor || '#3b82f6'}
+                                onChange={(e) => setHomeCardBackgroundColor(e.target.value)}
+                                className="w-[58px] h-10 border-0 rounded-md cursor-pointer"
+                              />
+                              <input 
+                                type="text" 
+                                value={homeCardBackgroundColor || '#3b82f6'}
+                                onChange={(e) => setHomeCardBackgroundColor(e.target.value)}
+                                placeholder="#3b82f6"
+                                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] bg-white"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setHomeCardBackgroundColor('transparent')}
+                                className={`px-3 py-2 text-sm rounded-md border flex-shrink-0 ${
+                                  homeCardBackgroundColor === 'transparent' 
+                                    ? 'bg-blue-100 border-blue-300 text-blue-700' 
+                                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                                }`}
+                              >
+                                투명
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-gray-800 mb-2">
+                            카드 썸네일 (홈 카드 배경 이미지) *
+                          </label>
+                          <div className="flex gap-2">
+                            <input 
+                              type="file" 
+                              accept="image/*"
+                              onChange={handleCardThumbnailUpload}
+                              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] bg-white"
+                              required={showOnHome}
+                            />
+                            {cardThumbnail && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  console.log('카드 썸네일 삭제 전:', cardThumbnail);
+                                  setCardThumbnail('');
+                                  console.log('카드 썸네일 삭제 후:', '');
+                                }}
+                                className="px-3 py-2 bg-sky-500 hover:bg-sky-600 text-white text-sm rounded-md transition-colors"
+                              >
+                                삭제
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                  </div>
+
+                  {/* 미리보기 */}
+                  <div className="flex justify-center">
+                    <Card className="group hover:shadow-xl transition-all duration-300 border-0 border-green-300/50 shadow-2xl break-inside-avoid mb-4 relative overflow-hidden bg-transparent w-[325px] h-[480px] flex flex-col justify-end cursor-pointer">
+                      {/* 배경 이미지 */}
+                      <div className="absolute inset-0 overflow-hidden">
+                        {cardThumbnail ? (
+                          <img
+                            src={cardThumbnail}
+                            alt="홈카드 배경"
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                          />
+                        ) : (
+                          <div 
+                            className="w-full h-full"
+                            style={{ 
+                              backgroundColor: homeCardBackgroundColor === 'transparent' ? 'transparent' : homeCardBackgroundColor,
+                              background: homeCardBackgroundColor === 'transparent' ? 'transparent' : `linear-gradient(135deg, ${homeCardBackgroundColor} 0%, ${homeCardBackgroundColor} 100%)`
+                            }}
+                          />
+                        )}
+                      </div>
+                      <CardHeader 
+                        className="text-center pt-1 pb-2 relative z-10"
+                        style={{
+                          position: 'absolute',
+                          bottom: `${cardTextPosition}%`,
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                          width: '100%'
+                        }}
+                      >
+                        <CardTitle className="text-[24px] font-bold mb-1 font-cookie-run" style={{ color: cardTitleColor }}>
+                          {cardTitle || "카드 제목"}
+                        </CardTitle>
+                        <p className="leading-relaxed" style={{ fontSize: '15px', whiteSpace: 'pre-line', color: cardDescriptionColor }}>
+                          {cardDescription || "카드 설명이 여기에 표시됩니다.\n최대 2줄까지 권장됩니다."}
+                        </p>
+                      </CardHeader>
+                    </Card>
+                  </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+
+          </CardContent>
+        </Card>
+
+        {/* 버튼들 - 카드 밖에 위치 */}
+        <div className="mt-6 px-4 md:px-0">
+          <div className="flex justify-between items-center">
+            <Link href="/store">
+              <Button 
+                className="bg-pink-500 hover:bg-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-full w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1"
+              >
+                <ArrowLeft className="w-4 h-4 md:w-5 md:h-5" />
+                <span className="text-xs md:text-sm font-medium">목록으로</span>
+              </Button>
+            </Link>
+            <div className="flex gap-3">
+              <Button 
+                onClick={saveArticle}
+                disabled={saving}
+                className="bg-sky-500 hover:bg-sky-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-full w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1"
+              >
+                <ShoppingBag className="w-4 h-4 md:w-5 md:h-5" />
+                <span className="text-xs md:text-sm font-medium">도안수정</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 오류 모달 */}
+      <ErrorModal
+        isOpen={showErrorModal}
+        onClose={() => setShowErrorModal(false)}
+        message={errorMessage}
+      />
+    </CommonBackground>
+  );
+}

@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
 import CommonHeader from '@/components/CommonHeader';
+import CommonBackground from '@/components/CommonBackground';
 import PageHeader from '@/components/PageHeader';
 
 export default function RemoteControlPage() {
@@ -25,17 +26,8 @@ export default function RemoteControlPage() {
 
 
   return (
-    <div 
-      className="min-h-screen py-16 md:py-24"
-      style={{
-        background: 'linear-gradient(130deg, #2563eb, #7c3aed, #ec4899)',
-        touchAction: 'pan-y',
-        overscrollBehavior: 'none'
-      }}
-    >
-      {/* Common Header */}
+    <CommonBackground>
       <CommonHeader />
-      
       <div className="max-w-7xl mx-auto px-0 md:px-8">
         <div className="mb-6 mt-10 px-4 md:px-0">
           <PageHeader 
@@ -44,7 +36,7 @@ export default function RemoteControlPage() {
           />
         </div>
 
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 px-4 md:px-0">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 px-4 md:px-0">
           <Link href="/draw">
             <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
               <Car className="w-4 h-4 mr-2" />
@@ -54,7 +46,7 @@ export default function RemoteControlPage() {
         </div>
 
         {/* App Download Section */}
-        <Card className="bg-white border-2 border-white/30 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden py-5 w-full rounded-2xl mb-6">
+        <Card className="bg-white border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden py-5 w-full rounded-2xl mb-6">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Smartphone className="w-5 h-5" />
@@ -88,7 +80,7 @@ export default function RemoteControlPage() {
         </Card>
 
         {/* Connection and Control */}
-        <Card className="bg-white border-2 border-white/30 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden py-5 w-full rounded-2xl mb-6">
+        <Card className="bg-white border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden py-5 w-full rounded-2xl mb-6">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Wifi className="w-5 h-5" />
@@ -118,7 +110,7 @@ export default function RemoteControlPage() {
 
         {/* Features */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <Card className="bg-white border-2 border-white/30 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden py-5 w-full rounded-2xl">
+          <Card className="bg-white border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden py-5 w-full rounded-2xl">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Car className="w-5 h-5" />
@@ -147,7 +139,7 @@ export default function RemoteControlPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white border-2 border-white/30 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden py-5 w-full rounded-2xl">
+          <Card className="bg-white border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden py-5 w-full rounded-2xl">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="w-5 h-5" />
@@ -178,7 +170,7 @@ export default function RemoteControlPage() {
         </div>
 
         {/* System Requirements */}
-        <Card className="bg-white border-2 border-white/30 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden py-5 w-full rounded-2xl">
+        <Card className="bg-white border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden py-5 w-full rounded-2xl">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Smartphone className="w-5 h-5" />
@@ -209,6 +201,6 @@ export default function RemoteControlPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </CommonBackground>
   );
 }

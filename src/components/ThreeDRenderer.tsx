@@ -36,6 +36,7 @@ const ThreeDRenderer = forwardRef<{ getRenderer: () => THREE.WebGLRenderer | nul
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
 
+
   // 부모 컴포넌트에서 렌더러에 접근할 수 있도록 노출
   useImperativeHandle(ref, () => ({
     getRenderer: () => {
@@ -55,7 +56,7 @@ const ThreeDRenderer = forwardRef<{ getRenderer: () => THREE.WebGLRenderer | nul
         console.log('🎨 ThreeDRenderer 강제 렌더링 실행');
         rendererRef.current.render(sceneRef.current, cameraRef.current);
       }
-    }
+    },
   }));
 
   useEffect(() => {
