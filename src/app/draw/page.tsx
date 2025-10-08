@@ -1,12 +1,15 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import Head from 'next/head';
 import { createPortal } from 'react-dom';
+import { useScrollLock } from '@/hooks/useScrollLock';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import CommonHeader from "@/components/CommonHeader";
+import CommonBackground from "@/components/CommonBackground";
 import PageHeader from "@/components/PageHeader";
+import DrawSplashScreen from "@/components/DrawSplashScreen";
+import ErrorModal from "@/components/ErrorModal";
 import { 
   ArrowLeft, 
   ArrowRight,
@@ -38,7 +41,8 @@ import {
   Printer,
   Upload,
   Tag,
-  Share2
+  Share2,
+  ExternalLink
 } from "lucide-react";
 
 import ThreeDRenderer from '@/components/ThreeDRenderer';
@@ -48,15 +52,17 @@ import { useAuth } from '@/contexts/AuthContext';
 import { analyzeCarShape } from '@/lib/carShapeAnalyzer';
 import { mapAnalysisToTemplate } from '@/lib/carTemplateMapper';
 import { db } from '@/lib/firebase';
-import { collection, addDoc, serverTimestamp, setDoc, doc } from 'firebase/firestore';
+import type { Firestore } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, setDoc, doc, getDoc, updateDoc, increment, arrayUnion } from 'firebase/firestore';
 import * as THREE from 'three';
+import jsPDF from 'jspdf';
 
 type DrawingTool = 'pen' | 'eraser';
 
 // 공통 스타일 상수
-const CARD_STYLES = "bg-white/90 backdrop-blur-sm border-2 border-white/30 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden py-5 mx-4 md:mx-0";
-const CARD_STYLES_ROUNDED = "bg-white/90 backdrop-blur-sm border-2 border-white/30 shadow-xl hover:shadow-2xl transition-all duration-300 rounded-2xl overflow-hidden py-5 mx-4 md:mx-0";
-const DRAWING_CANVAS_CARD_STYLES = "bg-white border-2 border-white/30 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden py-5 w-full rounded-2xl";
+const CARD_STYLES = "bg-white/90 backdrop-blur-sm border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden py-5 mx-4 md:mx-0";
+const CARD_STYLES_ROUNDED = "bg-white/90 backdrop-blur-sm border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 rounded-2xl overflow-hidden py-5 mx-4 md:mx-0";
+const DRAWING_CANVAS_CARD_STYLES = "bg-white/95 border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden py-5 w-full rounded-2xl";
 const THREE_D_RENDERER_CONTAINER = "w-full border-4 border-solid border-yellow-400/70 rounded-2xl overflow-hidden";
 const PRIMARY_BUTTON_STYLES = "bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-full px-6 py-3";
 const PRIMARY_BUTTON_STYLES_SMALL = "bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-6 py-2";
@@ -76,13 +82,22 @@ export default function DrawPage() {
   const [savedDrawingData, setSavedDrawingData] = useState<string | null>(null);
   const [drawingAnalysis, setDrawingAnalysis] = useState<any | null>(null); // 분석 결과 저장
   const [selectedCarType, setSelectedCarType] = useState<string | null>(null); // 사용자가 선택한 차종
-  const [showCommunityShareModal, setShowCommunityShareModal] = useState(false);
+  const [showGalleryShareModal, setShowGalleryShareModal] = useState(false);
   const [shareTitle, setShareTitle] = useState('');
-  const [shareDescription, setShareDescription] = useState('');
   const [shareTags, setShareTags] = useState('');
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [saveTitle, setSaveTitle] = useState('');
+  const [saveDescription, setSaveDescription] = useState('');
   const [pendingSaveTitle, setPendingSaveTitle] = useState('');
+  const [showGallerySuccessModal, setShowGallerySuccessModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [showSplashScreen, setShowSplashScreen] = useState(false);
+  
+  // 로그인 유도 모달 상태
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [loginModalType, setLoginModalType] = useState<'share' | 'download'>('share');
   
   // 꾸미기 기능을 위한 상태들
   const [carColor, setCarColor] = useState('#FFFFFF');
@@ -90,6 +105,9 @@ export default function DrawPage() {
   const [headlightColor, setHeadlightColor] = useState('#87CEEB');
   const [taillightColor, setTaillightColor] = useState('#FF6B6B');
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
+  
+  // 모달이 열릴 때 배경 스크롤 방지
+  useScrollLock(!!selectedItem);
   
   const [selectedWheel, setSelectedWheel] = useState<string | null>(null);
   const [selectedBadge, setSelectedBadge] = useState<string | null>(null);
@@ -118,6 +136,33 @@ export default function DrawPage() {
     // 클라이언트에서 초기 모바일 상태 설정
     setIsMobile(window.innerWidth <= 768);
   }, []);
+
+  // 스플래시 화면 표시 로직 (로그인하지 않은 사용자에게만)
+  useEffect(() => {
+    if (isClient && !user) {
+      setShowSplashScreen(true);
+    } else if (user) {
+      setShowSplashScreen(false);
+    }
+  }, [isClient, user]);
+
+  // 로그인 모달 열기
+  const openLoginModal = (type: 'share' | 'download') => {
+    setLoginModalType(type);
+    setShowLoginModal(true);
+  };
+
+  // 로그인 모달 닫기
+  const closeLoginModal = () => {
+    setShowLoginModal(false);
+    setLoginModalType('share');
+  };
+
+  // 로그인하고 액션 수행
+  const handleLoginAndAction = () => {
+    closeLoginModal();
+    window.location.href = '/auth';
+  };
 
   // 화면 크기 감지 (클라이언트에서만 실행)
   useEffect(() => {
@@ -151,6 +196,16 @@ export default function DrawPage() {
     // 도안 생성은 useEffect에서 자동으로 처리됨
   };
 
+  // 스플래시 화면 핸들러들
+  const handleCloseSplash = () => {
+    setShowSplashScreen(false);
+  };
+
+  const handleSignUpFromSplash = () => {
+    setShowSplashScreen(false);
+    router.push('/auth?mode=signup');
+  };
+
   // 화면 크기 변경 시 캔버스 재초기화
   useEffect(() => {
     if (canvasRef.current) {
@@ -178,56 +233,6 @@ export default function DrawPage() {
     forceRender: () => void;
   }>(null);
 
-  // 3D 렌더링 스냅샷 캡처 함수 (Promise 기반)
-  const captureSnapshot = useCallback((): Promise<string | null> => {
-    return new Promise((resolve) => {
-      const tryCapture = (attempts = 0) => {
-        const renderer = threeDRendererRef.current?.getRenderer();
-        
-        if (!renderer || !renderer.domElement) {
-          if (attempts < 15) {
-            setTimeout(() => tryCapture(attempts + 1), 1000);
-          } else {
-            console.error('❌ 도안용 렌더러를 찾을 수 없습니다');
-            resolve(null);
-          }
-          return;
-        }
-        
-        try {
-          // 렌더러 강제 렌더링
-          if (threeDRendererRef.current?.forceRender) {
-            threeDRendererRef.current.forceRender();
-          }
-          
-          // 더 긴 대기 후 캡처
-          setTimeout(() => {
-            try {
-              const dataURL = renderer.domElement.toDataURL('image/png');
-              console.log('✅ 도안용 스냅샷 캡처 성공');
-              resolve(dataURL);
-            } catch (error) {
-              console.error('❌ 도안용 스냅샷 캡처 실패:', error);
-              if (attempts < 15) {
-                setTimeout(() => tryCapture(attempts + 1), 1000);
-              } else {
-                resolve(null);
-              }
-            }
-          }, 300);
-        } catch (error) {
-          console.error('❌ 도안용 스냅샷 캡처 실패:', error);
-          if (attempts < 15) {
-            setTimeout(() => tryCapture(attempts + 1), 1000);
-          } else {
-            resolve(null);
-          }
-        }
-      };
-      
-      tryCapture();
-    });
-  }, [threeDRendererRef]);
 
   // 썸네일용 스냅샷 캡처 함수
   const captureThumbnailSnapshot = useCallback((): Promise<string | null> => {
@@ -255,7 +260,6 @@ export default function DrawPage() {
           setTimeout(() => {
             try {
               const dataURL = renderer.domElement.toDataURL('image/png');
-              console.log('✅ 썸네일용 스냅샷 캡처 성공');
               resolve(dataURL);
             } catch (error) {
               console.error('❌ 썸네일용 스냅샷 캡처 실패:', error);
@@ -280,6 +284,56 @@ export default function DrawPage() {
     });
   }, [thumbnailRendererRef]);
 
+
+  // 블루프린트용 이미지 생성 함수 (크롭만 하고 리사이즈하지 않음 - 고해상도 유지)
+  const createBlueprintFromSnapshot = (snapshotDataUrl: string): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(snapshotDataUrl);
+          return;
+        }
+
+        // 블루프린트용 크롭 사이즈 (4:3 비율, 고해상도 유지)
+        const cropWidth = 650;
+        const cropHeight = 488; // 4:3 비율
+        
+        // 스냅샷의 크기에 맞춰 크롭 사이즈 조정
+        const maxCropWidth = Math.min(cropWidth, img.width);
+        const maxCropHeight = Math.min(cropHeight, img.height);
+        const actualCropWidth = maxCropWidth;
+        const actualCropHeight = maxCropHeight;
+        
+        // 크롭 위치 (Y축 위로 100px, X축 왼쪽으로 40px)
+        const centerX = (img.width - actualCropWidth) / 2;
+        const centerY = (img.height - actualCropHeight) / 2;
+        const cropX = centerX - 40;
+        const cropY = centerY - 100;
+        
+        // 캔버스 크기를 원본 크롭 사이즈로 설정 (리사이즈하지 않음)
+        canvas.width = actualCropWidth;
+        canvas.height = actualCropHeight;
+        
+        // 크롭된 이미지를 원본 크기로 그리기 (리사이즈 없음)
+        ctx.drawImage(
+          img,
+          cropX, cropY, actualCropWidth, actualCropHeight,  // 소스 크롭 영역
+          0, 0, actualCropWidth, actualCropHeight  // 타겟 크기 (원본 크기 유지)
+        );
+        
+        resolve(canvas.toDataURL('image/png'));
+      };
+      img.onerror = () => {
+        console.error('❌ 블루프린트용 이미지 로드 실패');
+        resolve(snapshotDataUrl);
+      };
+      img.src = snapshotDataUrl;
+    });
+  };
+
   // 공통 헤더/푸터 함수 (원래 서식 복원)
   const drawCommonHeaderFooter = async (ctx: CanvasRenderingContext2D, a4Width: number, a4Height: number) => {
     // 로고 (좌측상단) - 원래 서식
@@ -290,11 +344,9 @@ export default function DrawPage() {
         const logoX = 50; // 좌측 상단에서 50px 떨어진 위치
         const logoY = 20; // 상단에서 20px 떨어진 위치
         ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
-        console.log('✅ 로고 이미지가 페이지에 그려짐');
         resolve();
       };
       logoImg.onerror = () => {
-        console.log('⚠️ 로고 이미지 로드 실패');
         // 로고 로드 실패 시 텍스트로 대체
         ctx.fillStyle = '#000000';
         ctx.font = 'bold 20px Arial';
@@ -309,7 +361,7 @@ export default function DrawPage() {
     ctx.fillStyle = '#000000';
     ctx.font = 'bold 22px Arial';
     ctx.textAlign = 'left';
-    ctx.fillText('이 도안은 박스로 메이커에서 만들어졌어요 ✨', 240, 80);
+    ctx.fillText('이 도안은 박스로에서 만들어졌어요 ✨', 240, 80);
     
     ctx.font = '22px Arial';
     ctx.fillText('아이들이 직접 자동차를 디자인하고, 도안을 출력해 조립하며, 친구들과 나누는 창작 놀이 플랫폼이에요.', 240, 110);
@@ -536,20 +588,23 @@ export default function DrawPage() {
         carShapePoints = createSedanShape();
     }
 
-    // 스냅샷 먼저 캡처 (렌더러 초기화 대기)
+    // 썸네일용 스냅샷 먼저 캡처 (렌더러 초기화 대기)
     await new Promise(resolve => setTimeout(resolve, 2000)); // 2초 대기
-    const snapshotDataUrl = await captureSnapshot();
+    const thumbnailSnapshotDataUrl = await captureThumbnailSnapshot();
     
-    if (!snapshotDataUrl) {
-      throw new Error('스냅샷 캡처 실패');
+    if (!thumbnailSnapshotDataUrl) {
+      throw new Error('썸네일용 스냅샷 캡처 실패');
     }
     
-    // data URL을 Image 객체로 변환
+    // 650x650 크롭된 이미지를 갤러리 썸네일과 블루프린트 모두에 사용
+    const sharedImageDataUrl = await createBlueprintFromSnapshot(thumbnailSnapshotDataUrl);
+    
+    // 공유 이미지를 Image 객체로 변환 (갤러리와 블루프린트 모두 사용)
     const snapshotImg = new Image();
     await new Promise((resolve, reject) => {
       snapshotImg.onload = resolve;
       snapshotImg.onerror = reject;
-      snapshotImg.src = snapshotDataUrl;
+      snapshotImg.src = sharedImageDataUrl;
     });
     
     // 페이지 1: 스냅샷과 정보
@@ -577,15 +632,13 @@ export default function DrawPage() {
       const snapshotWidth = snapshotImg.naturalWidth;
       const snapshotHeight = snapshotImg.naturalHeight;
       const snapshotX = (a4Width - snapshotWidth) / 2;
-      const snapshotY = 330; // 280 + 50
+      const snapshotY = 440; // 450 - 10
       
-      console.log('📸 스냅샷 원본 크기:', snapshotWidth, 'x', snapshotHeight);
       
       
               // 3D 렌더링 스냅샷 그리기
               if (snapshotImg && snapshotImg instanceof HTMLImageElement) {
                 ctx.drawImage(snapshotImg, snapshotX, snapshotY, snapshotWidth, snapshotHeight);
-                console.log('✅ 스냅샷이 도안에 그려짐');
               } else {
                 // 스냅샷을 캡처할 수 없으면 플레이스홀더 표시
                 ctx.fillStyle = '#E9ECEF';
@@ -597,7 +650,6 @@ export default function DrawPage() {
                 ctx.fillText('3D 박스카 스냅샷', a4Width / 2, snapshotY + snapshotHeight / 2 - 20);
                 ctx.font = '20px Arial';
                 ctx.fillText('(스냅샷을 캡처할 수 없습니다)', a4Width / 2, snapshotY + snapshotHeight / 2 + 20);
-                console.log('⚠️ 스냅샷 플레이스홀더 표시됨');
               }
       
       // 로고+타이틀+설명문 통합 이미지 (레이어 최상단으로 이동)
@@ -618,14 +670,11 @@ export default function DrawPage() {
                   const titleImgX = a4Width / 2 - calculatedWidth / 2;
                   const titleImgY = 150; // Moved down 10px more from 160
           
-          console.log(`📐 이미지 원본 크기: ${originalWidth}x${originalHeight}, 비율: ${aspectRatio.toFixed(2)}`);
-          console.log(`📐 렌더링 크기: ${calculatedWidth}x${calculatedHeight.toFixed(0)}`);
           
           ctx.drawImage(titleImg, titleImgX, titleImgY, calculatedWidth, calculatedHeight);
           resolve(true);
         };
         titleImg.onerror = () => {
-          console.log('⚠️ 로고+타이틀 이미지 로드 실패, 텍스트로 대체');
           ctx.fillStyle = '#1e40af';
           ctx.font = 'bold 24px Arial';
           ctx.textAlign = 'center';
@@ -659,7 +708,7 @@ export default function DrawPage() {
       ctx.font = 'bold 22px Arial';
       ctx.textAlign = 'center';
       const textY1 = 1000; // 모바일/데스크톱 동일한 위치
-      ctx.fillText('이 도안은 박스로 메이커에서 만들어졌어요 ✨', a4Width / 2, textY1);
+      ctx.fillText('이 도안은 박스로에서 만들어졌어요 ✨', a4Width / 2, textY1);
       
       ctx.font = '22px Arial';
       const textY2 = 1030; // 모바일/데스크톱 동일한 위치
@@ -704,7 +753,6 @@ export default function DrawPage() {
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
-        console.log('✅ 통통버스 그려짐');
       } else {
         // 다른 차종: 기존 방식
         ctx.beginPath();
@@ -934,7 +982,6 @@ export default function DrawPage() {
       ctx.arc(frontWheelX, frontWheelY, wheelHoleRadius, 0, 2 * Math.PI);
       ctx.fill();
       ctx.stroke();
-      console.log('✅ 앞바퀴 구멍 그려짐');
       
       // 뒷바퀴 구멍 (오른쪽)
       const rearWheelX = centerX + totalLength * 0.35 * scale;
@@ -944,7 +991,6 @@ export default function DrawPage() {
       ctx.arc(rearWheelX, rearWheelY, wheelHoleRadius, 0, 2 * Math.PI);
       ctx.fill();
       ctx.stroke();
-      console.log('✅ 뒷바퀴 구멍 그려짐');
       
       if (currentCarType === 'suv') {
         // SUV: suv (SUV) - 3D 렌더러 좌표 기반으로 창문 3개 구현
@@ -1022,7 +1068,6 @@ export default function DrawPage() {
       ctx.fillText('좌측면도', centerX, topCenterY + 30);
       
       // 아래쪽 그리기 (좌우반전)
-      console.log('🔍 아래쪽 그리기 - 차종:', currentCarType);
       ctx.strokeStyle = '#000000';
       ctx.lineWidth = 2;
       ctx.fillStyle = currentCarColor;
@@ -1043,7 +1088,6 @@ export default function DrawPage() {
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
-        console.log('✅ 통통버스 아래쪽 그려짐 (좌우반전)');
       } else {
         // 다른 차종: 기존 방식 (좌우반전)
         ctx.beginPath();
@@ -1063,7 +1107,6 @@ export default function DrawPage() {
       }
       
       // 아래쪽 창문 그리기 (위쪽 복제, 좌우반전)
-      console.log('🔍 아래쪽 창문 그리기 - 차종:', currentCarType);
       ctx.fillStyle = '#87CEEB'; // 하늘색
       ctx.strokeStyle = '#000000';
       ctx.lineWidth = 1;
@@ -1324,7 +1367,6 @@ export default function DrawPage() {
       }
       
       // 아래쪽 바퀴 구멍 그리기 (좌우반전)
-      console.log('🔍 아래쪽 바퀴 구멍 그리기');
       ctx.fillStyle = '#FFFFFF'; // 흰색으로 구멍 표시
       ctx.strokeStyle = '#000000';
       ctx.lineWidth = 2;
@@ -1338,7 +1380,6 @@ export default function DrawPage() {
       ctx.arc(bottomFrontWheelX, bottomFrontWheelY, bottomWheelHoleRadius, 0, 2 * Math.PI);
       ctx.fill();
       ctx.stroke();
-      console.log('✅ 아래쪽 앞바퀴 구멍 그려짐 (좌우반전)');
       
       // 뒷바퀴 구멍 (왼쪽, 좌우반전)
       const bottomRearWheelX = centerX - totalLength * 0.35 * scale; // X축 반전
@@ -1348,7 +1389,6 @@ export default function DrawPage() {
       ctx.arc(bottomRearWheelX, bottomRearWheelY, bottomWheelHoleRadius, 0, 2 * Math.PI);
       ctx.fill();
       ctx.stroke();
-      console.log('✅ 아래쪽 뒷바퀴 구멍 그려짐 (좌우반전)');
       
       // 아래쪽 라벨 추가 (우측면도) - 도면 바로 아래에 배치
       ctx.fillStyle = '#333333';
@@ -3225,14 +3265,7 @@ export default function DrawPage() {
               }
             }
             
-            console.log('🔍 5페이지 램프 그리기:', {
-              type: item.type,
-              selected: item.selected,
-              leftImagePath,
-              rightImagePath,
-              itemSize2D,
-              positions: { left: leftLampX, right: rightLampX, y: lampY }
-            });
+            // 5페이지 램프 그리기
             
             // 램프 이미지 로드 및 그리기 (좌우 2개)
             const loadLampImages = () => {
@@ -3243,20 +3276,17 @@ export default function DrawPage() {
                 const onImageLoad = () => {
                   loadedCount++;
                   if (loadedCount === totalImages) {
-                    console.log(`✅ ${item.type} 이미지 2개 로드 완료`);
                     resolve();
                   }
                 };
                 
                 const onImageError = (imagePath: string) => {
-                  console.log(`❌ ${item.type} 이미지 로드 실패:`, imagePath);
                   onImageLoad();
                 };
                 
                 // 왼쪽 램프 이미지
                 const leftImg = new Image();
                 leftImg.onload = () => {
-                  console.log(`✅ 왼쪽 ${item.type} 이미지 로드 성공:`, leftImagePath);
                   ctx.drawImage(leftImg, leftLampX, lampY, itemSize2D.width, itemSize2D.height);
                   onImageLoad();
                 };
@@ -3266,7 +3296,6 @@ export default function DrawPage() {
                 // 오른쪽 램프 이미지
                 const rightImg = new Image();
                 rightImg.onload = () => {
-                  console.log(`✅ 오른쪽 ${item.type} 이미지 로드 성공:`, rightImagePath);
                   ctx.drawImage(rightImg, rightLampX, lampY, itemSize2D.width, itemSize2D.height);
                   onImageLoad();
                 };
@@ -3297,13 +3326,7 @@ export default function DrawPage() {
               imagePath = `/${item.folder}/${item.type}-${item.selected}.png`;
             }
             
-            console.log('🔍 5페이지 아이템 그리기:', {
-              type: item.type,
-              selected: item.selected,
-              imagePath,
-              itemSize2D,
-              position: { x: itemX, y: itemY }
-            });
+            // 5페이지 아이템 그리기
             
             // 아이템 이미지 로드 및 그리기
             const loadItemImage = () => {
@@ -3327,20 +3350,17 @@ export default function DrawPage() {
                       const onImageLoad = () => {
                         loadedCount++;
                         if (loadedCount === totalImages) {
-                          console.log('✅ 뱃지 이미지 2개 로드 완료');
                           resolve();
                         }
                       };
                       
                       const onImageError = (imagePath: string) => {
-                        console.log('❌ 뱃지 이미지 로드 실패:', imagePath);
                         onImageLoad(); // 실패해도 카운트 증가
                       };
                       
                       // 왼쪽 뱃지 이미지
                       const leftBadgeImg = new Image();
                       leftBadgeImg.onload = () => {
-                        console.log('✅ 왼쪽 뱃지 이미지 로드 성공:', imagePath);
                         ctx.drawImage(leftBadgeImg, leftBadgeX, badgeY, itemSize2D.width, itemSize2D.height);
                         onImageLoad();
                       };
@@ -3350,7 +3370,6 @@ export default function DrawPage() {
                       // 오른쪽 뱃지 이미지
                       const rightBadgeImg = new Image();
                       rightBadgeImg.onload = () => {
-                        console.log('✅ 오른쪽 뱃지 이미지 로드 성공:', imagePath);
                         ctx.drawImage(rightBadgeImg, rightBadgeX, badgeY, itemSize2D.width, itemSize2D.height);
                         onImageLoad();
                       };
@@ -3360,22 +3379,18 @@ export default function DrawPage() {
                   };
                   
                   loadBadgeImages().then(() => {
-                    console.log('✅ 뱃지 이미지 로드 완료');
                     resolve();
                   }).catch((error) => {
-                    console.log('❌ 뱃지 이미지 로드 실패:', error);
                     resolve();
                   });
                 } else {
                   // 다른 아이템들은 기존 방식대로 처리
                   const img = new Image();
                   img.onload = () => {
-                    console.log('✅ 아이템 이미지 로드 성공:', imagePath);
                     ctx.drawImage(img, itemX - itemSize2D.width/2, itemY - itemSize2D.height/2, itemSize2D.width, itemSize2D.height);
                     resolve();
                   };
                   img.onerror = () => {
-                    console.log('❌ 아이템 이미지 로드 실패:', imagePath);
                     // 이미지 로드 실패 시 텍스트로 대체
                     ctx.fillStyle = '#333333';
                     ctx.font = '16px Arial';
@@ -3400,7 +3415,6 @@ export default function DrawPage() {
           
           if (item.type === 'badge') {
             // 뱃지 라벨은 헤드램프와 동일하게 중앙에 위치
-            console.log('🏷️ 뱃지 라벨 위치:', { itemX, labelY, label: item.label });
             ctx.fillText(item.label, itemX, labelY);
           } else {
             // 다른 아이템들은 기존 방식대로
@@ -3439,18 +3453,7 @@ export default function DrawPage() {
           // 타이어휠 이미지 경로
           const wheelImagePath = `/wheels/${wheelItem.selected}.png`;
           
-          console.log('🔍 5페이지 타이어 휠 4개 그리기 (4열 1행):', {
-            type: wheelItem.type,
-            selected: wheelItem.selected,
-            wheelImagePath,
-            wheelSize2D,
-            positions: { 
-              wheel1: { x: wheel1X, y: wheelYPos },
-              wheel2: { x: wheel2X, y: wheelYPos },
-              wheel3: { x: wheel3X, y: wheelYPos },
-              wheel4: { x: wheel4X, y: wheelYPos }
-            }
-          });
+          // 5페이지 타이어 휠 4개 그리기 (4열 1행)
           
           // 타이어 휠 4개 이미지 로드 및 그리기
           const loadWheelImages = () => {
@@ -3461,13 +3464,11 @@ export default function DrawPage() {
               const onImageLoad = () => {
                 loadedCount++;
                 if (loadedCount === totalImages) {
-                  console.log(`✅ 타이어 휠 이미지 4개 로드 완료`);
                   resolve();
                 }
               };
               
               const onImageError = (imagePath: string) => {
-                console.log(`❌ 타이어 휠 이미지 로드 실패:`, imagePath);
                 onImageLoad();
               };
               
@@ -3529,12 +3530,11 @@ export default function DrawPage() {
       setBlueprintGenerated(true);
       setCurrentPage(0); // 첫 번째 페이지로 초기화
     }
-  }, [selectedCarType, drawingAnalysis, carColor, selectedHeadlight, selectedTaillight, selectedGrille, selectedBadge, selectedPlate, selectedWheel, captureSnapshot]);
+  }, [selectedCarType, drawingAnalysis, carColor, selectedHeadlight, selectedTaillight, selectedGrille, selectedBadge, selectedPlate, selectedWheel, captureThumbnailSnapshot, createBlueprintFromSnapshot]);
 
   // export 단계로 이동할 때 도안이 없으면 자동 생성
   useEffect(() => {
     if (currentStep === 'export' && !blueprintGenerated && !blueprintGenerating) {
-      console.log('🔄 export 단계에서 도안 자동 생성 시작');
       setBlueprintGenerating(true);
       generateBlueprint()
         .then(() => {
@@ -3550,7 +3550,6 @@ export default function DrawPage() {
   // carColor가 변경되면 도안을 다시 생성하도록 플래그 리셋 및 자동 재생성
   useEffect(() => {
     if (blueprintGenerated || blueprintGenerating) {
-      console.log('🎨 carColor 변경 감지, 도안 재생성 시작');
       setBlueprintGenerated(false);
       setBlueprintGenerating(false);
       
@@ -3571,16 +3570,43 @@ export default function DrawPage() {
     }
   }, [carColor, currentStep]);
 
+  // 도안 다운로드 기록 저장 함수
+  const saveBlueprintDownloadRecord = async (downloadType: 'single' | 'all' | 'pdf', fileName: string) => {
+    if (!user) return;
+
+    try {
+      const downloadRecord = {
+        userId: user.uid,
+        userEmail: user.email || '',
+        userDisplayName: user.authorNickname || user.displayName || 'Anonymous',
+        downloadType: downloadType,
+        fileName: fileName,
+        carType: selectedCarType || drawingAnalysis?.analysis?.carType || 'sedan',
+        carColor: carColor,
+        downloadCount: 1,
+        createdAt: serverTimestamp()
+      };
+
+      await addDoc(collection(db as any, 'blueprintDownloads'), downloadRecord);
+    } catch (error) {
+      console.error('❌ 도안 다운로드 기록 저장 실패:', error);
+    }
+  };
+
   // 도안 다운로드 함수 (현재 페이지)
-  const downloadBlueprint = () => {
+  const downloadBlueprint = async () => {
     if (blueprintImages.length === 0 || currentPage >= blueprintImages.length) return;
     
+    const fileName = `boxro-blueprint-page${currentPage + 1}.png`;
     const link = document.createElement('a');
-    link.download = `boxro-blueprint-page${currentPage + 1}.png`;
+    link.download = fileName;
     link.href = blueprintImages[currentPage];
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+
+    // 다운로드 기록 저장
+    await saveBlueprintDownloadRecord('single', fileName);
   };
 
   // 모든 페이지를 세로로 배치하되 페이지 구분선이 있는 이미지로 다운로드
@@ -3642,50 +3668,64 @@ export default function DrawPage() {
       }
       
       // 합쳐진 이미지 다운로드
-      canvas.toBlob((blob) => {
+      const fileName = `boxro-blueprint-all-pages.png`;
+      canvas.toBlob(async (blob) => {
         if (blob) {
           const url = URL.createObjectURL(blob);
           const link = document.createElement('a');
-          link.download = `boxro-blueprint-all-pages.png`;
+          link.download = fileName;
           link.href = url;
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
           URL.revokeObjectURL(url);
+
+          // 다운로드 기록 저장
+          await saveBlueprintDownloadRecord('all', fileName);
         }
       }, 'image/png');
       
     } catch (error) {
       console.error('합쳐진 이미지 생성 실패:', error);
-      alert('이미지 합치기 중 오류가 발생했습니다.');
+      setErrorMessage('이미지 합치기 중 오류가 발생했습니다.');
+      setShowErrorModal(true);
     }
   };
 
-  // 커뮤니티에 디자인 공유
-  const shareToCommunity = async () => {
+  // 박스카 갤러리에 디자인 공유
+  const shareToGallery = async () => {
     if (!user) {
       alert('로그인이 필요합니다.');
       return;
     }
 
     if (!shareTitle.trim()) {
-      alert('제목을 입력해주세요.');
+      // 제목이 비어있을 때는 모달을 닫지 않고 사용자에게 알림
       return;
     }
 
     try {
-      console.log('사용자 인증 상태:', user);
-      console.log('Firebase 연결 상태 확인 중...');
-      
+      // 사용자의 최신 닉네임 가져오기
+      let userNickname = user.displayName || 'Anonymous';
+      try {
+        const userRef = doc(db as any, 'users', user.uid);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          userNickname = userData.authorNickname || userData.displayName || user.displayName || 'Anonymous';
+        }
+      } catch (error) {
+        console.warn('사용자 닉네임 조회 실패, 기본값 사용:', error);
+      }
+
       // 이미지 압축
-      console.log('이미지 압축 중...');
       const compressedImages = await Promise.all(
         blueprintImages.map(img => compressImage(img, 0.6))
       );
       
-      // 3D 스냅샷을 썸네일로 사용
-      const snapshot = await captureSnapshot();
-      const thumbnail = snapshot ? await compressImage(snapshot, 0.5) : await compressImage(blueprintImages[0], 0.5);
+      // 3D 스냅샷을 썸네일로 사용 (650x650 크롭된 이미지 사용)
+      const snapshot = await captureThumbnailSnapshot();
+      const thumbnail = snapshot ? await createBlueprintFromSnapshot(snapshot) : await compressImage(blueprintImages[0], 0.5);
       
       // 태그를 배열로 변환
       const tagsArray = shareTags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
@@ -3695,101 +3735,50 @@ export default function DrawPage() {
         name: shareTitle,
         type: selectedCarType || drawingAnalysis?.analysis?.carType || 'sedan',
         author: user.displayName || 'Anonymous',
+        authorNickname: userNickname, // Firestore에서 가져온 최신 닉네임 사용
         authorEmail: user.email || '',
+        authorId: user.uid, // 작성자 ID 추가
         thumbnail: thumbnail,
-        description: shareDescription,
         tags: tagsArray,
         blueprintImages: compressedImages,
         likes: 0,
         downloads: 0,
         views: 0,
-        comments: 0,
+        boxroTalks: 0,
         likedBy: [],
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       };
 
-      // 커뮤니티에 공유
-      const communityDocRef = await addDoc(collection(db, 'communityDesigns'), designData);
+      // 박스카 갤러리에 공유 (communityDesigns 컬렉션)
+      const galleryDocRef = await addDoc(collection(db as any, 'communityDesigns'), designData);
       
       // 사용자의 개인 디자인 컬렉션에도 저장
       const userDesignData = {
         ...designData,
         authorId: user.uid,
-        communityId: communityDocRef.id, // 커뮤니티 문서 ID 참조
+        galleryId: galleryDocRef.id, // 박스카 갤러리 문서 ID 참조
         isPublic: true
       };
       
-      await addDoc(collection(db, 'userDesigns'), userDesignData);
+      await addDoc(collection(db as any, 'userDesigns'), userDesignData);
       
-      alert('커뮤니티에 성공적으로 공유되었습니다!');
-      setShowCommunityShareModal(false);
+      setShowGalleryShareModal(false);
+      setShowGallerySuccessModal(true);
       setShareTitle('');
-      setShareDescription('');
       setShareTags('');
     } catch (error) {
       console.error('공유 실패:', error);
       if (error instanceof Error && error.message.includes('size')) {
-        alert('이미지가 너무 큽니다. 다시 시도해주세요.');
+        setErrorMessage('이미지가 너무 큽니다. 다시 시도해주세요.');
       } else {
-        alert('공유 중 오류가 발생했습니다.');
+        setErrorMessage('공유 중 오류가 발생했습니다.');
       }
+      setShowErrorModal(true);
     }
   };
 
-  // 썸네일 생성 함수 (스냅샷을 크롭하고 리사이징) - 도안과 분리된 전용 함수
-  const createThumbnailFromSnapshot = (snapshotDataUrl: string): Promise<string> => {
-    return new Promise((resolve) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          resolve(snapshotDataUrl);
-          return;
-        }
 
-        // 스냅샷 크기 디버깅
-        console.log('📸 썸네일용 스냅샷 크기:', img.width, 'x', img.height);
-        
-        // 썸네일 전용 크롭 사이즈 (모바일/데스크톱 동일)
-        const cropSize = 800;
-        
-        // 스냅샷의 더 작은 쪽을 기준으로 정사각형 크롭
-        const maxCropSize = Math.min(img.width, img.height);
-        const actualCropSize = Math.min(cropSize, maxCropSize);
-        
-        console.log('✂️ 썸네일 크롭 사이즈:', actualCropSize, '(요청:', cropSize, ', 스냅샷:', img.width, 'x', img.height, ', 최대:', maxCropSize, ')');
-        
-        // 썸네일 전용 크롭 위치 (Y축 위로 100px, X축 왼쪽으로 40px)
-        const centerX = (img.width - actualCropSize) / 2;
-        const centerY = (img.height - actualCropSize) / 2;
-        const cropX = centerX - 40;
-        const cropY = centerY - 100;
-        
-        console.log('📍 썸네일 크롭 위치 계산:');
-        console.log('  - 스냅샷 크기:', img.width, 'x', img.height);
-        console.log('  - 크롭 사이즈:', actualCropSize);
-        console.log('  - 중앙 위치:', centerX, centerY);
-        console.log('  - 최종 크롭 위치:', cropX, cropY);
-        console.log('  - 크롭 영역:', `${cropX},${cropY} ~ ${cropX + actualCropSize},${cropY + actualCropSize}`);
-        
-        // 캔버스 크기를 300x300으로 설정
-        canvas.width = 300;
-        canvas.height = 300;
-        
-        // 크롭된 이미지를 300x300으로 리사이징하여 그리기
-        ctx.drawImage(
-          img,
-          cropX, cropY, actualCropSize, actualCropSize,  // 소스 크롭 영역
-          0, 0, 300, 300  // 대상 캔버스 영역
-        );
-        
-        resolve(canvas.toDataURL('image/jpeg', 0.8));
-      };
-      img.src = snapshotDataUrl;
-    });
-  };
 
   // 이미지 압축 함수
   const compressImage = (imageDataUrl: string, quality: number = 0.7): Promise<string> => {
@@ -3817,7 +3806,15 @@ export default function DrawPage() {
         canvas.height = height;
         
         ctx?.drawImage(img, 0, 0, width, height);
-        const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+        
+        // 투명도가 있는 이미지인지 확인
+        const imageData = ctx?.getImageData(0, 0, width, height);
+        const hasTransparency = imageData?.data.some((_, index) => index % 4 === 3 && imageData.data[index] < 255);
+        
+        // 투명도가 있으면 PNG, 없으면 JPG 사용
+        const compressedDataUrl = hasTransparency 
+          ? canvas.toDataURL('image/png', 1.0)
+          : canvas.toDataURL('image/jpeg', quality);
         resolve(compressedDataUrl);
       };
       
@@ -3885,23 +3882,26 @@ export default function DrawPage() {
 
     // 확인 모달 표시
     setPendingSaveTitle(autoTitle);
+    setSaveTitle(autoTitle); // 모달이 열릴 때 자동으로 제목 설정
     setShowConfirmModal(true);
   };
 
   // 확인 모달에서 확인 버튼 클릭
   const handleConfirmSave = async () => {
     setShowConfirmModal(false);
-    await saveToMyDesignsWithTitle(pendingSaveTitle);
+    await saveToMyDesignsWithTitle(saveTitle, saveDescription);
   };
 
   // 확인 모달에서 취소 버튼 클릭
   const handleCancelSave = () => {
     setShowConfirmModal(false);
     setPendingSaveTitle('');
+    setSaveTitle('');
+    setSaveDescription('');
   };
 
-  // 개인 디자인 저장 (제목을 받아서)
-  const saveToMyDesignsWithTitle = async (finalTitle: string) => {
+  // 개인 디자인 저장 (제목과 설명을 받아서)
+  const saveToMyDesignsWithTitle = async (finalTitle: string, finalDescription: string = '') => {
     if (!user) {
       alert('로그인이 필요합니다.');
       return;
@@ -3913,18 +3913,14 @@ export default function DrawPage() {
     }
 
     try {
-      console.log('사용자 인증 상태:', user);
-      console.log('Firebase 연결 상태 확인 중...');
-      
       // 이미지 압축
-      console.log('이미지 압축 중...');
       const compressedImages = await Promise.all(
         blueprintImages.map(img => compressImage(img, 0.6))
       );
       
-      // 3D 스냅샷을 썸네일로 사용 (크롭 및 리사이징)
+      // 3D 스냅샷을 썸네일로 사용 (650x650 크롭된 이미지 사용)
       const snapshot = await captureThumbnailSnapshot();
-      const thumbnail = snapshot ? await createThumbnailFromSnapshot(snapshot) : await compressImage(blueprintImages[0], 0.5);
+      const thumbnail = snapshot ? await createBlueprintFromSnapshot(snapshot) : await compressImage(blueprintImages[0], 0.5);
       
       // 태그는 빈 배열로 설정
       const tagsArray: string[] = [];
@@ -3937,27 +3933,31 @@ export default function DrawPage() {
         authorEmail: user.email || '',
         authorId: user.uid, // 이 값이 중요합니다
         thumbnail: thumbnail,
-        description: '',
+        description: finalDescription,
         tags: tagsArray,
         blueprintImages: compressedImages,
         likes: 0,
         downloads: 0,
         views: 0,
-        comments: 0,
+        boxroTalks: 0,
         isPublic: false, // 개인 저장이므로 공개하지 않음
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       };
 
-      const docRef = await addDoc(collection(db, 'userDesigns'), userDesignData);
+      const docRef = await addDoc(collection(db as any, 'userDesigns'), userDesignData);
       
       setShowSuccessModal(true);
+      setSaveTitle('');
+      setSaveDescription('');
     } catch (error) {
       console.error('저장 실패:', error);
       if (error instanceof Error && error.message.includes('size')) {
-        alert('이미지가 너무 큽니다. 다시 시도해주세요.');
+        setErrorMessage('이미지가 너무 큽니다. 다시 시도해주세요.');
+        setShowErrorModal(true);
       } else {
-        alert('저장 중 오류가 발생했습니다.');
+        setErrorMessage('저장 중 오류가 발생했습니다.');
+        setShowErrorModal(true);
       }
     }
   };
@@ -3967,9 +3967,6 @@ export default function DrawPage() {
     if (blueprintImages.length === 0) return;
     
     try {
-      // jsPDF 동적 import
-      const { default: jsPDF } = await import('jspdf');
-      
       // A4 가로 방향으로 PDF 생성 (mm 단위) - 도안이 가로 방향이므로
       const pdf = new jsPDF({
         orientation: 'landscape', // 가로 방향
@@ -4007,10 +4004,14 @@ export default function DrawPage() {
                      String(now.getMinutes()).padStart(2, '0');
       const fileName = `boxro_pattern_release_${dateStr}.pdf`;
       pdf.save(fileName);
+
+      // 다운로드 기록 저장
+      await saveBlueprintDownloadRecord('pdf', fileName);
       
     } catch (error) {
       console.error('PDF 생성 실패:', error);
-      alert('PDF 생성 중 오류가 발생했습니다. jsPDF 라이브러리가 필요합니다.');
+      setErrorMessage('PDF 생성 중 오류가 발생했습니다. jsPDF 라이브러리가 필요합니다.');
+      setShowErrorModal(true);
     }
   };
 
@@ -4049,29 +4050,12 @@ export default function DrawPage() {
     const containerWidth = rect.width;
     const containerHeight = rect.height;
     
-    console.log('📐 점선 div 컨테이너 크기:', { 
-      containerWidth, 
-      containerHeight,
-      parentElement: parentElement.className,
-      windowWidth: window.innerWidth,
-      windowHeight: window.innerHeight,
-      isMobile
-    });
     
     // 점선 div의 크기에 맞춰 캔버스 크기 설정
     const canvasWidth = Math.floor(containerWidth);
     const canvasHeight = Math.floor(containerHeight);
     
-    console.log('📏 점선 div 기반 캔버스 크기:', { 
-      canvasWidth, 
-      canvasHeight, 
-      isMobile,
-      containerWidth,
-      containerHeight,
-      ratio: canvasHeight / canvasWidth
-    });
     
-    console.log('🎯 최종 캔버스 크기:', { canvasWidth, canvasHeight });
     
     // 캔버스 크기 설정 (점선 div 크기에 맞춤)
     canvas.width = canvasWidth;
@@ -4079,15 +4063,7 @@ export default function DrawPage() {
     
     // 캔버스는 점선 div 안에서 100% 크기로 설정됨
     
-    console.log('🔧 점선 div 기반 크기 설정:', { 
-      canvasWidth, 
-      canvasHeight,
-      isMobile,
-      containerWidth,
-      containerHeight
-    });
     
-    console.log('✅ 캔버스 크기 설정 완료:', { canvasWidth, canvasHeight });
     
     const context = canvas.getContext('2d');
     if (!context) return;
@@ -4101,6 +4077,26 @@ export default function DrawPage() {
     context.fillStyle = '#ffffff';
     context.fillRect(0, 0, canvasWidth, canvasHeight);
     
+    // 그리드 그리기
+    context.strokeStyle = '#f3f4f6'; // 더 연한 회색
+    context.lineWidth = 1;
+    
+    // 세로선 그리기 (20px 간격)
+    for (let x = 0; x <= canvasWidth; x += 20) {
+      context.beginPath();
+      context.moveTo(x, 0);
+      context.lineTo(x, canvasHeight);
+      context.stroke();
+    }
+    
+    // 가로선 그리기 (20px 간격)
+    for (let y = 0; y <= canvasHeight; y += 20) {
+      context.beginPath();
+      context.moveTo(0, y);
+      context.lineTo(canvasWidth, y);
+      context.stroke();
+    }
+    
     // 현재 도구 설정
     if (currentTool === 'eraser') {
       context.strokeStyle = '#ffffff';
@@ -4110,8 +4106,6 @@ export default function DrawPage() {
       context.lineWidth = lineWidth;
     }
     
-    // 간단한 로그만 (성능 향상)
-    console.log('🎨 Canvas resized:', { canvasWidth, canvasHeight });
   }, [isMobile]);
 
     // 컴포넌트 마운트 시 캔버스 초기화 (한 번만)
@@ -4130,12 +4124,10 @@ export default function DrawPage() {
       const now = Date.now();
       // 500ms 이내의 연속 리사이즈는 무시 (성능 최적화)
       if (now - lastResizeTime < 500) {
-        console.log('🚫 리사이즈 이벤트 무시 (너무 빈번함)');
         return;
       }
       lastResizeTime = now;
       
-      console.log('🔄 리사이즈 이벤트 발생 - 반응형 캔버스 재계산');
       clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(() => {
         requestAnimationFrame(initializeCanvas);
@@ -4177,7 +4169,6 @@ export default function DrawPage() {
     if (currentStep === 'draw' && hasBeenToPreview) {
       // 프리뷰에서 돌아온 경우, 캔버스 재초기화 후 드로잉 복원
       setTimeout(() => {
-        console.log('🔄 프리뷰에서 돌아옴, 캔버스 재초기화:', { isMobile, currentStep });
         initializeCanvas(); // 캔버스 재초기화 필요
         if (savedDrawingData) {
           restoreDrawing();
@@ -4207,7 +4198,6 @@ export default function DrawPage() {
   // 드로잉 시작
   const startDrawing = (clientX: number, clientY: number) => {
     if (!contextRef.current) {
-      console.log('Context not available, reinitializing canvas...');
       initializeCanvas(); // Context가 없으면 캔버스 재초기화
       return;
     }
@@ -4226,13 +4216,6 @@ export default function DrawPage() {
     
     contextRef.current.beginPath();
     contextRef.current.moveTo(coords.x, coords.y);
-    
-    console.log('Drawing started:', {
-      tool: currentTool,
-      color: contextRef.current.strokeStyle,
-      lineWidth: contextRef.current.lineWidth,
-      coords
-    });
   };
 
   // 드로잉
@@ -4297,17 +4280,30 @@ export default function DrawPage() {
     // 캔버스 클리어
     contextRef.current.clearRect(0, 0, canvasWidth, canvasHeight);
     
-    console.log('🧹 캔버스 클리어 완료:', { 
-      canvasWidth, 
-      canvasHeight,
-      isMobile,
-      containerWidth,
-      containerHeight
-    });
     
     // 흰색으로 채우기
     contextRef.current.fillStyle = '#ffffff';
     contextRef.current.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // 그리드 그리기
+    contextRef.current.strokeStyle = '#f3f4f6'; // 더 연한 회색
+    contextRef.current.lineWidth = 1;
+    
+    // 세로선 그리기 (20px 간격)
+    for (let x = 0; x <= canvasWidth; x += 20) {
+      contextRef.current.beginPath();
+      contextRef.current.moveTo(x, 0);
+      contextRef.current.lineTo(x, canvasHeight);
+      contextRef.current.stroke();
+    }
+    
+    // 가로선 그리기 (20px 간격)
+    for (let y = 0; y <= canvasHeight; y += 20) {
+      contextRef.current.beginPath();
+      contextRef.current.moveTo(0, y);
+      contextRef.current.lineTo(canvasWidth, y);
+      contextRef.current.stroke();
+    }
     
     // 도구 설정 복원
     if (currentTool === 'eraser') {
@@ -4330,16 +4326,10 @@ export default function DrawPage() {
     
     // 자동차 쉐입 분석 수행
     try {
-      console.log('🚗 자동차 쉐입 분석 시작...');
-      console.log('🔍 새로운 분석 알고리즘 사용 중');
       const analysis = analyzeCarShape(canvas);
-      console.log('📊 최종 분석 결과:', analysis);
-      console.log('🚗 분류된 차종:', analysis.carType);
-      console.log('📈 신뢰도:', analysis.confidence);
       
       // 분석 결과를 템플릿과 매핑
       const templateMapping = mapAnalysisToTemplate(analysis);
-      console.log('🎯 템플릿 매핑 결과:', templateMapping);
       
       // 분석 결과 저장
       setDrawingAnalysis({
@@ -4350,14 +4340,14 @@ export default function DrawPage() {
       // 분석된 차종을 기본 선택으로 설정
       setSelectedCarType(analysis.carType);
     
-    const dataUrl = canvas.toDataURL();
+    const dataUrl = canvas.toDataURL('image/png');
     setSavedDrawingData(dataUrl); // 드로잉 데이터 저장
     setHasBeenToPreview(true);
     setCurrentStep('preview');
     } catch (error) {
       console.error('❌ 분석 중 오류 발생:', error);
       // 분석 실패 시에도 3D 프리뷰로 이동 (기본값 사용)
-      const dataUrl = canvas.toDataURL();
+      const dataUrl = canvas.toDataURL('image/png');
       setSavedDrawingData(dataUrl);
       setHasBeenToPreview(true);
       setCurrentStep('preview');
@@ -4444,7 +4434,7 @@ export default function DrawPage() {
       <div className="mb-6 mt-10 px-4 md:px-0">
         <PageHeader 
           title="박스카 그리기"
-          description="상상한 자동차를 직접 그려보세요! 화면 위에 쓱쓱, 마음껏 그릴 수 있어요."
+          description="상상한 자동차를 그려보세요! 화면 위에 쓱쓱 자유롭게 ✨"
         />
       </div>
 
@@ -4455,22 +4445,20 @@ export default function DrawPage() {
             <Sparkles className="w-5 h-5 mr-2 text-blue-600" />
             <span className="bg-gradient-to-r from-blue-600 to-pink-600 bg-clip-text text-transparent">그리기 캔버스</span>
           </CardTitle>
+          {/* 안내 문구 */}
+          <p className="text-xs text-gray-600 mt-0 mb-0 text-left">
+            다양한 색상의 펜으로 그림을 그리고, 지우개로 지울 수 있어요.
+          </p>
         </CardHeader>
         <CardContent 
           className="px-4 md:px-8 pt-0 pb-0 -mt-3"
         >
-          {/* 구분선 */}
-          <div className="border-t border-gray-300 mb-4"></div>
-          
-          {/* 그리기 도구들 */}
-          <div className="mb-4 space-y-4" style={{ touchAction: 'auto' }}>
+          {/* 그리기 도구 박스 */}
+          <div className="bg-white rounded-xl p-4 border border-gray-200 mb-4" style={{ touchAction: 'auto' }}>
             {/* 첫 번째 행: 툴과 컬러 */}
-            <div className="flex items-center gap-8 sm:gap-12">
+            <div className="flex items-center gap-4 sm:gap-6">
               {/* Tool Selection */}
               <div className="flex-shrink-0">
-                {/* <label className="text-sm font-medium text-gray-700 mb-2 block flex items-center">
-                  도구
-                </label> */}
                 <div className="flex gap-2">
                   <Button
                     variant={currentTool === 'pen' ? 'default' : 'outline'}
@@ -4504,9 +4492,6 @@ export default function DrawPage() {
               {/* Color Selection */}
               {currentTool === 'pen' && (
                 <div className="flex-1 min-w-0">
-                  {/* <label className="text-sm font-medium text-gray-700 mb-2 block flex items-center">
-                    색상
-                  </label> */}
                   <div className="flex flex-col gap-1 sm:gap-2">
                     {/* 첫 번째 줄: 5개 컬러 */}
                     <div className="flex gap-1 sm:gap-2">
@@ -4535,29 +4520,7 @@ export default function DrawPage() {
               )}
             </div>
 
-            {/* 두 번째 행: 선 굵기 */}
-            {/* <div>
-              <label className="text-sm font-medium text-gray-700 mb-2 block flex items-center">
-                굵기: {lineWidth}px
-              </label>
-              <input
-                type="range"
-                min="1"
-                max="20"
-                value={lineWidth}
-                onChange={(e) => setLineWidth(Number(e.target.value))}
-                className="w-full h-3 rounded-lg appearance-none cursor-pointer slider"
-                style={{
-                  background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(lineWidth - 1) * 5.26}%, #e5e7eb ${(lineWidth - 1) * 5.26}%, #e5e7eb 100%)`
-                }}
-              />
-            </div> */}
           </div>
-
-          {/* 안내 문구 */}
-          <p className="text-xs text-black mt-4 mb-4" style={{ touchAction: 'auto' }}>
-            다양한 색상의 펜으로 그림을 그리고, 지우개로 지울 수 있어요.
-          </p>
 
           {/* 캔버스 */}
           <div 
@@ -4586,31 +4549,32 @@ export default function DrawPage() {
             />
           </div>
           
-          {/* 구분선 */}
-          <div className="border-t border-gray-300 my-6"></div>
-          
           {/* Action Buttons - 카드 안에 좌우 배치 */}
-          <div className="flex items-center justify-between" style={{ touchAction: 'auto' }}>
-            <Button 
-              variant="outline" 
-              onClick={clearCanvas}
-              className="bg-white/80 backdrop-blur-sm border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 rounded-full w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1"
-            >
-              <Eraser className="w-4 h-4 md:w-5 md:h-5" />
-              <span className="text-xs md:text-sm font-medium">초기화</span>
-            </Button>
-            <Button 
-              onClick={saveDrawing}
-              disabled={!hasDrawing && !hasBeenToPreview}
-              className={`rounded-full w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1 transition-all duration-200 ${
-                !hasDrawing && !hasBeenToPreview
-                  ? 'opacity-50 cursor-not-allowed bg-gray-300' 
-                  : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg hover:shadow-xl'
-              }`}
-            >
-              <Sparkles className="w-4 h-4 md:w-5 md:h-5" />
-              <span className="text-xs md:text-sm font-medium">3D 생성</span>
-            </Button>
+          <div className="flex items-center justify-between pt-4" style={{ touchAction: 'auto' }}>
+            <div>
+              <Button 
+                variant="outline" 
+                onClick={clearCanvas}
+                className="bg-white/80 backdrop-blur-sm border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 rounded-full w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1"
+              >
+                <Eraser className="w-4 h-4 md:w-5 md:h-5" />
+                <span className="text-xs md:text-sm font-medium">초기화</span>
+              </Button>
+            </div>
+            <div>
+              <Button 
+                onClick={saveDrawing}
+                disabled={!hasDrawing && !hasBeenToPreview}
+                className={`rounded-full w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1 transition-all duration-200 ${
+                  !hasDrawing && !hasBeenToPreview
+                    ? 'opacity-50 cursor-not-allowed bg-gray-300' 
+                    : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg hover:shadow-xl'
+                }`}
+              >
+                <Sparkles className="w-4 h-4 md:w-5 md:h-5" />
+                <span className="text-xs md:text-sm font-medium">3D 생성</span>
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -4631,23 +4595,35 @@ export default function DrawPage() {
       <div className="w-full">
         {/* Main 3D Preview */}
         <div className="w-full">
-          <Card className="bg-white border-2 border-white/30 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden py-5 w-full rounded-2xl">
+          <Card className="bg-white/95 border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden py-5 w-full rounded-2xl">
             <CardHeader className="text-gray-800 px-4 md:px-8 pb-0">
               <CardTitle className="text-lg flex items-center">
                 <Brain className="w-5 h-5 mr-2 text-blue-600" />
                 <span className="bg-gradient-to-r from-blue-600 to-pink-600 bg-clip-text text-transparent">AI가 분석한 박스카</span>
+                <button
+                  onClick={() => {
+                    document.getElementById('ai-algorithm-section')?.scrollIntoView({ 
+                      behavior: 'smooth' 
+                    });
+                  }}
+                  className="ml-2 text-blue-600 hover:text-blue-800 transition-colors duration-200 bg-blue-50 hover:bg-blue-100 rounded-full p-1"
+                  title="AI 알고리즘 설명 보기"
+                >
+                  <Sparkles className="w-5 h-5" />
+                </button>
               </CardTitle>
+              {/* 안내 문구 */}
+              <p className="text-xs text-gray-600 mt-0 mb-0 text-left">
+                결과가 마음에 안 든다면? 다른 차종으로 쓱 바꿔보세요!
+              </p>
             </CardHeader>
             <CardContent className="px-4 md:px-8 pt-0 pb-0 -mt-3">
               {/* 분석 결과 표시 */}
               {drawingAnalysis && (
                 <div className="mb-4">
                   
-                  {/* 구분선 */}
-                  <div className="border-t border-gray-300 mb-4"></div>
-                  
                   {/* 차종 선택 버튼들 */}
-                  <div className="grid grid-cols-4 md:grid-cols-7 gap-2">
+                  <div className="grid grid-cols-4 md:grid-cols-7 gap-3">
                     {[
                       // 차종 타입 정의 (이미지 사용)
                       { type: 'sedan', label: '꼬마세단', image: '/buttons/button-sedan.png' },           // 꼬마세단: sedan (기본 세단)
@@ -4662,10 +4638,9 @@ export default function DrawPage() {
                         <button
                           key={car.type}
                           onClick={() => {
-                            console.log('🚗 차종 선택:', car.type);
                             setSelectedCarType(car.type);
                           }}
-                          className={`flex flex-col items-center justify-center px-2 py-1 md:p-2 rounded-xl border-2 transition-all duration-200 h-[85px] md:h-[100px] ${
+                          className={`flex flex-col items-center justify-center px-2 py-1 md:p-2 rounded-xl border-2 transition-all duration-200 h-[85px] md:h-[106px] ${
                             selectedCarType === car.type
                               ? 'border-transparent bg-gradient-to-br from-blue-500 to-purple-500 text-white'
                               : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50 text-gray-700'
@@ -4681,11 +4656,6 @@ export default function DrawPage() {
                       );
                     })}
                   </div>
-                  
-                  {/* 안내 문구 */}
-                  <p className="text-xs text-black mt-4 mb-4">
-                    결과가 마음에 안 든다면? 다른 차종으로 쓱 바꿔보세요!
-                  </p>
                 </div>
               )}
               
@@ -4693,7 +4663,6 @@ export default function DrawPage() {
                     <ThreeDRenderer 
                       carType={(() => {
                         const finalCarType = selectedCarType || drawingAnalysis?.analysis?.carType || "sedan";
-                        console.log('🎯 3D 렌더러에 전달되는 carType:', finalCarType, { selectedCarType, analysisCarType: drawingAnalysis?.analysis?.carType });
                         return finalCarType;
                       })()} 
                       drawingAnalysis={drawingAnalysis}
@@ -4713,26 +4682,25 @@ export default function DrawPage() {
                     />
                   </div>
                   
-                  {/* 구분선 */}
-                  <div className="border-t border-gray-300 my-6"></div>
-                  
                   {/* Action Buttons - 카드 안에 좌우 배치 */}
-                  <div className="flex items-center justify-between">
-                    <Button 
-                      variant="outline" 
-                      onClick={() => setCurrentStep('draw')}
-                      className="bg-white/80 backdrop-blur-sm border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 rounded-full w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1"
-                    >
-                      <ArrowLeft className="w-4 h-4 md:w-5 md:h-5" />
-                      <span className="text-xs md:text-sm font-medium">뒤로</span>
-                    </Button>
-                    <Button 
-                      onClick={() => setCurrentStep('decorate')} 
-                      className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-full w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1"
-                    >
-                      <Sparkles className="w-4 h-4 md:w-5 md:h-5" />
-                      <span className="text-xs md:text-sm font-medium">앞으로</span>
-                    </Button>
+                  <div className="pt-4">
+                    <div className="flex items-center justify-between">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setCurrentStep('draw')}
+                        className="bg-white/80 backdrop-blur-sm border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 rounded-full w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1"
+                      >
+                        <ArrowLeft className="w-4 h-4 md:w-5 md:h-5" />
+                        <span className="text-xs md:text-sm font-medium">뒤로</span>
+                      </Button>
+                      <Button 
+                        onClick={() => setCurrentStep('decorate')} 
+                        className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-full w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1"
+                      >
+                        <Sparkles className="w-4 h-4 md:w-5 md:h-5" />
+                        <span className="text-xs md:text-sm font-medium">꾸미기</span>
+                      </Button>
+                    </div>
                   </div>
             </CardContent>
           </Card>
@@ -4740,14 +4708,14 @@ export default function DrawPage() {
         </div>
 
       {/* AI 알고리즘 소개 콘텐츠 - 버튼 아래 배치 */}
-      <div className="mt-6 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden py-5 px-4 md:px-8 rounded-2xl" style={{ background: 'linear-gradient(93deg, #1d41b8, #7c3aed)' }}>
+       <div id="ai-algorithm-section" className="mt-6 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden py-5 px-4 md:px-8 rounded-2xl" style={{ background: 'linear-gradient(93deg, #1d41b8, #7c3aed)' }}>
         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 font-sans text-white">
           <Sparkles className="w-5 h-5 text-white" />
           <span>
             박스로 AI 알고리즘?
           </span>
         </h3>
-        <p className="text-white text-sm mb-8">
+        <p className="text-white text-sm mb-6">
           내가 그린 그림을 AI가 어떻게 분석하는지 알아보세요
         </p>
         
@@ -4893,19 +4861,20 @@ export default function DrawPage() {
       </div>
 
       {/* 3D 박스카 미리보기 + 꾸미기 아이템 */}
-      <Card className="bg-white border-2 border-white/30 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden py-5 w-full rounded-2xl mb-6 relative">
+      <Card className="bg-white/95 border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden py-5 w-full rounded-2xl mb-6 relative">
         <CardHeader className="text-gray-800 px-4 md:px-8 pb-0">
           <CardTitle className="text-lg flex items-center">
             <Palette className="w-5 h-5 mr-2 text-blue-600" />
             <span className="bg-gradient-to-r from-blue-600 to-pink-600 bg-clip-text text-transparent">꾸미기 아이템</span>
           </CardTitle>
+          {/* 안내 문구 */}
+          <p className="text-xs text-gray-600 mt-0 mb-0 text-left">
+            내 박스카를 360° 돌려보며, 아이템으로 나만의 스타일을 완성해요.
+          </p>
         </CardHeader>
         <CardContent className="px-4 md:px-8 pt-0 pb-0 -mt-3">
-          {/* 구분선 */}
-          <div className="border-t border-gray-300 mb-4"></div>
-          
           {/* 꾸미기 아이템 선택 버튼들 */}
-          <div className="grid grid-cols-4 md:grid-cols-7 gap-2">
+          <div className="grid grid-cols-4 md:grid-cols-7 gap-3">
             {[
               { type: 'headlight', label: '헤드램프', image: 'button-headlamps.png' },
               { type: 'taillight', label: '리어램프', image: 'button-realamps.png' },
@@ -4920,7 +4889,7 @@ export default function DrawPage() {
                 <button
                   key={item.type}
                   onClick={() => setSelectedItem(item.type)}
-                  className={`relative flex flex-col items-center justify-center p-2 rounded-xl border-2 transition-all duration-200 h-[85px] md:h-[100px] ${
+                  className={`relative flex flex-col items-center justify-center p-2 rounded-xl border-2 transition-all duration-200 h-[85px] md:h-[106px] ${
                     selectedItem === item.type
                       ? 'border-transparent bg-gradient-to-br from-blue-500 to-purple-500 text-white'
                       : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50 text-gray-700'
@@ -4943,18 +4912,12 @@ export default function DrawPage() {
             })}
           </div>
           
-          {/* 안내 문구 */}
-          <p className="text-xs text-black mt-4 mb-4">
-            내 박스카를 360° 돌려보며, 아이템으로 나만의 스타일을 완성해요.
-          </p>
-          
           {/* 3D 렌더링 영역 */}
-          <div className={`${THREE_D_RENDERER_CONTAINER} mb-6`} style={{ aspectRatio: isClient ? (isMobile ? '4/3' : '2/1') : '2/1' }}>
+          <div className={`${THREE_D_RENDERER_CONTAINER} mt-4 mb-4`} style={{ aspectRatio: isClient ? (isMobile ? '4/3' : '2/1') : '2/1' }}>
             <ThreeDRenderer 
               ref={threeDRendererRef}
               carType={(() => {
                 const finalCarType = selectedCarType || drawingAnalysis?.analysis?.carType || "sedan";
-                console.log('🎯 박스카 미리보기 렌더러에 전달되는 carType:', finalCarType);
                 return finalCarType;
               })()} 
               drawingAnalysis={drawingAnalysis}
@@ -4974,10 +4937,6 @@ export default function DrawPage() {
             />
           </div>
 
-
-          {/* 구분선 */}
-          <div className="border-t border-gray-300 my-6"></div>
-
           {/* Action Buttons - 카드 안에 배치 */}
           <div className="flex items-center justify-between">
             <Button 
@@ -4993,7 +4952,7 @@ export default function DrawPage() {
               className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-full w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1"
             >
               <Sparkles className="w-4 h-4 md:w-5 md:h-5" />
-              <span className="text-xs md:text-sm font-medium">앞으로</span>
+              <span className="text-xs md:text-sm font-medium">도안 생성</span>
             </Button>
           </div>
         </CardContent>
@@ -5012,7 +4971,7 @@ export default function DrawPage() {
               <div className="p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1 pr-4">
-                    <h3 className="text-lg text-gray-800 font-sans font-semibold">
+                    <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                       {selectedItem === 'body-color' && '박스카 색상 선택'}
                       {selectedItem === 'headlight' && '헤드램프 선택'}
                       {selectedItem === 'taillight' && '리어램프 선택'}
@@ -5028,7 +4987,7 @@ export default function DrawPage() {
                   </div>
                   <button
                     onClick={() => setSelectedItem(null)}
-                    className="text-gray-500 hover:text-gray-700 text-2xl font-bold flex-shrink-0"
+                    className="text-gray-500 hover:text-gray-700 text-2xl font-bold flex-shrink-0 -mt-2"
                   >
                     ×
                   </button>
@@ -5039,22 +4998,26 @@ export default function DrawPage() {
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {[
-                      '#FF6B6B', // 빨간색
-                      '#4ECDC4', // 청록색
-                      '#45B7D1', // 하늘색
-                      '#96CEB4', // 민트색
-                      '#FFEAA7', // 노란색
-                      '#DDA0DD', // 자주색
-                      '#98D8C8', // 연두색
-                      '#F7DC6F', // 골드
-                      '#BB8FCE', // 라벤더
-                      '#85C1E9', // 파란색
-                      '#F8C471', // 오렌지
-                      '#82E0AA'  // 연한 초록
+                      '#FF6B6B', // 짙은 빨간색 (페라리 레드)
+                      '#7FE5E0', // 밝은 청록색 (포르쉐 청록)
+                      '#4682B4', // 진한 하늘색 (스틸 블루)
+                      '#B8F2E6', // 밝은 민트색 (민트 그린)
+                      '#FFFF99', // 밝은 노란색 (포르쉐 옐로우)
+                      '#E6B3FF', // 밝은 자주색 (포르쉐 퍼플)
+                      '#C8F7C5', // 밝은 연두색 (라임 그린)
+                      '#FFE066', // 밝은 골드 (골드)
+                      '#E6CCFF', // 밝은 라벤더 (라벤더)
+                      '#B3D9FF', // 밝은 파란색 (오션 블루)
+                      '#FFCC99', // 밝은 오렌지 (오렌지)
+                      '#B3FFB3', // 밝은 초록 (그린)
+                      '#F0F0F0', // 밝은 회색 (실버)
+                      '#FFE6E6', // 밝은 핑크 (핑크)
+                      '#E6F3FF', // 밝은 아이스 블루 (아이스 블루)
+                      '#FFE6CC'  // 밝은 피치 (피치)
                     ].map(color => (
                       <button
                         key={color}
-                      className={`relative flex items-center justify-center p-2 rounded-lg border-2 transition-all duration-200 h-[70px] md:h-[76px] ${
+                      className={`relative flex items-center justify-center p-2 rounded-lg border-2 transition-all duration-200 h-[64px] md:h-[70px] ${
                           carColor === color
                             ? 'border-transparent bg-gradient-to-br from-blue-500 to-purple-500 text-white'
                             : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50'
@@ -5134,7 +5097,7 @@ export default function DrawPage() {
                           setAppliedItems(prev => new Set(prev).add('headlight'));
                         }
                       }}
-                      className={`relative flex flex-col items-center justify-center p-2 rounded-lg border-2 transition-all duration-200 h-[70px] md:h-[76px] ${
+                      className={`relative flex flex-col items-center justify-center p-2 rounded-lg border-2 transition-all duration-200 h-[64px] md:h-[70px] ${
                         selectedHeadlight === item.type
                           ? 'border-transparent bg-gradient-to-br from-blue-500 to-purple-500 text-white'
                           : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50'
@@ -5343,7 +5306,7 @@ export default function DrawPage() {
                             setAppliedItems(prev => new Set(prev).add('taillight'));
                           }
                         }}
-                        className={`relative flex flex-col items-center justify-center p-2 rounded-lg border-2 transition-all duration-200 h-[70px] md:h-[76px] ${
+                        className={`relative flex flex-col items-center justify-center p-2 rounded-lg border-2 transition-all duration-200 h-[64px] md:h-[70px] ${
                           selectedTaillight === item.type
                             ? 'border-transparent bg-gradient-to-br from-blue-500 to-purple-500 text-white'
                             : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50'
@@ -5405,7 +5368,7 @@ export default function DrawPage() {
                             setAppliedItems(prev => new Set(prev).add('grille'));
                           }
                         }}
-                        className={`relative flex flex-col items-center justify-center p-2 rounded-lg border-2 transition-all duration-200 h-[70px] md:h-[76px] ${
+                        className={`relative flex flex-col items-center justify-center p-2 rounded-lg border-2 transition-all duration-200 h-[64px] md:h-[70px] ${
                           selectedGrille === item.type
                             ? 'border-transparent bg-gradient-to-br from-blue-500 to-purple-500 text-white'
                             : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50'
@@ -5463,7 +5426,7 @@ export default function DrawPage() {
                           setAppliedItems(prev => new Set(prev).add('badge'));
                         }
                       }}
-                      className={`relative flex items-center justify-center p-3 rounded-lg border-2 transition-all duration-200 h-[70px] md:h-[80px] ${
+                      className={`relative flex items-center justify-center p-3 rounded-lg border-2 transition-all duration-200 h-[64px] md:h-[70px] ${
                         selectedBadge === badge.type
                           ? 'border-transparent bg-gradient-to-br from-blue-500 to-purple-500 text-white'
                           : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50'
@@ -5516,7 +5479,7 @@ export default function DrawPage() {
                      setAppliedItems(prev => new Set(prev).add('plate'));
                    }
                  }}
-                 className={`relative flex flex-col items-center p-3 rounded-lg border-2 transition-all duration-200 h-[70px] md:h-[76px] ${
+                 className={`relative flex flex-col items-center p-3 rounded-lg border-2 transition-all duration-200 h-[64px] md:h-[70px] ${
                    selectedPlate === item.type
                      ? 'border-transparent bg-gradient-to-br from-blue-500 to-purple-500 text-white'
                      : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50'
@@ -5565,7 +5528,7 @@ export default function DrawPage() {
                           setAppliedItems(prev => new Set(prev).add('wheel'));
                         }
                       }}
-                        className={`relative flex flex-col items-center justify-center p-2 rounded-lg border-2 transition-all duration-200 h-[70px] md:h-[76px] ${
+                        className={`relative flex flex-col items-center justify-center p-2 rounded-lg border-2 transition-all duration-200 h-[64px] md:h-[70px] ${
                         selectedWheel === item.type
                           ? 'border-transparent bg-gradient-to-br from-blue-500 to-purple-500 text-white'
                           : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50'
@@ -5575,49 +5538,49 @@ export default function DrawPage() {
                         <img 
                           src="/wheels/wheel-1.png" 
                           alt="휠 1" 
-                          className="w-14 h-14 object-contain"
+                          className="w-[52px] h-[52px] object-contain"
                         />
                       ) : item.type === 'wheel-2' ? (
                         <img 
                           src="/wheels/wheel-2.png" 
                           alt="휠 2" 
-                          className="w-14 h-14 object-contain"
+                          className="w-[52px] h-[52px] object-contain"
                         />
                       ) : item.type === 'wheel-3' ? (
                         <img 
                           src="/wheels/wheel-3.png" 
                           alt="휠 3" 
-                          className="w-14 h-14 object-contain"
+                          className="w-[52px] h-[52px] object-contain"
                         />
                       ) : item.type === 'wheel-4' ? (
                         <img 
                           src="/wheels/wheel-4.png" 
                           alt="휠 4" 
-                          className="w-14 h-14 object-contain"
+                          className="w-[52px] h-[52px] object-contain"
                         />
                       ) : item.type === 'wheel-5' ? (
                         <img 
                           src="/wheels/wheel-5.png" 
                           alt="휠 5" 
-                          className="w-14 h-14 object-contain"
+                          className="w-[52px] h-[52px] object-contain"
                         />
                       ) : item.type === 'wheel-6' ? (
                         <img 
                           src="/wheels/wheel-6.png" 
                           alt="휠 6" 
-                          className="w-14 h-14 object-contain"
+                          className="w-[52px] h-[52px] object-contain"
                         />
                       ) : item.type === 'wheel-7' ? (
                         <img 
                           src="/wheels/wheel-7.png" 
                           alt="휠 7" 
-                          className="w-14 h-14 object-contain"
+                          className="w-[52px] h-[52px] object-contain"
                         />
                       ) : item.type === 'wheel-8' ? (
                         <img 
                           src="/wheels/wheel-8.png" 
                           alt="휠 8" 
-                          className="w-14 h-14 object-contain"
+                          className="w-[52px] h-[52px] object-contain"
                         />
                       ) : (
                         <span className="text-2xl mb-1">{item.icon}</span>
@@ -5637,10 +5600,9 @@ export default function DrawPage() {
                 <div className="mt-4 flex justify-center">
           <Button 
                     onClick={() => {
-                      console.log(`${selectedItem} 선택됨`);
                       setSelectedItem(null);
                     }}
-                    className={PRIMARY_BUTTON_STYLES_SMALL}
+                    className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-full px-12 py-3"
                   >
                     선택
           </Button>
@@ -5733,12 +5695,7 @@ export default function DrawPage() {
               <h3 className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-pink-600 bg-clip-text text-transparent mb-2">
                 박스카 도안을 준비하고 있어요!
               </h3>
-              <p className="text-gray-600 text-sm mb-3">3D 박스카가 종이 도안으로 변신 중이에요...</p>
-              <div className="flex items-center justify-center gap-1 text-xs text-gray-500">
-                <div className="w-1 h-1 bg-purple-400 rounded-full animate-bounce"></div>
-                <div className="w-1 h-1 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                <div className="w-1 h-1 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-              </div>
+              <p className="text-gray-600 text-sm">3D 박스카가 종이 도안으로 변신 중이에요...</p>
             </div>
           </div>
         </div>
@@ -5747,23 +5704,20 @@ export default function DrawPage() {
 
       <div className="mb-6 mt-10 px-4 md:px-0">
         <PageHeader 
-          title="도안 만들기"
+          title="박스카 도안 완성!"
           description="내가 그린 자동차가 도안으로 바뀌었어요. 파일을 내려받아 인쇄하면, 진짜 박스카 만들 준비 완료!"
         />
       </div>
 
       {/* 3D 박스카 미리보기 + 도안 다운로드 */}
-      <Card className="bg-white border-2 border-white/30 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden py-5 w-full rounded-2xl mb-6 relative">
+      <Card className="bg-white/95 border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden py-5 w-full rounded-2xl mb-6 relative">
         <CardHeader className="text-gray-800 px-4 md:px-8 pb-0">
           <CardTitle className="text-lg flex items-center">
             <Printer className="w-5 h-5 mr-2 text-blue-600" />
-            <span className="bg-gradient-to-r from-blue-600 to-pink-600 bg-clip-text text-transparent">박스카 도안</span>
+            <span className="bg-gradient-to-r from-blue-600 to-pink-600 bg-clip-text text-transparent">내가 만든 박스카 도안</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="px-4 md:px-8 pt-0 pb-0 -mt-3">
-          {/* 구분선 */}
-          <div className="border-t border-gray-300 mb-4"></div>
-          
           {/* 도안 미리보기 영역 */}
           <div className={`${THREE_D_RENDERER_CONTAINER} bg-white flex items-center justify-center mb-4`} style={{ aspectRatio: isClient ? (isMobile ? '4/3' : '2/1') : '2/1' }}>
             {blueprintGenerated && blueprintImages.length > 0 ? (
@@ -5825,14 +5779,17 @@ export default function DrawPage() {
 
           {/* Action Buttons - 카드 안에 배치 */}
           <div className="flex items-center justify-between">
-            <Button 
-              variant="outline" 
-              onClick={() => setCurrentStep('decorate')}
-              className="bg-white/80 backdrop-blur-sm border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 rounded-full w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1"
-            >
-              <ArrowLeft className="w-4 h-4 md:w-5 md:h-5" />
-              <span className="text-xs md:text-sm font-medium">뒤로</span>
-            </Button>
+            <div className="flex items-center">
+              <Button 
+                variant="outline" 
+                onClick={() => setCurrentStep('decorate')}
+                className="bg-white/80 backdrop-blur-sm border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 rounded-full w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1"
+              >
+                <ArrowLeft className="w-4 h-4 md:w-5 md:h-5" />
+                <span className="text-xs md:text-sm font-medium">뒤로</span>
+              </Button>
+            </div>
+            <div className="flex items-center gap-2">
             {/* <Button 
               onClick={downloadBlueprint}
               disabled={!blueprintGenerated || blueprintImages.length === 0}
@@ -5849,31 +5806,85 @@ export default function DrawPage() {
               <Download className="w-4 h-4 md:w-5 md:h-5" />
               <span className="text-xs md:text-sm font-medium">전체</span>
             </Button> */}
-            <Button 
-              onClick={downloadAllPagesAsPDF}
-              disabled={!blueprintGenerated || blueprintImages.length === 0}
-              className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-full w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Download className="w-4 h-4 md:w-5 md:h-5" />
-              <span className="text-xs md:text-sm font-medium">PDF</span>
-            </Button>
         <Button 
-          onClick={handleSaveToMyDesigns}
+          onClick={() => {
+            if (!user) {
+              openLoginModal('share');
+              return;
+            }
+            // 박스카 갤러리 공유 모달 열 때 자동으로 랜덤 제목 생성
+            const generateFunTitle = (carType: string) => {
+              const adjectives = {
+                'sedan-type1': ['부릉부릉 너무 귀여운', '씽씽 달리는', '방긋 웃는', '깜찍발랄한', '콩콩 튀는'],
+                'sedan-type2': ['든든하게 달리는', '똑똑하고 멋진', '반짝반짝 빛나는', '여유로운', '묵직하게 힘찬'],
+                'sports': ['번쩍번쩍 멋있는', '쌩쌩 신나는', '슝슝 달려가는', '짜릿하게 질주하는', '번개처럼 빠른'],
+                'suv': ['우당탕탕 용감한', '씩씩하게 달리는', '어디든 갈 수 있는', '힘센', '모험심 가득한'],
+                'truck': ['든든하게 짐을 싣는', '빵빵 힘찬', '우직한', '무거운 것도 척척', '으랏차차 힘센'],
+                'bus': ['즐겁게 달리는', '방긋 인사하는', '신나게 출발하는', '콩닥콩닥 두근거리는', '꽉 찬 웃음의'],
+                'bus-square': ['네모네모 귀여운', '사각사각 멋진', '반듯반듯 착한', '네모난 세상', '네모로 즐거운']
+              };
+              
+              const carTypeNames = {
+                'sedan-type1': '꼬마세단',
+                'sedan-type2': '큰세단', 
+                'sports': '스포츠카',
+                'suv': 'SUV',
+                'truck': '빵빵트럭',
+                'bus': '통통버스',
+                'bus-square': '네모버스'
+              };
+              
+              const typeAdjectives = adjectives[carType as keyof typeof adjectives] || adjectives['sedan-type1'];
+              const typeName = carTypeNames[carType as keyof typeof carTypeNames] || '꼬마세단';
+              
+              const randomAdjective = typeAdjectives[Math.floor(Math.random() * typeAdjectives.length)];
+              return `${randomAdjective} ${typeName}`;
+            };
+
+            const mapAnalyzedCarType = (analyzedType: string) => {
+              const mapping: { [key: string]: string } = {
+                'sedan': 'sedan-type1',
+                'suv': 'suv',
+                'truck': 'truck',
+                'bus': 'bus',
+                'sports': 'sports'
+              };
+              return mapping[analyzedType] || 'sedan-type1';
+            };
+
+            const carType = selectedCarType || drawingAnalysis?.analysis?.carType || 'sedan';
+            const mappedCarType = mapAnalyzedCarType(carType);
+            const funTitle = generateFunTitle(mappedCarType);
+            setShareTitle(funTitle);
+            setShowGalleryShareModal(true);
+          }}
           disabled={!blueprintGenerated || blueprintImages.length === 0}
-          title={!blueprintGenerated || blueprintImages.length === 0 ? "먼저 도안을 생성해주세요" : "나만의 박스카에 저장하기"}
-          className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-full w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Heart className="w-4 h-4 md:w-5 md:h-5" />
-          <span className="text-xs md:text-sm font-medium">나만의박스카</span>
-        </Button>
-        <Button 
-          onClick={() => setShowCommunityShareModal(true)}
-          disabled={!blueprintGenerated || blueprintImages.length === 0}
-          className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-full w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="bg-gradient-to-r from-sky-400 to-sky-500 hover:from-sky-500 hover:to-sky-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-3xl w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Share2 className="w-4 h-4 md:w-5 md:h-5" />
-          <span className="text-xs md:text-sm font-medium">공유</span>
+          <div className="text-center" style={{ lineHeight: '1.15' }}>
+            <div className="text-xs md:text-sm font-medium" style={{ lineHeight: '1.15' }}>갤러리</div>
+            <div className="text-xs md:text-sm font-medium" style={{ lineHeight: '1.15' }}>공유</div>
+          </div>
         </Button>
+            <Button 
+              onClick={() => {
+                if (!user) {
+                  openLoginModal('download');
+                  return;
+                }
+                downloadAllPagesAsPDF();
+              }}
+              disabled={!blueprintGenerated || blueprintImages.length === 0}
+              className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-3xl w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Download className="w-4 h-4 md:w-5 md:h-5" />
+              <div className="text-center" style={{ lineHeight: '1.15' }}>
+                <div className="text-xs md:text-sm font-medium" style={{ lineHeight: '1.15' }}>도안</div>
+                <div className="text-xs md:text-sm font-medium" style={{ lineHeight: '1.15' }}>다운로드</div>
+              </div>
+            </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -5881,29 +5892,22 @@ export default function DrawPage() {
   );
 
   return (
-    <>
-      <Head>
-        <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-        <meta httpEquiv="Pragma" content="no-cache" />
-        <meta httpEquiv="Expires" content="0" />
-      </Head>
-      <div 
-        className="min-h-screen py-16 md:py-24"
-        style={{
-          background: 'linear-gradient(130deg, #2563eb, #7c3aed, #ec4899)',
-          touchAction: 'pan-y',
-          overscrollBehavior: 'none'
-        }}
-      >
-      {/* Common Header */}
+    <CommonBackground>
       <CommonHeader />
-      
       <div className="max-w-7xl mx-auto px-0 md:px-8">
         {currentStep === 'draw' && renderDrawStep()}
         {currentStep === 'preview' && renderPreviewStep()}
         {currentStep === 'decorate' && renderDecorateStep()}
         {currentStep === 'export' && renderExportStep()}
       </div>
+
+      {/* 스플래시 화면 */}
+      {showSplashScreen && (
+        <DrawSplashScreen
+          onClose={handleCloseSplash}
+          onSignUp={handleSignUpFromSplash}
+        />
+      )}
 
       {/* AI 알고리즘 설명 모달 - 제거됨 */}
       {false && (
@@ -6024,76 +6028,117 @@ export default function DrawPage() {
       )}
 
 
-      {/* 커뮤니티 공유 모달 */}
-      {showCommunityShareModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">커뮤니티에 공유하기</h3>
-              <button
-                onClick={() => setShowCommunityShareModal(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+      {/* 박스카 갤러리 공유 모달 */}
+      {showGalleryShareModal && (
+        <div className="fixed inset-0 bg-gradient-to-br from-purple-900/20 via-blue-900/20 to-pink-900/20 backdrop-blur-md z-50 flex items-center justify-center">
+          <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-6 max-w-sm w-full mx-6">
+            <div className="text-center">
+              <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+                멋진 작품이네요!
+              </h3>
+              <p className="text-gray-600 text-sm mb-6">
+                박스카 갤러리에 공유할까요?
+              </p>
             
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  제목 *
-                </label>
-                <input
-                  type="text"
-                  value={shareTitle}
-                  onChange={(e) => setShareTitle(e.target.value)}
-                  placeholder="디자인 제목을 입력하세요"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                />
+              <div className="space-y-4">
+                <div>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={shareTitle}
+                      onChange={(e) => {
+                        if (e.target.value.length <= 30) {
+                          setShareTitle(e.target.value);
+                        }
+                      }}
+                      placeholder="작품 제목을 입력하세요"
+                      maxLength={30}
+                      className={`flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-[15px] ${
+                        !shareTitle.trim() 
+                          ? 'border-red-300 focus:ring-red-500' 
+                          : 'border-gray-300 focus:ring-purple-500'
+                      }`}
+                    />
+                    <button
+                      onClick={() => {
+                        // 동적 제목 생성 함수 (박스카 저장과 동일)
+                        const generateFunTitle = (carType: string) => {
+                          const adjectives = {
+                            'sedan-type1': ['부릉부릉 너무 귀여운', '씽씽 달리는', '방긋 웃는', '깜찍발랄한', '콩콩 튀는'],
+                            'sedan-type2': ['든든하게 달리는', '똑똑하고 멋진', '반짝반짝 빛나는', '여유로운', '묵직하게 힘찬'],
+                            'sports': ['번쩍번쩍 멋있는', '쌩쌩 신나는', '슝슝 달려가는', '짜릿하게 질주하는', '번개처럼 빠른'],
+                            'suv': ['우당탕탕 용감한', '씩씩하게 달리는', '어디든 갈 수 있는', '힘센', '모험심 가득한'],
+                            'truck': ['든든하게 짐을 싣는', '빵빵 힘찬', '우직한', '무거운 것도 척척', '으랏차차 힘센'],
+                            'bus': ['즐겁게 달리는', '방긋 인사하는', '신나게 출발하는', '콩닥콩닥 두근거리는', '꽉 찬 웃음의'],
+                            'bus-square': ['네모네모 귀여운', '사각사각 멋진', '반듯반듯 착한', '네모난 세상', '네모로 즐거운']
+                          };
+                          
+                          const carTypeNames = {
+                            'sedan-type1': '꼬마세단',
+                            'sedan-type2': '큰세단', 
+                            'sports': '스포츠카',
+                            'suv': 'SUV',
+                            'truck': '빵빵트럭',
+                            'bus': '통통버스',
+                            'bus-square': '네모버스'
+                          };
+                          
+                          const typeAdjectives = adjectives[carType as keyof typeof adjectives] || adjectives['sedan-type1'];
+                          const typeName = carTypeNames[carType as keyof typeof carTypeNames] || '꼬마세단';
+                          
+                          const randomAdjective = typeAdjectives[Math.floor(Math.random() * typeAdjectives.length)];
+                          return `${randomAdjective} ${typeName}`;
+                        };
+
+                        // 분석된 차종을 제목 생성용 차종으로 매핑
+                        const mapAnalyzedCarType = (analyzedType: string) => {
+                          const mapping: { [key: string]: string } = {
+                            'sedan': 'sedan-type1',
+                            'suv': 'suv',
+                            'truck': 'truck',
+                            'bus': 'bus',
+                            'sports': 'sports'
+                          };
+                          return mapping[analyzedType] || 'sedan-type1';
+                        };
+
+                        const carType = selectedCarType || drawingAnalysis?.analysis?.carType || 'sedan';
+                        const mappedCarType = mapAnalyzedCarType(carType);
+                        const funTitle = generateFunTitle(mappedCarType);
+                        setShareTitle(funTitle);
+                      }}
+                      className="px-4 py-2 bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 transition-colors text-sm font-medium whitespace-nowrap min-w-[80px]"
+                    >
+                      🎲 랜덤
+                    </button>
+                  </div>
+                  {!shareTitle.trim() && (
+                    <p className="text-red-500 text-xs mt-1">제목을 입력하거나 랜덤 버튼을 눌러주세요</p>
+                  )}
+                  <p className="text-gray-600 text-xs mt-2">
+                    이 작품에 어울리는 이름을 지어보세요.<br />
+                    랜덤 버튼으로 재밌게 바꿀 수도 있어요.
+                  </p>
+                </div>
+                
               </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  설명
-                </label>
-                <textarea
-                  value={shareDescription}
-                  onChange={(e) => setShareDescription(e.target.value)}
-                  placeholder="디자인에 대한 설명을 입력하세요"
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  태그
-                </label>
-                <input
-                  type="text"
-                  value={shareTags}
-                  onChange={(e) => setShareTags(e.target.value)}
-                  placeholder="태그를 쉼표로 구분하여 입력하세요 (예: 자동차, 디자인, 예쁜)"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                />
-              </div>
-            </div>
             
-            <div className="flex gap-3 mt-6">
-              <Button
-                onClick={() => setShowCommunityShareModal(false)}
-                variant="outline"
-                className="flex-1"
-              >
-                취소
-              </Button>
-              <Button
-                onClick={shareToCommunity}
-                className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
-              >
-                <Upload className="w-4 h-4 mr-2" />
-                공유하기
-              </Button>
+              <div className="flex gap-3 mt-6">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowGalleryShareModal(false)}
+                  className="flex-1 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-full"
+                >
+                  취소
+                </Button>
+                <Button
+                  onClick={shareToGallery}
+                  disabled={!shareTitle.trim()}
+                  className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 rounded-full"
+                >
+                  공유하기
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -6104,24 +6149,116 @@ export default function DrawPage() {
         <div className="fixed inset-0 bg-gradient-to-br from-purple-900/20 via-blue-900/20 to-pink-900/20 backdrop-blur-md z-50 flex items-center justify-center">
           <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-6 max-w-sm w-full mx-6">
             <div className="text-center">
-              <div className="text-2xl mb-4">✨</div>
-              <h3 className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-pink-600 bg-clip-text text-transparent mb-2">
+              <div className="text-[30px] mb-2">✨</div>
+              <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
                 멋진 작품이네요!
               </h3>
-              <p className="text-gray-600 text-sm mb-4">
+              <p className="text-gray-600 text-sm mb-6">
                 나만의 박스카에 저장할까요?
               </p>
-              <div className="flex gap-3">
+            
+              <div className="space-y-4">
+                <div>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={saveTitle}
+                      onChange={(e) => {
+                        if (e.target.value.length <= 30) {
+                          setSaveTitle(e.target.value);
+                        }
+                      }}
+                      placeholder="작품 제목을 입력하세요"
+                      maxLength={30}
+                      className={`flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-[15px] ${
+                        !saveTitle.trim() 
+                          ? 'border-red-300 focus:ring-red-500' 
+                          : 'border-gray-300 focus:ring-purple-500'
+                      }`}
+                    />
+                    <button
+                      onClick={() => {
+                        // 동적 제목 생성 함수 (박스카 저장과 동일)
+                        const generateFunTitle = (carType: string) => {
+                          const adjectives = {
+                            'sedan-type1': ['부릉부릉 너무 귀여운', '씽씽 달리는', '방긋 웃는', '깜찍발랄한', '콩콩 튀는'],
+                            'sedan-type2': ['든든하게 달리는', '똑똑하고 멋진', '반짝반짝 빛나는', '여유로운', '묵직하게 힘찬'],
+                            'sports': ['번쩍번쩍 멋있는', '쌩쌩 신나는', '슝슝 달려가는', '짜릿하게 질주하는', '번개처럼 빠른'],
+                            'suv': ['우당탕탕 용감한', '씩씩하게 달리는', '어디든 갈 수 있는', '힘센', '모험심 가득한'],
+                            'truck': ['든든하게 짐을 싣는', '빵빵 힘찬', '우직한', '무거운 것도 척척', '으랏차차 힘센'],
+                            'bus': ['즐겁게 달리는', '방긋 인사하는', '신나게 출발하는', '콩닥콩닥 두근거리는', '꽉 찬 웃음의'],
+                            'bus-square': ['네모네모 귀여운', '사각사각 멋진', '반듯반듯 착한', '네모난 세상', '네모로 즐거운']
+                          };
+                          
+                          const carTypeNames = {
+                            'sedan-type1': '꼬마세단',
+                            'sedan-type2': '큰세단', 
+                            'sports': '스포츠카',
+                            'suv': 'SUV',
+                            'truck': '빵빵트럭',
+                            'bus': '통통버스',
+                            'bus-square': '네모버스'
+                          };
+                          
+                          const typeAdjectives = adjectives[carType as keyof typeof adjectives] || adjectives['sedan-type1'];
+                          const typeName = carTypeNames[carType as keyof typeof carTypeNames] || '꼬마세단';
+                          
+                          const randomAdjective = typeAdjectives[Math.floor(Math.random() * typeAdjectives.length)];
+                          return `${randomAdjective} ${typeName}`;
+                        };
+
+                        // 분석된 차종을 제목 생성용 차종으로 매핑
+                        const mapAnalyzedCarType = (analyzedType: string) => {
+                          const mapping: { [key: string]: string } = {
+                            'sedan': 'sedan-type1',
+                            'suv': 'suv',
+                            'truck': 'truck',
+                            'bus': 'bus',
+                            'sports': 'sports'
+                          };
+                          return mapping[analyzedType] || 'sedan-type1';
+                        };
+
+                        const carType = selectedCarType || drawingAnalysis?.analysis?.carType || 'sedan';
+                        const mappedCarType = mapAnalyzedCarType(carType);
+                        const funTitle = generateFunTitle(mappedCarType);
+                        setSaveTitle(funTitle);
+                      }}
+                      className="px-3 py-2 bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 transition-colors text-sm font-medium"
+                    >
+                      🎲 랜덤
+                    </button>
+                  </div>
+                </div>
+                
+                <div>
+                  <textarea
+                    value={saveDescription}
+                    onChange={(e) => {
+                      if (e.target.value.length <= 20) {
+                        setSaveDescription(e.target.value);
+                      }
+                    }}
+                    placeholder="작품에 대한 설명을 입력하세요"
+                    rows={2}
+                    maxLength={20}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-[15px]"
+                  />
+                </div>
+              </div>
+            
+              <div className="flex gap-3 mt-6">
                 <Button
                   variant="outline"
                   onClick={handleCancelSave}
-                  className="flex-1 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300"
+                  className="flex-1 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-full"
                 >
                   취소
                 </Button>
                 <Button
                   onClick={handleConfirmSave}
-                  className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                  disabled={!saveTitle.trim()}
+                  className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 rounded-full"
                 >
                   저장하기
                 </Button>
@@ -6130,6 +6267,50 @@ export default function DrawPage() {
           </div>
         </div>
       )}
+
+      {/* 박스카 갤러리 공유 성공 모달 */}
+      {showGallerySuccessModal && (
+        <div className="fixed inset-0 bg-gradient-to-br from-purple-900/20 via-blue-900/20 to-pink-900/20 backdrop-blur-md z-50 flex items-center justify-center">
+          <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-6 max-w-sm w-full mx-6">
+            <div className="text-center">
+              <div className="flex justify-center mb-2">
+                <div className="text-[30px]">✨</div>
+              </div>
+              <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+                성공적으로 공유되었습니다!
+              </h3>
+              <p className="text-gray-600 text-sm mb-7">
+                다른 사람들과 함께 멋진 작품을 나눠보세요
+              </p>
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowGallerySuccessModal(false)}
+                  className="flex-1 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-full"
+                >
+                  나중에
+                </Button>
+                <Button
+                  onClick={() => {
+                    setShowGallerySuccessModal(false);
+                    router.push('/gallery');
+                  }}
+                  className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 rounded-full"
+                >
+                  박스카 갤러리 보러가기
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 에러 모달 */}
+      <ErrorModal
+        isOpen={showErrorModal}
+        onClose={() => setShowErrorModal(false)}
+        message={errorMessage || "예상치 못한 오류가 발생했습니다.\n페이지를 새로고침하거나 다시 시도해주세요."}
+      />
 
       {/* 저장 성공 모달 */}
       {showSuccessModal && (
@@ -6140,7 +6321,7 @@ export default function DrawPage() {
               <h3 className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-pink-600 bg-clip-text text-transparent mb-2">
                 나만의 박스카에 성공적으로 저장되었습니다!
               </h3>
-              <p className="text-gray-600 text-sm mb-4">
+              <p className="text-gray-600 text-sm mb-7">
                 이제 나만의 박스카에서 확인할 수 있어요
               </p>
               <div className="flex gap-3">
@@ -6165,8 +6346,49 @@ export default function DrawPage() {
           </div>
         </div>
       )}
-      </div>
-    </>
+
+      {/* 로그인 유도 모달 */}
+      {showLoginModal && (
+        <div className="fixed inset-0 bg-gradient-to-br from-purple-900/20 via-blue-900/20 to-pink-900/20 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 max-w-md w-full mx-6">
+            <div className="p-6">
+              <div className="text-center">
+                <div className="flex justify-center mb-4">
+                  <div className="text-4xl">
+                    {loginModalType === 'share' && '🚀'}
+                    {loginModalType === 'download' && '📥'}
+                  </div>
+                </div>
+                <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+                  {loginModalType === 'share' && '공유하기'}
+                  {loginModalType === 'download' && '다운로드'}
+                </h3>
+                <p className="text-gray-600 text-sm mb-6">
+                  {loginModalType === 'share' && '내 작품을 갤러리에 공유하려면 로그인해주세요'}
+                  {loginModalType === 'download' && '내 박스카 도안을 내려받으려면 로그인해주세요'}
+                </p>
+                
+                <div className="flex gap-3 mt-6">
+                  <Button
+                    variant="outline"
+                    onClick={closeLoginModal}
+                    className="flex-1 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300"
+                  >
+                    나중에 할래
+                  </Button>
+                  <Button
+                    onClick={handleLoginAndAction}
+                    className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+                  >
+                    로그인하기
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </CommonBackground>
   );
 }
 
