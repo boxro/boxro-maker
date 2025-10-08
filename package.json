@@ -51,9 +51,5 @@
   "engines": {
     "node": "22.x",
     "npm": "10.x"
-  },
-  "packageManager": "npm@10.9.0",
-  "config": {
-    "registry": "https://registry.npmjs.org/"
   }
 }
