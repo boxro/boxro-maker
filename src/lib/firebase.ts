@@ -37,6 +37,30 @@ let auth;
 let db;
 let storage;
 
+// Firebase 연결 상태 확인 함수
+export const checkFirebaseConnection = () => {
+  console.log('🔍 Firebase 연결 상태 확인:', {
+    app: !!app,
+    auth: !!auth,
+    db: !!db,
+    storage: !!storage,
+    apiKey: !!firebaseConfig.apiKey,
+    authDomain: !!firebaseConfig.authDomain,
+    projectId: !!firebaseConfig.projectId,
+    storageBucket: !!firebaseConfig.storageBucket,
+    messagingSenderId: !!firebaseConfig.messagingSenderId,
+    appId: !!firebaseConfig.appId
+  });
+  
+  if (!app || !db) {
+    console.error('❌ Firebase 연결 실패');
+    return false;
+  }
+  
+  console.log('✅ Firebase 연결 성공');
+  return true;
+};
+
 // Firebase 초기화 함수
 const initializeFirebase = () => {
   try {

@@ -272,6 +272,13 @@ export default function StoryArticlePage() {
     try {
       setLoading(true);
       
+      // Firebase 연결 상태 확인
+      const { checkFirebaseConnection } = await import("@/lib/firebase");
+      if (!checkFirebaseConnection()) {
+        setError('Firebase 연결에 실패했습니다. 페이지를 새로고침해주세요.');
+        return;
+      }
+      
       // Firebase에서 박스카 이야기 글 데이터 가져오기
       const { doc, getDoc, updateDoc } = await import("firebase/firestore");
       const { db } = await import("@/lib/firebase");
@@ -327,7 +334,21 @@ export default function StoryArticlePage() {
         authDomain: !!process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
         projectId: !!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
       });
-      setError('글을 불러오는데 실패했습니다. Firebase 설정을 확인해주세요.');
+      
+      // 구체적인 에러 메시지
+      if (error instanceof Error) {
+        if (error.message.includes('permission-denied')) {
+          setError('데이터베이스 접근 권한이 없습니다. 관리자에게 문의하세요.');
+        } else if (error.message.includes('not-found')) {
+          setError('글이 존재하지 않습니다.');
+        } else if (error.message.includes('unavailable')) {
+          setError('서버가 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해주세요.');
+        } else {
+          setError(`데이터 로드 실패: ${error.message}`);
+        }
+      } else {
+        setError('글을 불러오는데 실패했습니다. Firebase 설정을 확인해주세요.');
+      }
     } finally {
       setLoading(false);
     }
