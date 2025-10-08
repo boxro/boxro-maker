@@ -312,17 +312,27 @@ export default function StoryArticlePage() {
         // 보기 상태 설정
         setIsViewed(currentUserId ? (data.viewedBy?.includes(currentUserId) || false) : false);
         
-        // 조회수 증가
-        await updateDoc(articleRef, {
-          views: (articleData.views || 0) + 1
-        });
+        // 조회수 증가 (로그인한 사용자만)
+        if (currentUserId) {
+          await updateDoc(articleRef, {
+            views: (articleData.views || 0) + 1
+          });
+        }
         
         // 로그인한 사용자가 본 적이 없으면 자동으로 본 상태로 토글
         if (currentUserId && !data.viewedBy?.includes(currentUserId)) {
-          await updateDoc(articleRef, {
-            viewedBy: arrayUnion(currentUserId)
-          });
-          setIsViewed(true);
+          try {
+            await updateDoc(articleRef, {
+              viewedBy: arrayUnion(currentUserId)
+            });
+            setIsViewed(true);
+          } catch (error: any) {
+            if (error.code === 'permission-denied') {
+              console.log('🔧 Firebase 보안 규칙 설정 대기 중 - viewedBy 업데이트 건너뜀');
+            } else {
+              console.error('viewedBy 업데이트 실패:', error);
+            }
+          }
         }
       } else {
         setError('글이 존재하지 않습니다.');
