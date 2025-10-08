@@ -176,3 +176,11 @@ export function useStory() {
   }
   return context;
 }
+
+export function useMagazine() {
+  const context = useContext(MagazineContext);
+  if (context === undefined) {
+    throw new Error('useMagazine must be used within a MagazineProvider');
+  }
+  return context;
+}
