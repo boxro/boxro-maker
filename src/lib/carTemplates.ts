@@ -364,7 +364,17 @@ function calculateSlope(profile: number[], start: number, end: number): number {
 }
 
 // 차량 타입 결정 함수 - 개선된 로직
-function determineCarType(features: any): CarType {
+function determineCarType(features: {
+  hasHood: boolean;
+  hasTrunk: boolean;
+  hasBed: boolean;
+  isLongCabin: boolean;
+  frontSlope: number;
+  rearSlope: number;
+  height: number;
+  width: number;
+  length: number;
+}): CarType {
   // 네모버스(bus): 캐빈만 (보닛, 트렁크, 베드 없음, 긴 캐빈)
   if (!features.hasHood && !features.hasTrunk && !features.hasBed && features.isLongCabin) {
     return 'bus';
@@ -400,7 +410,17 @@ function determineCarType(features: any): CarType {
 }
 
 // 신뢰도 계산 함수 - 개선된 로직
-function calculateConfidence(features: any, carType: CarType): number {
+function calculateConfidence(features: {
+  hasHood: boolean;
+  hasTrunk: boolean;
+  hasBed: boolean;
+  isLongCabin: boolean;
+  frontSlope: number;
+  rearSlope: number;
+  height: number;
+  width: number;
+  length: number;
+}, carType: CarType): number {
   let confidence = 0.3; // 기본 신뢰도 낮춤
   
   switch (carType) {
@@ -443,7 +463,17 @@ function calculateConfidence(features: any, carType: CarType): number {
 }
 
 // 박스 구조 결정 함수
-function determineBoxes(features: any, carType: CarType) {
+function determineBoxes(features: {
+  hasHood: boolean;
+  hasTrunk: boolean;
+  hasBed: boolean;
+  isLongCabin: boolean;
+  frontSlope: number;
+  rearSlope: number;
+  height: number;
+  width: number;
+  length: number;
+}, carType: CarType) {
   switch (carType) {
     case 'sedan': // 꼬마세단(sedan)
       return {
