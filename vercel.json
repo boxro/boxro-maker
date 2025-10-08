@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm ci && npm run build",
-  "installCommand": "npm ci",
+  "buildCommand": "npm cache clean --force && npm install --registry https://registry.npmjs.org/ && npm run build",
+  "installCommand": "npm cache clean --force && npm install --registry https://registry.npmjs.org/",
   "framework": "nextjs"
 }
