@@ -390,8 +390,7 @@ export default function AdminPage() {
       setHomeCards(prev => [...prev, newCard]);
       
       resetForm();
-      setErrorMessage('홈카드가 성공적으로 추가되었습니다!');
-      setShowErrorModal(true);
+      alert('홈카드가 성공적으로 추가되었습니다!');
     } catch (error) {
       console.error('홈카드 추가 실패:', error);
       setErrorMessage('홈카드 추가에 실패했습니다.');
