@@ -17,11 +17,20 @@ export const metadata: Metadata = {
     siteName: "BOXRO 박스로 | Eco-Friendly Maker Project",
     type: "website",
     locale: "ko_KR",
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'BOXRO 박스로 | Eco-Friendly Maker Project',
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "BOXRO 박스로 | Eco-Friendly Maker Project",
     description: "버려진 박스로 자동차를 만들고, 상상력을 움직이는 친환경 놀이 플랫폼",
+    images: ['/og-image.png'],
   },
   icons: {
     icon: [
