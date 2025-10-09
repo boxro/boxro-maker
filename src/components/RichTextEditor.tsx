@@ -304,7 +304,9 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
       }
       
       // 수정된 content로 에디터 업데이트 (한 번만 호출)
-      editor.commands.setContent(processedContent, false, {
+      // 줄바꿈을 <br> 태그로 변환하여 처리
+      const contentWithLineBreaks = processedContent.replace(/\n/g, '<br>');
+      editor.commands.setContent(contentWithLineBreaks, false, {
         preserveWhitespace: 'full',
         parseOptions: {
           preserveWhitespace: 'full'
