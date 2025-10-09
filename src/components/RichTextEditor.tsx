@@ -253,7 +253,7 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
     },
     editorProps: {
       attributes: {
-        class: 'rich-text-editor focus:outline-none min-h-[300px] p-4 border border-gray-200 rounded-lg bg-white',
+        class: 'rich-text-editor focus:outline-none min-h-[300px] p-4 bg-white',
       },
     },
     immediatelyRender: false,
@@ -445,9 +445,9 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
   }
 
   return (
-    <div className="rounded-lg">
-      {/* 툴바 */}
-      <div className="p-2 flex flex-wrap gap-1">
+    <div className="rounded-lg border border-gray-200 bg-white">
+      {/* 툴바 - 고정 */}
+      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 p-2 flex flex-wrap gap-1">
         {/* 텍스트 스타일 */}
         <div className="flex gap-1 border-r border-gray-200 pr-2 mr-2">
           <Button
@@ -828,8 +828,8 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
         </div>
       </div>
 
-      {/* 에디터 */}
-      <div className="text-[15px]">
+      {/* 에디터 - 스크롤 가능 */}
+      <div className="text-[15px] max-h-[400px] overflow-y-auto">
         <EditorContent editor={editor} />
       </div>
 
