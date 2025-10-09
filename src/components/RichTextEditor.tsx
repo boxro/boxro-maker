@@ -233,23 +233,16 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
       // content prop과 다를 때만 onChange 호출 (무한 루프 방지)
       if (html !== content) {
         console.log('🔍 onChange 함수 호출 전');
-        onChange(html);
+        // 커서 위치 보존을 위해 setTimeout 사용
+        setTimeout(() => {
+          onChange(html);
+        }, 0);
         console.log('🔍 onChange 함수 호출 후');
       }
     },
     onSelectionUpdate: ({ editor }) => {
-      let html = editor.getHTML();
-      console.log('🔍 onSelectionUpdate:', html);
-      
-      // 빈 줄바꿈 처리: <p></p>를 <br><br>로 변환
-      html = html.replace(/<p><\/p>/g, '<br><br>');
-      // 연속된 줄바꿈 처리
-      html = html.replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
-      
-      // content prop과 다를 때만 onChange 호출 (무한 루프 방지)
-      if (html !== content) {
-        onChange(html);
-      }
+      // onSelectionUpdate에서는 onChange 호출하지 않음 (커서 위치 문제 방지)
+      // 선택 영역 변경 시에는 HTML 변환하지 않음
     },
     editorProps: {
       attributes: {
