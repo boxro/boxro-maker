@@ -30,8 +30,6 @@ import {
   Unlink,
   Image as ImageIcon,
   Type,
-  Minus,
-  Plus,
   AlignLeft,
   AlignCenter,
   AlignRight,
@@ -54,14 +52,65 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [imageUrl, setImageUrl] = useState('');
   const [isMounted, setIsMounted] = useState(false);
-  const [lineHeight, setLineHeight] = useState(1.5);
+  const [selectedColor, setSelectedColor] = useState('#000000');
+  const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
+  const [selectedFontFamily, setSelectedFontFamily] = useState('Arial');
+  const [isFontFamilyOpen, setIsFontFamilyOpen] = useState(false);
+  const [selectedFontSize, setSelectedFontSize] = useState('16px');
+  const [isFontSizeOpen, setIsFontSizeOpen] = useState(false);
+  const [customFonts, setCustomFonts] = useState<string[]>([]);
+  const [customFontInput, setCustomFontInput] = useState('');
+  const [isCustomFontOpen, setIsCustomFontOpen] = useState(false);
 
-  // 모달이 열릴 때 배경 스크롤 방지
+  // 모달이 열릴 때 배경 스크롤 방지 (색상 선택기는 제외)
   useScrollLock(isLinkModalOpen || isImageModalOpen);
 
   useEffect(() => {
     setIsMounted(true);
+    
+    // localStorage에서 사용자 정의 폰트 로드
+    const savedFonts = localStorage.getItem('richTextEditor-customFonts');
+    if (savedFonts) {
+      try {
+        const fonts = JSON.parse(savedFonts);
+        setCustomFonts(fonts);
+        console.log('🔍 저장된 사용자 정의 폰트 로드:', fonts);
+      } catch (error) {
+        console.warn('사용자 정의 폰트 로드 실패:', error);
+      }
+    }
   }, []);
+
+  // 색상 선택기 외부 클릭 시 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      
+      if (isColorPickerOpen && !target.closest('.color-picker-container')) {
+        setIsColorPickerOpen(false);
+      }
+      
+      if (isFontFamilyOpen && !target.closest('.font-family-container')) {
+        setIsFontFamilyOpen(false);
+      }
+      
+      if (isFontSizeOpen && !target.closest('.font-size-container')) {
+        setIsFontSizeOpen(false);
+      }
+      
+      if (isCustomFontOpen && !target.closest('.custom-font-container')) {
+        setIsCustomFontOpen(false);
+      }
+    };
+
+    if (isColorPickerOpen || isFontFamilyOpen || isFontSizeOpen || isCustomFontOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isColorPickerOpen, isFontFamilyOpen, isFontSizeOpen, isCustomFontOpen]);
 
 
   const editor = useEditor({
@@ -75,6 +124,82 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
         types: ['paragraph', 'heading'],
       }),
       Color,
+      // 커스텀 폰트 패밀리 확장
+      Extension.create({
+        name: 'fontFamily',
+        addGlobalAttributes() {
+          return [
+            {
+              types: ['textStyle'],
+              attributes: {
+                fontFamily: {
+                  default: null,
+                  parseHTML: element => element.style.fontFamily?.replace(/['"]/g, ''),
+                  renderHTML: attributes => {
+                    if (!attributes.fontFamily) {
+                      return {};
+                    }
+                    return {
+                      style: `font-family: ${attributes.fontFamily}`,
+                    };
+                  },
+                },
+              },
+            },
+          ];
+        },
+        addCommands() {
+          return {
+            setFontFamily: (fontFamily: string) => ({ chain }) => {
+              return chain().setMark('textStyle', { fontFamily }).run();
+            },
+            unsetFontFamily: () => ({ chain }) => {
+              return chain()
+                .setMark('textStyle', { fontFamily: null })
+                .removeEmptyTextStyle()
+                .run();
+            },
+          };
+        },
+      }),
+      // 커스텀 폰트 크기 확장
+      Extension.create({
+        name: 'fontSize',
+        addGlobalAttributes() {
+          return [
+            {
+              types: ['textStyle'],
+              attributes: {
+                fontSize: {
+                  default: null,
+                  parseHTML: element => element.style.fontSize,
+                  renderHTML: attributes => {
+                    if (!attributes.fontSize) {
+                      return {};
+                    }
+                    return {
+                      style: `font-size: ${attributes.fontSize}`,
+                    };
+                  },
+                },
+              },
+            },
+          ];
+        },
+        addCommands() {
+          return {
+            setFontSize: (fontSize: string) => ({ chain }) => {
+              return chain().setMark('textStyle', { fontSize }).run();
+            },
+            unsetFontSize: () => ({ chain }) => {
+              return chain()
+                .setMark('textStyle', { fontSize: null })
+                .removeEmptyTextStyle()
+                .run();
+            },
+          };
+        },
+      }),
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
@@ -225,61 +350,72 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
     }
   };
 
-  // 줄간격 조절 함수들
-  const decreaseLineHeight = () => {
-    const newHeight = Math.max(1.0, lineHeight - 0.1);
-    setLineHeight(newHeight);
-    applyLineHeight(newHeight);
-  };
-
-  const increaseLineHeight = () => {
-    const newHeight = Math.min(3.0, lineHeight + 0.1);
-    setLineHeight(newHeight);
-    applyLineHeight(newHeight);
-  };
-
-  const resetLineHeight = () => {
-    setLineHeight(1.5);
-    applyLineHeight(1.5);
-  };
-
-  const applyLineHeight = (height: number) => {
-    if (!editor) return;
-    
-    // 현재 선택된 텍스트가 있는지 확인
-    const { from, to } = editor.state.selection;
-    const hasSelection = from !== to;
-    
-    if (hasSelection) {
-      // 선택된 텍스트가 있는 경우 - 선택된 범위의 블록들에만 적용
-      const { $from, $to } = editor.state.selection;
-      
-      editor.state.doc.nodesBetween($from.pos, $to.pos, (node, pos) => {
-        if (node.type.name === 'paragraph' || node.type.name.startsWith('heading')) {
-          const dom = editor.view.nodeDOM(pos);
-          if (dom) {
-            (dom as HTMLElement).style.setProperty('line-height', height.toString(), 'important');
-          }
-        }
-      });
-    } else {
-      // 커서만 있는 경우 - 현재 블록에만 적용
-      const { $from } = editor.state.selection;
-      const node = $from.parent;
-      
-      if (node.type.name === 'paragraph' || node.type.name.startsWith('heading')) {
-        const dom = editor.view.nodeDOM($from.before());
-        if (dom) {
-          (dom as HTMLElement).style.setProperty('line-height', height.toString(), 'important');
-        }
-      }
+  // 색상 적용 함수
+  const applyColor = (color: string) => {
+    if (editor) {
+      editor.chain().focus().setColor(color).run();
+      setSelectedColor(color);
+      setIsColorPickerOpen(false);
     }
+  };
+
+  // 색상 제거 함수
+  const removeColor = () => {
+    if (editor) {
+      editor.chain().focus().unsetColor().run();
+      setSelectedColor('#000000');
+    }
+  };
+
+  // 폰트 패밀리 적용 함수
+  const applyFontFamily = (fontFamily: string) => {
+    if (editor) {
+      editor.chain().focus().setFontFamily(fontFamily).run();
+      setSelectedFontFamily(fontFamily);
+      setIsFontFamilyOpen(false);
+    }
+  };
+
+  // 폰트 크기 적용 함수
+  const applyFontSize = (fontSize: string) => {
+    if (editor) {
+      editor.chain().focus().setFontSize(fontSize).run();
+      setSelectedFontSize(fontSize);
+      setIsFontSizeOpen(false);
+    }
+  };
+
+  // 사용자 정의 폰트 추가 함수
+  const addCustomFont = () => {
+    if (customFontInput.trim() && !customFonts.includes(customFontInput.trim())) {
+      const newFonts = [...customFonts, customFontInput.trim()];
+      setCustomFonts(newFonts);
+      
+      // localStorage에 저장
+      try {
+        localStorage.setItem('richTextEditor-customFonts', JSON.stringify(newFonts));
+        console.log('🔍 사용자 정의 폰트 저장됨:', newFonts);
+      } catch (error) {
+        console.warn('사용자 정의 폰트 저장 실패:', error);
+      }
+      
+      setCustomFontInput('');
+      setIsCustomFontOpen(false);
+    }
+  };
+
+  // 사용자 정의 폰트 제거 함수
+  const removeCustomFont = (font: string) => {
+    const newFonts = customFonts.filter(f => f !== font);
+    setCustomFonts(newFonts);
     
-    // HTML 업데이트를 위해 onChange 호출
-    setTimeout(() => {
-      const html = editor.getHTML();
-      onChange(html);
-    }, 100);
+    // localStorage 업데이트
+    try {
+      localStorage.setItem('richTextEditor-customFonts', JSON.stringify(newFonts));
+      console.log('🔍 사용자 정의 폰트 삭제됨:', font, '남은 폰트:', newFonts);
+    } catch (error) {
+      console.warn('사용자 정의 폰트 삭제 실패:', error);
+    }
   };
 
 
@@ -339,6 +475,194 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
           >
             <Code className="w-4 h-4" />
           </Button>
+        </div>
+
+        {/* 색상 선택 */}
+        <div className="flex gap-1 border-r border-gray-200 pr-2 mr-2">
+          <div className="relative color-picker-container">
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-gray-300 text-gray-600 hover:bg-gray-50"
+              onClick={() => setIsColorPickerOpen(!isColorPickerOpen)}
+            >
+              <div className="flex items-center gap-1">
+                <div 
+                  className="w-4 h-4 rounded border border-gray-300" 
+                  style={{ backgroundColor: selectedColor }}
+                ></div>
+                <Type className="w-4 h-4" />
+              </div>
+            </Button>
+            
+            {isColorPickerOpen && (
+              <div className="absolute top-full left-0 mt-1 p-4 bg-white border border-gray-300 rounded-lg shadow-lg z-[9999] min-w-[280px]">
+                <div className="grid grid-cols-8 gap-2 mb-3">
+                  {[
+                    '#000000', '#333333', '#666666', '#999999',
+                    '#FF0000', '#FF6600', '#FFCC00', '#00FF00',
+                    '#0066FF', '#6600FF', '#FF00FF', '#00FFFF',
+                    '#8B4513', '#FF69B4', '#32CD32', '#FFD700'
+                  ].map((color) => (
+                    <button
+                      key={color}
+                      className="w-8 h-8 rounded border border-gray-300 hover:scale-110 transition-transform shadow-sm"
+                      style={{ backgroundColor: color }}
+                      onClick={() => applyColor(color)}
+                      title={color}
+                    />
+                  ))}
+                </div>
+                <div className="flex gap-3 items-center">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-600">커스텀:</span>
+                    <input
+                      type="color"
+                      value={selectedColor}
+                      onChange={(e) => applyColor(e.target.value)}
+                      className="w-10 h-8 border border-gray-300 rounded cursor-pointer"
+                    />
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={removeColor}
+                    className="text-xs px-3 py-1"
+                  >
+                    기본색
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 폰트 패밀리 선택 */}
+        <div className="flex gap-1 border-r border-gray-200 pr-2 mr-2">
+          <div className="relative font-family-container">
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-gray-300 text-gray-600 hover:bg-gray-50"
+              onClick={() => setIsFontFamilyOpen(!isFontFamilyOpen)}
+            >
+              <div className="flex items-center gap-1">
+                <Type className="w-4 h-4" />
+                <span className="text-xs">{selectedFontFamily}</span>
+              </div>
+            </Button>
+            
+            {isFontFamilyOpen && (
+              <div className="absolute top-full left-0 mt-1 p-3 bg-white border border-gray-300 rounded-lg shadow-lg z-[9999] min-w-[250px]">
+                {/* 기본 폰트 목록 */}
+                <div className="space-y-1 mb-3">
+                  <div className="text-xs font-semibold text-gray-500 mb-2">기본 폰트</div>
+                  {[
+                    'Arial', 'Times New Roman', 'Georgia', 'Verdana', 
+                    'Helvetica', 'Courier New', 'Trebuchet MS', 'Arial Black'
+                  ].map((font) => (
+                    <button
+                      key={font}
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded"
+                      style={{ fontFamily: font }}
+                      onClick={() => applyFontFamily(font)}
+                    >
+                      {font}
+                    </button>
+                  ))}
+                </div>
+
+                {/* 사용자 정의 폰트 목록 */}
+                {customFonts.length > 0 && (
+                  <div className="space-y-1 mb-3">
+                    <div className="flex items-center justify-between">
+                      <div className="text-xs font-semibold text-gray-500">사용자 정의 폰트</div>
+                      <div className="text-xs text-green-600">💾 저장됨</div>
+                    </div>
+                    {customFonts.map((font) => (
+                      <div key={font} className="flex items-center justify-between group">
+                        <button
+                          className="flex-1 text-left px-3 py-2 text-sm hover:bg-gray-100 rounded"
+                          style={{ fontFamily: font }}
+                          onClick={() => applyFontFamily(font)}
+                        >
+                          {font}
+                        </button>
+                        <button
+                          className="ml-2 px-2 py-1 text-xs text-red-500 hover:bg-red-50 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => removeCustomFont(font)}
+                          title="폰트 삭제"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* 폰트 추가 섹션 */}
+                <div className="border-t pt-3">
+                  <div className="text-xs font-semibold text-gray-500 mb-2">폰트 추가</div>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={customFontInput}
+                      onChange={(e) => setCustomFontInput(e.target.value)}
+                      placeholder="폰트 이름 입력"
+                      className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      onKeyPress={(e) => e.key === 'Enter' && addCustomFont()}
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={addCustomFont}
+                      disabled={!customFontInput.trim()}
+                      className="px-3 py-2 text-xs"
+                    >
+                      추가
+                    </Button>
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1">
+                    예: "Noto Sans KR", "Roboto", "Open Sans"
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 폰트 크기 선택 */}
+        <div className="flex gap-1 border-r border-gray-200 pr-2 mr-2">
+          <div className="relative font-size-container">
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-gray-300 text-gray-600 hover:bg-gray-50"
+              onClick={() => setIsFontSizeOpen(!isFontSizeOpen)}
+            >
+              <div className="flex items-center gap-1">
+                <Type className="w-4 h-4" />
+                <span className="text-xs">{selectedFontSize}</span>
+              </div>
+            </Button>
+            
+            {isFontSizeOpen && (
+              <div className="absolute top-full left-0 mt-1 p-3 bg-white border border-gray-300 rounded-lg shadow-lg z-[9999] min-w-[120px]">
+                <div className="space-y-1">
+                  {['12px', '14px', '16px', '18px', '20px', '24px', '28px', '32px'].map((size) => (
+                    <button
+                      key={size}
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded"
+                      style={{ fontSize: size }}
+                      onClick={() => applyFontSize(size)}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* 헤딩 */}
@@ -465,39 +789,6 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
           </Button>
         </div>
 
-        {/* 줄간격 조절 */}
-        <div className="flex gap-1 border-r border-gray-200 pr-2 mr-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-gray-300 text-gray-600 hover:bg-gray-50"
-            onClick={decreaseLineHeight}
-            title="줄간격 줄이기"
-          >
-            <Minus className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-gray-300 text-gray-600 hover:bg-gray-50"
-            onClick={resetLineHeight}
-            title="줄간격 초기화"
-          >
-            <Type className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-gray-300 text-gray-600 hover:bg-gray-50"
-            onClick={increaseLineHeight}
-            title="줄간격 늘리기"
-          >
-            <Plus className="w-4 h-4" />
-          </Button>
-          <span className="text-xs text-gray-500 px-2 py-1 flex items-center">
-            {lineHeight.toFixed(1)}
-          </span>
-        </div>
 
         {/* 실행 취소/다시 실행 */}
         <div className="flex gap-1">

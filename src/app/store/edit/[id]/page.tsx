@@ -83,6 +83,10 @@ export default function EditStoryPage() {
   // 오류 모달 상태
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  
+  // 성공 메시지 모달 상태
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
   const [loading, setLoading] = useState(true);
 
   // 이미지 리사이즈 함수 (투명도 감지)
@@ -822,9 +826,28 @@ export default function EditStoryPage() {
                             <div className="flex flex-col gap-1">
                               <button
                                 type="button"
-                                onClick={() => {
-                                  navigator.clipboard.writeText(image);
-                                  alert('이미지 URL이 클립보드에 복사되었습니다!');
+                                onClick={async () => {
+                                  try {
+                                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                                      await navigator.clipboard.writeText(image);
+                                      setSuccessMessage('이미지 URL이 클립보드에 복사되었습니다!');
+                                      setShowSuccessModal(true);
+                                    } else {
+                                      // 클립보드 API를 사용할 수 없는 경우
+                                      const textArea = document.createElement('textarea');
+                                      textArea.value = image;
+                                      document.body.appendChild(textArea);
+                                      textArea.select();
+                                      document.execCommand('copy');
+                                      document.body.removeChild(textArea);
+                                      setSuccessMessage('이미지 URL이 클립보드에 복사되었습니다!');
+                                      setShowSuccessModal(true);
+                                    }
+                                  } catch (error) {
+                                    console.error('클립보드 복사 실패:', error);
+                                    setErrorMessage('복사에 실패했습니다. 다시 시도해주세요.');
+                                    setShowErrorModal(true);
+                                  }
                                 }}
                                 className="px-2 py-1 bg-green-500 hover:bg-green-600 text-white text-xs rounded transition-colors"
                               >
@@ -1136,6 +1159,28 @@ export default function EditStoryPage() {
         onClose={() => setShowErrorModal(false)}
         message={errorMessage}
       />
+
+      {/* 성공 메시지 모달 */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-gradient-to-br from-green-900/20 via-blue-900/20 to-purple-900/20 backdrop-blur-md z-50 flex items-center justify-center">
+          <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-6 max-w-sm w-full mx-6">
+            <div className="text-center">
+              <h3 className="text-[18px] font-semibold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-2">
+                복사 완료
+              </h3>
+              <p className="text-gray-600 text-[14px] mb-4">
+                {successMessage}
+              </p>
+              <Button
+                onClick={() => setShowSuccessModal(false)}
+                className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white transition-all duration-200 rounded-full text-[14px]"
+              >
+                확인
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </CommonBackground>
   );
 }

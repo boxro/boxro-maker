@@ -24,6 +24,7 @@ export default function EditProfilePage() {
     photoURL: '',
     email: ''
   });
+  const [tempImage, setTempImage] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -124,27 +125,18 @@ export default function EditProfilePage() {
         return;
       }
 
-      // 임시로 Base64로 변환하여 사용 (CORS 문제 해결)
+      // 임시로 Base64로 변환하여 임시 상태에만 저장
       const reader = new FileReader();
-      reader.onload = async (e) => {
+      reader.onload = (e) => {
         try {
           const base64String = e.target?.result as string;
           
-          const userRef = doc(db, 'users', user.uid);
-          await updateDoc(userRef, {
-            customPhotoURL: base64String,
-            updatedAt: new Date().toISOString()
-          });
-
-          setProfileData(prev => ({
-            ...prev,
-            photoURL: base64String
-          }));
-
-          setMessage('프로필 이미지가 업데이트되었습니다!');
+          // 임시 상태에만 저장 (DB에는 저장하지 않음)
+          setTempImage(base64String);
+          setMessage('이미지가 선택되었습니다. 저장 버튼을 눌러 변경사항을 적용하세요.');
         } catch (error) {
-          console.error('이미지 업데이트 실패:', error);
-          setMessage('이미지 업데이트에 실패했습니다. 다시 시도해주세요.');
+          console.error('이미지 변환 실패:', error);
+          setMessage('이미지 변환에 실패했습니다. 다시 시도해주세요.');
         } finally {
           setIsUploadingImage(false);
         }
@@ -187,7 +179,8 @@ export default function EditProfilePage() {
       await updateDoc(userRef, {
         displayName: profileData.displayName,
         authorNickname: profileData.displayName,
-        photoURL: profileData.photoURL,
+        photoURL: tempImage || profileData.photoURL, // 임시 이미지가 있으면 사용
+        customPhotoURL: tempImage || profileData.photoURL, // 임시 이미지가 있으면 사용
         updatedAt: new Date().toISOString()
       });
 
@@ -219,6 +212,15 @@ export default function EditProfilePage() {
         console.warn('기존 댓글 닉네임 업데이트 실패:', error);
       }
 
+      // 임시 이미지를 정리하고 상태 업데이트
+      if (tempImage) {
+        setProfileData(prev => ({
+          ...prev,
+          photoURL: tempImage
+        }));
+        setTempImage(null);
+      }
+      
       setShowSuccessModal(true);
       setIsEditing(false);
     } catch (error: any) {
@@ -235,6 +237,9 @@ export default function EditProfilePage() {
   };
 
   const handleCancel = () => {
+    // 임시 이미지 초기화
+    setTempImage(null);
+    setMessage('');
     router.push('/');
   };
 
@@ -265,9 +270,9 @@ export default function EditProfilePage() {
               <div className="text-center mb-4">
                 <div className="relative inline-block">
                   <div className="w-24 h-24 mx-auto mb-2 rounded-full overflow-hidden flex items-center justify-center bg-gray-200">
-                    {profileData.photoURL ? (
+                    {(tempImage || profileData.photoURL) ? (
                       <img 
-                        src={profileData.photoURL} 
+                        src={tempImage || profileData.photoURL} 
                         alt="프로필 이미지" 
                         className="w-full h-full object-cover"
                         crossOrigin="anonymous"

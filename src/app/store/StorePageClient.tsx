@@ -357,6 +357,19 @@ export default function StorePageClient() {
     }
 
     try {
+      // 1. 관련 박스로 톡 삭제
+      const boxroTalksQuery = query(
+        collection(db, 'storeBoxroTalks'),
+        where('articleId', '==', id)
+      );
+      const boxroTalksSnapshot = await getDocs(boxroTalksQuery);
+      
+      const deletePromises = boxroTalksSnapshot.docs.map(doc => 
+        deleteDoc(doc.ref)
+      );
+      await Promise.all(deletePromises);
+      
+      // 2. 게시물 삭제
       await deleteDoc(doc(db, 'storeItems', id));
       setArticles(articles.filter(article => article.id !== id));
       alert('글이 삭제되었습니다.');

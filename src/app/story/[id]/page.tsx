@@ -689,7 +689,7 @@ export default function StoryArticlePage() {
         <CommonHeader />
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
-            <p className="text-red-600 mb-4">{error || '글을 찾을 수 없습니다.'}</p>
+            <p className="text-white mb-4">{error || '글을 찾을 수 없습니다.'}</p>
             <Link href="/story">
               <Button className="bg-white border border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 rounded-full px-6 py-3 text-gray-800">
                 <ArrowLeft className="w-4 h-4 mr-2" />

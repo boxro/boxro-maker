@@ -61,6 +61,12 @@ interface AdminStats {
   firebaseConnected: boolean;
   dbConnected: boolean;
   storageConnected: boolean;
+  totalCommits: number;
+  lastDeploy: string;
+  lastBuild: string;
+  todayActiveUsers: number;
+  recent24hActivity: number;
+  peakTime: string;
 }
 
 interface HomeCard {
@@ -187,7 +193,13 @@ export default function AdminPage() {
     blueprintDownloads: 0,
     firebaseConnected: false,
     dbConnected: false,
-    storageConnected: false
+    storageConnected: false,
+    totalCommits: 0,
+    lastDeploy: 'N/A',
+    lastBuild: 'N/A',
+    todayActiveUsers: 0,
+    recent24hActivity: 0,
+    peakTime: 'N/A'
   });
 
   // 홈카드 관리 관련 state
@@ -1440,6 +1452,201 @@ export default function AdminPage() {
     }
   };
 
+  // Git 커밋 수 가져오기
+  const getTotalCommits = async (): Promise<number> => {
+    try {
+      // Git 명령어로 커밋 수 가져오기
+      const response = await fetch('/api/git-commits');
+      if (response.ok) {
+        const data = await response.json();
+        return data.totalCommits || 0;
+      }
+      return 0;
+    } catch (error) {
+      console.warn('Git 커밋 수 가져오기 실패:', error);
+      return 0;
+    }
+  };
+
+  // 마지막 배포 시간 가져오기
+  const getLastDeployTime = async (): Promise<string> => {
+    try {
+      // package.json의 버전 정보나 빌드 시간 사용
+      const response = await fetch('/api/last-deploy');
+      if (response.ok) {
+        const data = await response.json();
+        return data.lastDeploy || 'N/A';
+      }
+      return new Date().toLocaleDateString('ko-KR');
+    } catch (error) {
+      console.warn('마지막 배포 시간 가져오기 실패:', error);
+      return 'N/A';
+    }
+  };
+
+  // 마지막 빌드 시간 가져오기
+  const getLastBuildTime = async (): Promise<string> => {
+    try {
+      // 빌드 시간 정보 가져오기
+      const response = await fetch('/api/last-build');
+      if (response.ok) {
+        const data = await response.json();
+        return data.lastBuild || 'N/A';
+      }
+      return new Date().toLocaleDateString('ko-KR');
+    } catch (error) {
+      console.warn('마지막 빌드 시간 가져오기 실패:', error);
+      return 'N/A';
+    }
+  };
+
+  // 오늘 활성 사용자 수 가져오기
+  const getTodayActiveUsers = async (): Promise<number> => {
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      // 오늘 생성된 작품이나 박스로톡이 있는 사용자 수 계산
+      const todayDesignsQuery = query(
+        collection(db, 'communityDesigns'),
+        where('createdAt', '>=', today)
+      );
+      const todayDesignsSnapshot = await getDocs(todayDesignsQuery);
+      
+      const todayBoxroTalksQuery = query(
+        collection(db, 'boxroTalks'),
+        where('createdAt', '>=', today)
+      );
+      const todayBoxroTalksSnapshot = await getDocs(todayBoxroTalksQuery);
+      
+      // 오늘 활동한 사용자 ID 수집
+      const activeUserIds = new Set<string>();
+      
+      // 오늘 작품을 만든 사용자들
+      todayDesignsSnapshot.docs.forEach(doc => {
+        const data = doc.data();
+        if (data.authorId) {
+          activeUserIds.add(data.authorId);
+        }
+      });
+      
+      // 오늘 박스로톡을 작성한 사용자들
+      todayBoxroTalksSnapshot.docs.forEach(doc => {
+        const data = doc.data();
+        if (data.authorId) {
+          activeUserIds.add(data.authorId);
+        }
+      });
+      
+      const todayActiveCount = activeUserIds.size;
+      console.log('오늘 활성 사용자 수:', todayActiveCount);
+      return todayActiveCount;
+    } catch (error) {
+      console.warn('오늘 활성 사용자 수 가져오기 실패:', error);
+      return 0;
+    }
+  };
+
+  // 최근 24시간 활동량 가져오기
+  const getRecent24hActivity = async (): Promise<number> => {
+    try {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      
+      // 갤러리 활동 (작품 생성, 좋아요, 공유, 다운로드)
+      const designsQuery = query(
+        collection(db, 'communityDesigns'),
+        where('createdAt', '>=', yesterday)
+      );
+      const designsSnapshot = await getDocs(designsQuery);
+      const recentDesigns = designsSnapshot.docs.length;
+      
+      // 박스로 톡 활동
+      const boxroTalksQuery = query(
+        collection(db, 'boxroTalks'),
+        where('createdAt', '>=', yesterday)
+      );
+      const boxroTalksSnapshot = await getDocs(boxroTalksQuery);
+      const recentBoxroTalks = boxroTalksSnapshot.docs.length;
+      
+      return recentDesigns + recentBoxroTalks;
+    } catch (error) {
+      console.warn('최근 24시간 활동량 가져오기 실패:', error);
+      return 0;
+    }
+  };
+
+  // 피크 시간 가져오기
+  const getPeakTime = async (): Promise<string> => {
+    try {
+      // 최근 30일간의 활동 데이터를 시간대별로 분석
+      const monthAgo = new Date();
+      monthAgo.setDate(monthAgo.getDate() - 30);
+      
+      // 갤러리 작품 생성 시간 분석
+      const designsQuery = query(
+        collection(db, 'communityDesigns'),
+        where('createdAt', '>=', monthAgo)
+      );
+      const designsSnapshot = await getDocs(designsQuery);
+      
+      // 박스로 톡 생성 시간 분석
+      const boxroTalksQuery = query(
+        collection(db, 'boxroTalks'),
+        where('createdAt', '>=', monthAgo)
+      );
+      const boxroTalksSnapshot = await getDocs(boxroTalksQuery);
+      
+      const hourCounts: { [key: number]: number } = {};
+      
+      // 갤러리 작품 시간 분석
+      designsSnapshot.docs.forEach(doc => {
+        const data = doc.data();
+        if (data.createdAt && data.createdAt.toDate) {
+          const date = data.createdAt.toDate();
+          const hour = date.getHours();
+          hourCounts[hour] = (hourCounts[hour] || 0) + 1;
+        }
+      });
+      
+      // 박스로 톡 시간 분석
+      boxroTalksSnapshot.docs.forEach(doc => {
+        const data = doc.data();
+        if (data.createdAt && data.createdAt.toDate) {
+          const date = data.createdAt.toDate();
+          const hour = date.getHours();
+          hourCounts[hour] = (hourCounts[hour] || 0) + 1;
+        }
+      });
+      
+      console.log('시간대별 활동 수:', hourCounts);
+      
+      // 가장 활발한 시간대 찾기
+      let peakHour = 14; // 기본값: 오후 2시
+      let maxCount = 0;
+      
+      for (const [hour, count] of Object.entries(hourCounts)) {
+        if (count > maxCount) {
+          maxCount = count;
+          peakHour = parseInt(hour);
+        }
+      }
+      
+      // 데이터가 없으면 일반적인 피크 시간 사용
+      if (Object.keys(hourCounts).length === 0) {
+        peakHour = 14; // 오후 2시
+        console.log('활동 데이터 없음, 기본 피크 시간 사용:', peakHour);
+      }
+      
+      const result = `${peakHour}:00`;
+      console.log('피크 시간 결과:', result);
+      return result;
+    } catch (error) {
+      console.warn('피크 시간 가져오기 실패:', error);
+      return '14:00'; // 기본값 반환
+    }
+  };
+
   // 사용자 활동 데이터 가져오기
   const loadUserActivities = async (userEmail: string) => {
     try {
@@ -1503,7 +1710,11 @@ export default function AdminPage() {
       const boxroTalksSnapshot = await getDocs(boxroTalksQuery);
       const userGalleryBoxroTalks = boxroTalksSnapshot.docs
         .map(doc => ({ id: doc.id, ...doc.data(), source: 'gallery' }))
-        .filter((boxroTalk: any) => boxroTalk.authorEmail === userEmail);
+        .filter((boxroTalk: any) => 
+          boxroTalk.authorEmail === userEmail &&
+          boxroTalk.isDeleted !== true && 
+          boxroTalk.deletedAt === undefined
+        );
 
       // 사용자의 박스로 톡 가져오기 (스토리 박스로 톡 - 스토어 관련 제외)
       const storyBoxroTalksQuery = query(collection(db, 'storyBoxroTalks'), orderBy('createdAt', 'desc'));
@@ -1516,7 +1727,9 @@ export default function AdminPage() {
           !boxroTalk.storeItemId && 
           boxroTalk.type !== 'store' && 
           !(boxroTalk.text && boxroTalk.text.includes('스토어')) &&
-          !(boxroTalk.articleId && boxroTalk.articleId.includes('store'))
+          !(boxroTalk.articleId && boxroTalk.articleId.includes('store')) &&
+          boxroTalk.isDeleted !== true && 
+          boxroTalk.deletedAt === undefined
         );
 
       // 사용자의 박스로 톡 가져오기 (스토어 박스로 톡)
@@ -1524,10 +1737,18 @@ export default function AdminPage() {
       const storeBoxroTalksSnapshot = await getDocs(storeBoxroTalksQuery);
       const userStoreBoxroTalks = storeBoxroTalksSnapshot.docs
         .map(doc => ({ id: doc.id, ...doc.data(), source: 'store' }))
-        .filter((boxroTalk: any) => boxroTalk.authorEmail === userEmail);
+        .filter((boxroTalk: any) => 
+          boxroTalk.authorEmail === userEmail &&
+          boxroTalk.isDeleted !== true && 
+          boxroTalk.deletedAt === undefined
+        );
 
-      // 모든 박스로 톡 합치기 (최신순 정렬)
+      // 모든 박스로 톡 합치기 (최신순 정렬, 삭제된 톡 제외)
       const userBoxroTalks = [...userGalleryBoxroTalks, ...userStoryBoxroTalks, ...userStoreBoxroTalks]
+        .filter((boxroTalk: any) => 
+          boxroTalk.isDeleted !== true && 
+          boxroTalk.deletedAt === undefined
+        )
         .sort((a, b) => {
           // Firestore Timestamp 객체 처리
           const getTimestamp = (date: any) => {
@@ -1546,12 +1767,14 @@ export default function AdminPage() {
           return dateB - dateA; // 최신순 (내림차순)
         });
 
-      // 박스로 톡의 작품 정보 가져오기
+      // 박스로 톡의 작품 정보 가져오기 (고아 박스로톡 제외)
       const boxroTalksWithDesignInfo = await Promise.all(
         userBoxroTalks.map(async (boxroTalk: any) => {
           let designTitle = '작품 정보 없음';
           let designAuthor = '작가 정보 없음';
           let designThumbnail = null;
+          let isOrphaned = false; // 고아 박스로톡 여부
+          
           try {
             // 갤러리 박스로 톡인 경우
             if (boxroTalk.source === 'gallery' && boxroTalk.designId) {
@@ -1565,7 +1788,8 @@ export default function AdminPage() {
                 designThumbnail = designData.thumbnail || designData.thumbnailUrl || null;
                 console.log('추출된 갤러리 작품 제목:', designTitle, '작가:', designAuthor, '썸네일:', designThumbnail);
               } else {
-                console.log('갤러리 작품 문서가 존재하지 않음:', boxroTalk.designId);
+                console.log('갤러리 작품 문서가 존재하지 않음 (고아 박스로톡):', boxroTalk.designId);
+                isOrphaned = true;
               }
             }
             // 스토리 박스로 톡인 경우
@@ -1580,7 +1804,8 @@ export default function AdminPage() {
                 designThumbnail = articleData.thumbnail || articleData.cardThumbnail || null;
                 console.log('추출된 스토리 작품 제목:', designTitle, '작가:', designAuthor, '썸네일:', designThumbnail);
               } else {
-                console.log('스토리 작품 문서가 존재하지 않음:', boxroTalk.articleId);
+                console.log('스토리 작품 문서가 존재하지 않음 (고아 박스로톡):', boxroTalk.articleId);
+                isOrphaned = true;
               }
             }
             // 스토어 박스로 톡인 경우
@@ -1595,10 +1820,12 @@ export default function AdminPage() {
                 designThumbnail = storeData.thumbnail || storeData.cardThumbnail || null;
                 console.log('추출된 스토어 작품 제목:', designTitle, '작가:', designAuthor, '썸네일:', designThumbnail);
               } else {
-                console.log('스토어 작품 문서가 존재하지 않음:', boxroTalk.articleId);
+                console.log('스토어 작품 문서가 존재하지 않음 (고아 박스로톡):', boxroTalk.articleId);
+                isOrphaned = true;
               }
             } else {
               console.log('박스로 톡에 source나 ID가 없음:', boxroTalk);
+              isOrphaned = true;
             }
           } catch (error) {
             console.warn('작품 정보 가져오기 실패:', error);
@@ -1611,10 +1838,14 @@ export default function AdminPage() {
             designAuthor: designAuthor,
             designThumbnail: designThumbnail,
             createdAt: boxroTalk.createdAt,
-            source: boxroTalk.source // source 필드 유지
+            source: boxroTalk.source, // source 필드 유지
+            isOrphaned: isOrphaned // 고아 박스로톡 여부
           };
         })
       );
+
+      // 고아 박스로톡 필터링 (삭제된 게시글의 박스로톡 제외)
+      const validBoxroTalks = boxroTalksWithDesignInfo.filter((boxroTalk: any) => !boxroTalk.isOrphaned);
 
       // 사용자의 좋아요 가져오기 (갤러리 작품 + 박스카 이야기)
       const userLikes = [
@@ -1814,7 +2045,7 @@ export default function AdminPage() {
               title: design.title || design.name || '제목 없음',
               thumbnail: design.thumbnail || design.thumbnailUrl,
               author: design.authorNickname || design.author || design.authorName || design.creator || design.userId || '작가 정보 없음',
-              shares: sharedBy.length,
+              shares: design.shares || 0, // 전체 공유 수 사용
               createdAt: design.createdAt
             });
           }
@@ -1837,7 +2068,7 @@ export default function AdminPage() {
               title: story.title || '제목 없음',
               thumbnail: story.thumbnail || story.cardThumbnail,
               author: story.actualNickname || story.authorNickname || story.authorName || story.author || story.creator || story.userId || '작가 정보 없음',
-              shares: sharedBy.length,
+              shares: story.shares || 0, // 전체 공유 수 사용
               createdAt: story.createdAt
             });
           }
@@ -1860,7 +2091,7 @@ export default function AdminPage() {
               title: storeItem.title || '제목 없음',
               thumbnail: storeItem.thumbnail || storeItem.cardThumbnail,
               author: storeItem.authorNickname || storeItem.author || storeItem.authorName || storeItem.creator || storeItem.userId || '작가 정보 없음',
-              shares: sharedBy.length,
+              shares: storeItem.shares || 0, // 전체 공유 수 사용
               createdAt: storeItem.createdAt
             });
           }
@@ -1903,7 +2134,7 @@ export default function AdminPage() {
               title: design.title || design.name || '제목 없음',
               thumbnail: design.thumbnail || design.imageUrl,
               author: design.authorNickname || design.author || design.authorName || design.creator || design.userId || '작가 정보 없음',
-              views: viewedBy.length,
+              views: design.views || 0, // 전체 조회 수 사용
               createdAt: design.createdAt
             });
           }
@@ -1927,7 +2158,7 @@ export default function AdminPage() {
               title: story.title || '제목 없음',
               thumbnail: story.thumbnail || story.imageUrl,
               author: story.authorNickname || story.author || story.authorName || story.creator || story.userId || '작가 정보 없음',
-              views: viewedBy.length,
+              views: story.views || 0, // 전체 조회 수 사용
               createdAt: story.createdAt
             });
           }
@@ -1951,7 +2182,7 @@ export default function AdminPage() {
               title: storeItem.title || '제목 없음',
               thumbnail: storeItem.thumbnail || storeItem.cardThumbnail,
               author: storeItem.authorNickname || storeItem.author || storeItem.authorName || storeItem.creator || storeItem.userId || '작가 정보 없음',
-              views: viewedBy.length,
+              views: storeItem.views || 0, // 전체 조회 수 사용
               createdAt: storeItem.createdAt
             });
           }
@@ -2013,7 +2244,7 @@ export default function AdminPage() {
 
       return {
         designs: userDesigns,
-        boxroTalks: boxroTalksWithDesignInfo,
+        boxroTalks: validBoxroTalks, // 고아 박스로톡 제외한 유효한 박스로톡만 반환
         likes: userLikes,
         downloads: allUserDownloads,
         shares: userShares,
@@ -2032,6 +2263,43 @@ export default function AdminPage() {
         storeRedirects: []
       };
     }
+  };
+
+  // 고아 박스로톡 필터링 함수 (삭제된 게시글의 박스로톡 제외)
+  const filterOrphanedBoxroTalks = async (boxroTalks: any[], source: 'gallery' | 'story' | 'store') => {
+    const validBoxroTalks = [];
+    
+    for (const boxroTalk of boxroTalks) {
+      let isOrphaned = false;
+      
+      try {
+        if (source === 'gallery' && boxroTalk.designId) {
+          const designDoc = await getDoc(doc(db, 'communityDesigns', boxroTalk.designId));
+          if (!designDoc.exists()) {
+            isOrphaned = true;
+          }
+        } else if (source === 'story' && boxroTalk.articleId) {
+          const articleDoc = await getDoc(doc(db, 'storyArticles', boxroTalk.articleId));
+          if (!articleDoc.exists()) {
+            isOrphaned = true;
+          }
+        } else if (source === 'store' && boxroTalk.articleId) {
+          const storeDoc = await getDoc(doc(db, 'storeItems', boxroTalk.articleId));
+          if (!storeDoc.exists()) {
+            isOrphaned = true;
+          }
+        }
+      } catch (error) {
+        console.warn('고아 박스로톡 확인 실패:', error);
+        isOrphaned = true;
+      }
+      
+      if (!isOrphaned) {
+        validBoxroTalks.push(boxroTalk);
+      }
+    }
+    
+    return validBoxroTalks;
   };
 
   const loadAdminData = async () => {
@@ -2152,8 +2420,13 @@ export default function AdminPage() {
         // 스토리의 조회수는 별도로 계산하지 않음 (사용자 활동이 아님)
       });
 
-      // 갤러리 박스로 톡별 통계
-      boxroTalks.forEach((boxroTalk: any) => {
+      // 갤러리 박스로 톡별 통계 (삭제되지 않은 것만 + 고아 박스로톡 제외)
+      const deletedFilteredBoxroTalks = boxroTalks.filter((boxroTalk: any) => 
+        boxroTalk.isDeleted !== true && boxroTalk.deletedAt === undefined
+      );
+      const activeGalleryBoxroTalks = await filterOrphanedBoxroTalks(deletedFilteredBoxroTalks, 'gallery');
+      
+      activeGalleryBoxroTalks.forEach((boxroTalk: any) => {
         const email = boxroTalk.authorEmail || 'unknown';
         if (!userStatsMap.has(email)) {
           userStatsMap.set(email, {
@@ -2177,12 +2450,14 @@ export default function AdminPage() {
         userStat.boxroTalksCount++;
       });
 
-      // 스토리 박스로 톡별 통계 (스토어 관련 제외)
-      const pureStoryBoxroTalks = storyBoxroTalks.filter(talk => 
+      // 스토리 박스로 톡별 통계 (스토어 관련 제외, 삭제되지 않은 것만 + 고아 박스로톡 제외)
+      const deletedFilteredStoryBoxroTalks = storyBoxroTalks.filter(talk => 
         !talk.storeId && !talk.storeItemId && talk.type !== 'store' && 
         !(talk.text && talk.text.includes('스토어')) &&
-        !(talk.articleId && talk.articleId.includes('store'))
+        !(talk.articleId && talk.articleId.includes('store')) &&
+        talk.isDeleted !== true && talk.deletedAt === undefined
       );
+      const pureStoryBoxroTalks = await filterOrphanedBoxroTalks(deletedFilteredStoryBoxroTalks, 'story');
       
       pureStoryBoxroTalks.forEach((boxroTalk: any) => {
         const email = boxroTalk.authorEmail || 'unknown';
@@ -2327,7 +2602,13 @@ export default function AdminPage() {
       console.log('🔍 총 스토어 박스로 톡:', allStoreBoxroTalks.length);
       console.log('🔍 전체 데이터:', allStoreBoxroTalks);
 
-      allStoreBoxroTalks.forEach((boxroTalk: any) => {
+      // 삭제되지 않은 스토어 박스로 톡만 필터링 + 고아 박스로톡 제외
+      const deletedFilteredStoreBoxroTalks = allStoreBoxroTalks.filter((boxroTalk: any) => 
+        boxroTalk.isDeleted !== true && boxroTalk.deletedAt === undefined
+      );
+      const activeStoreBoxroTalks = await filterOrphanedBoxroTalks(deletedFilteredStoreBoxroTalks, 'store');
+      
+      activeStoreBoxroTalks.forEach((boxroTalk: any) => {
         const email = boxroTalk.authorEmail || 'unknown';
         if (!userStatsMap.has(email)) {
           userStatsMap.set(email, {
@@ -2355,7 +2636,7 @@ export default function AdminPage() {
       const storeViews = storeItems.reduce((sum, storeItem: any) => sum + (storeItem.views || 0), 0);
       const storeRedirects = storeItems.reduce((sum, storeItem: any) => sum + (storeItem.storeRedirects || 0), 0);
       
-      // 스토어 바로가기 사용자별 카운트
+      // 스토어 바로가기 사용자별 카운트 (여러 번 바로가기해도 매번 카운트)
       storeItems.forEach((storeItem: any) => {
         const redirectedBy = storeItem.storeRedirectedBy || [];
         redirectedBy.forEach((uid: string) => {
@@ -2364,7 +2645,7 @@ export default function AdminPage() {
           // uid로 사용자 찾기
           for (const [email, userStat] of userStatsMap.entries()) {
             if (userStat.uid === uid) {
-              userStat.storeRedirectsCount++;
+              userStat.storeRedirectsCount += storeItem.storeRedirects || 0; // 전체 바로가기 수 사용
               break;
             }
           }
@@ -2379,7 +2660,13 @@ export default function AdminPage() {
         (talk.articleId && talk.articleId.includes('store'))
       );
       
-      const storeBoxroTalksCount = allStoreBoxroTalks.length + storeRelatedTalksFromStory.length;
+      // 스토리에서 스토어 관련 박스로톡도 고아 필터링 적용
+      const deletedFilteredStoreRelatedTalks = storeRelatedTalksFromStory.filter(talk => 
+        talk.isDeleted !== true && talk.deletedAt === undefined
+      );
+      const validStoreRelatedTalks = await filterOrphanedBoxroTalks(deletedFilteredStoreRelatedTalks, 'story');
+      
+      const storeBoxroTalksCount = activeStoreBoxroTalks.length + validStoreRelatedTalks.length;
       
       // 디버깅: 스토어 박스로 톡 통계 확인
       console.log('🔍 스토어 박스로 톡 통계:');
@@ -2453,31 +2740,36 @@ export default function AdminPage() {
           }
         });
         
-        sharedBy.forEach((userId: string) => {
-          const user = users.find(u => u.uid === userId);
-          if (user) {
-            const email = user.email || 'unknown';
-            if (!userStatsMap.has(email)) {
-              userStatsMap.set(email, {
-                email,
-                displayName: user.displayName || '익명',
-                photoURL: user.photoURL || '',
-                createdAt: user.createdAt || '',
-                lastSignIn: user.lastSignIn || '',
-                designsCount: 0,
-                boxroTalksCount: 0,
-                likesCount: 0,
-                downloadsCount: 0,
-                sharesCount: 0,
-                viewsCount: 0,
-                storeRedirectsCount: 0,
-                uid: user.uid || ''
-              });
+        // 공유는 여러 번 공유해도 매번 카운트 (shares 필드 사용)
+        const totalShares = design.shares || 0;
+        if (totalShares > 0) {
+          // sharedBy 배열의 사용자들에게 공유 수만큼 카운트
+          sharedBy.forEach((userId: string) => {
+            const user = users.find(u => u.uid === userId);
+            if (user) {
+              const email = user.email || 'unknown';
+              if (!userStatsMap.has(email)) {
+                userStatsMap.set(email, {
+                  email,
+                  displayName: user.displayName || '익명',
+                  photoURL: user.photoURL || '',
+                  createdAt: user.createdAt || '',
+                  lastSignIn: user.lastSignIn || '',
+                  designsCount: 0,
+                  boxroTalksCount: 0,
+                  likesCount: 0,
+                  downloadsCount: 0,
+                  sharesCount: 0,
+                  viewsCount: 0,
+                  storeRedirectsCount: 0,
+                  uid: user.uid || ''
+                });
+              }
+              const userStat = userStatsMap.get(email)!;
+              userStat.sharesCount += totalShares; // 전체 공유 수 사용
             }
-            const userStat = userStatsMap.get(email)!;
-            userStat.sharesCount++;
-          }
-        });
+          });
+        }
 
         viewedBy.forEach((userId: string) => {
           const user = users.find(u => u.uid === userId);
@@ -2501,7 +2793,7 @@ export default function AdminPage() {
               });
             }
             const userStat = userStatsMap.get(email)!;
-            userStat.viewsCount++;
+            userStat.viewsCount += design.views || 0; // 전체 조회 수 사용
           }
         });
       });
@@ -2539,31 +2831,36 @@ export default function AdminPage() {
           }
         });
         
-        sharedBy.forEach((userId: string) => {
-          const user = users.find(u => u.uid === userId);
-          if (user) {
-            const email = user.email || 'unknown';
-            if (!userStatsMap.has(email)) {
-              userStatsMap.set(email, {
-                email,
-                displayName: user.displayName || '익명',
-                photoURL: user.photoURL || '',
-                createdAt: user.createdAt || '',
-                lastSignIn: user.lastSignIn || '',
-                designsCount: 0,
-                boxroTalksCount: 0,
-                likesCount: 0,
-                downloadsCount: 0,
-                sharesCount: 0,
-                viewsCount: 0,
-                storeRedirectsCount: 0,
-                uid: user.uid || ''
-              });
+        // 공유는 여러 번 공유해도 매번 카운트 (shares 필드 사용)
+        const totalShares = story.shares || 0;
+        if (totalShares > 0) {
+          // sharedBy 배열의 사용자들에게 공유 수만큼 카운트
+          sharedBy.forEach((userId: string) => {
+            const user = users.find(u => u.uid === userId);
+            if (user) {
+              const email = user.email || 'unknown';
+              if (!userStatsMap.has(email)) {
+                userStatsMap.set(email, {
+                  email,
+                  displayName: user.displayName || '익명',
+                  photoURL: user.photoURL || '',
+                  createdAt: user.createdAt || '',
+                  lastSignIn: user.lastSignIn || '',
+                  designsCount: 0,
+                  boxroTalksCount: 0,
+                  likesCount: 0,
+                  downloadsCount: 0,
+                  sharesCount: 0,
+                  viewsCount: 0,
+                  storeRedirectsCount: 0,
+                  uid: user.uid || ''
+                });
+              }
+              const userStat = userStatsMap.get(email)!;
+              userStat.sharesCount += totalShares; // 전체 공유 수 사용
             }
-            const userStat = userStatsMap.get(email)!;
-            userStat.sharesCount++;
-          }
-        });
+          });
+        }
 
         viewedBy.forEach((userId: string) => {
           const user = users.find(u => u.uid === userId);
@@ -2587,7 +2884,7 @@ export default function AdminPage() {
               });
             }
             const userStat = userStatsMap.get(email)!;
-            userStat.viewsCount++;
+            userStat.viewsCount += story.views || 0; // 전체 조회 수 사용
           }
         });
       });
@@ -2625,31 +2922,36 @@ export default function AdminPage() {
           }
         });
         
-        sharedBy.forEach((userId: string) => {
-          const user = users.find(u => u.uid === userId);
-          if (user) {
-            const email = user.email || 'unknown';
-            if (!userStatsMap.has(email)) {
-              userStatsMap.set(email, {
-                email,
-                displayName: user.displayName || '익명',
-                photoURL: user.photoURL || '',
-                createdAt: user.createdAt || '',
-                lastSignIn: user.lastSignIn || '',
-                designsCount: 0,
-                boxroTalksCount: 0,
-                likesCount: 0,
-                downloadsCount: 0,
-                sharesCount: 0,
-                viewsCount: 0,
-                storeRedirectsCount: 0,
-                uid: user.uid || ''
-              });
+        // 공유는 여러 번 공유해도 매번 카운트 (shares 필드 사용)
+        const totalShares = storeItem.shares || 0;
+        if (totalShares > 0) {
+          // sharedBy 배열의 사용자들에게 공유 수만큼 카운트
+          sharedBy.forEach((userId: string) => {
+            const user = users.find(u => u.uid === userId);
+            if (user) {
+              const email = user.email || 'unknown';
+              if (!userStatsMap.has(email)) {
+                userStatsMap.set(email, {
+                  email,
+                  displayName: user.displayName || '익명',
+                  photoURL: user.photoURL || '',
+                  createdAt: user.createdAt || '',
+                  lastSignIn: user.lastSignIn || '',
+                  designsCount: 0,
+                  boxroTalksCount: 0,
+                  likesCount: 0,
+                  downloadsCount: 0,
+                  sharesCount: 0,
+                  viewsCount: 0,
+                  storeRedirectsCount: 0,
+                  uid: user.uid || ''
+                });
+              }
+              const userStat = userStatsMap.get(email)!;
+              userStat.sharesCount += totalShares; // 전체 공유 수 사용
             }
-            const userStat = userStatsMap.get(email)!;
-            userStat.sharesCount++;
-          }
-        });
+          });
+        }
 
         viewedBy.forEach((userId: string) => {
           const user = users.find(u => u.uid === userId);
@@ -2673,7 +2975,7 @@ export default function AdminPage() {
               });
             }
             const userStat = userStatsMap.get(email)!;
-            userStat.viewsCount++;
+            userStat.viewsCount += storeItem.views || 0; // 전체 조회 수 사용
           }
         });
       });
@@ -2730,7 +3032,7 @@ export default function AdminPage() {
       
       // 갤러리 통계
       const galleryViews = designs.reduce((sum, design: any) => sum + (design.views || 0), 0);
-      const galleryBoxroTalks = boxroTalks.length;
+      const galleryBoxroTalks = activeGalleryBoxroTalks.length;
       const galleryLikes = designs.reduce((sum, design: any) => sum + (design.likes || 0), 0);
       const galleryShares = designs.reduce((sum, design: any) => sum + (design.shares || 0), 0);
       const galleryDownloads = designs.reduce((sum, design: any) => sum + (design.downloads || 0), 0);
@@ -2738,12 +3040,14 @@ export default function AdminPage() {
       // 스토리 통계 (스토어 관련 박스로 톡 제외)
       const storyViews = stories.reduce((sum, story: any) => sum + (story.views || 0), 0);
       
-      // 스토어 관련 박스로 톡을 제외한 순수 스토리 박스로 톡만 계산
-      const filteredStoryBoxroTalks = storyBoxroTalks.filter(talk => 
+      // 스토어 관련 박스로 톡을 제외한 순수 스토리 박스로 톡만 계산 (삭제되지 않은 것만 + 고아 박스로톡 제외)
+      const deletedFilteredPureStoryBoxroTalks = storyBoxroTalks.filter(talk => 
         !talk.storeId && !talk.storeItemId && talk.type !== 'store' && 
         !(talk.text && talk.text.includes('스토어')) &&
-        !(talk.articleId && talk.articleId.includes('store'))
+        !(talk.articleId && talk.articleId.includes('store')) &&
+        talk.isDeleted !== true && talk.deletedAt === undefined
       );
+      const filteredStoryBoxroTalks = await filterOrphanedBoxroTalks(deletedFilteredPureStoryBoxroTalks, 'story');
       const storyBoxroTalksCount = filteredStoryBoxroTalks.length;
       
       const storyLikes = stories.reduce((sum, story: any) => sum + (story.likes || 0), 0);
@@ -2782,8 +3086,8 @@ export default function AdminPage() {
         }
       });
       
-      // 전체 통합 통계
-      const totalBoxroTalks = boxroTalks.length + storyBoxroTalksCount + storeBoxroTalksCount;
+      // 전체 통합 통계 (삭제되지 않은 박스로 톡만)
+      const totalBoxroTalks = activeGalleryBoxroTalks.length + storyBoxroTalksCount + storeBoxroTalksCount;
       
       
       
@@ -2816,7 +3120,13 @@ export default function AdminPage() {
         blueprintDownloads: blueprintDownloads,
         firebaseConnected: connectionStatus.firebaseConnected,
         dbConnected: connectionStatus.dbConnected,
-        storageConnected: connectionStatus.storageConnected
+        storageConnected: connectionStatus.storageConnected,
+        totalCommits: await getTotalCommits(),
+        lastDeploy: await getLastDeployTime(),
+        lastBuild: await getLastBuildTime(),
+        todayActiveUsers: await getTodayActiveUsers(),
+        recent24hActivity: await getRecent24hActivity(),
+        peakTime: await getPeakTime()
       };
 
       setAdminStats(totalStats);
@@ -3001,12 +3311,15 @@ export default function AdminPage() {
                 <div className="text-sm font-medium">전체 회원 수</div>
                 <Users className="h-4 w-4 text-blue-500" />
               </div>
-              <div className="flex flex-row items-center justify-between h-24">
+              <div className="flex flex-row items-end justify-between h-24">
                 <div className="text-3xl font-bold text-blue-600">{adminStats.totalUsers}</div>
                 <div className="text-right">
                   <div className="text-xs text-gray-800">
                     활성: {adminStats.activeUsers || 0}<br/>
-                    비활성: {adminStats.inactiveUsers || 0}
+                    비활성: {adminStats.inactiveUsers || 0}<br/>
+                    오늘 로그인 수: {adminStats.todayActiveUsers || 0}<br/>
+                    24시간 활동량: {adminStats.recent24hActivity || 0}<br/>
+                    피크 시간: {adminStats.peakTime || 'N/A'}
                   </div>
                 </div>
               </div>
@@ -3018,7 +3331,7 @@ export default function AdminPage() {
                 <div className="text-sm font-medium">갤러리 작품 수</div>
                 <Calendar className="h-4 w-4 text-green-500" />
               </div>
-              <div className="flex flex-row items-center justify-between h-24">
+              <div className="flex flex-row items-end justify-between h-24">
                 <div className="text-3xl font-bold text-green-600">{adminStats.totalDesigns}</div>
                 <div className="text-right">
                   <div className="text-xs text-gray-800">
@@ -3039,7 +3352,7 @@ export default function AdminPage() {
                 <div className="text-sm font-medium">발행된 이야기 수</div>
                 <MessageCircle className="h-4 w-4 text-purple-500" />
               </div>
-              <div className="flex flex-row items-center justify-between h-24">
+              <div className="flex flex-row items-end justify-between h-24">
                 <div className="text-3xl font-bold text-purple-600">{adminStats.totalStories || 0}</div>
                 <div className="text-right">
                   <div className="text-xs text-gray-800">
@@ -3058,7 +3371,7 @@ export default function AdminPage() {
                 <div className="text-sm font-medium">스토어 도안 수</div>
                 <ShoppingBag className="h-4 w-4 text-orange-500" />
               </div>
-              <div className="flex flex-row items-center justify-between h-24">
+              <div className="flex flex-row items-end justify-between h-24">
                 <div className="text-3xl font-bold text-orange-600">{adminStats.totalStoreItems || 0}</div>
                 <div className="text-right">
                   <div className="text-xs text-gray-800">
@@ -3078,7 +3391,7 @@ export default function AdminPage() {
                 <div className="text-sm font-medium">시스템 상태</div>
                 <div className={`w-4 h-4 rounded-full ${adminStats.firebaseConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
               </div>
-              <div className="flex flex-row items-center justify-between h-24">
+              <div className="flex flex-row items-end justify-between h-24">
                 <div className={`text-3xl font-bold ${adminStats.firebaseConnected ? 'text-green-600' : 'text-red-600'}`}>
                   {adminStats.firebaseConnected ? '정상' : '오류'}
                 </div>
@@ -3091,12 +3404,43 @@ export default function AdminPage() {
                       </div>
                     </div>
                   </div>
+
+            {/* 프로젝트 정보 */}
+            <div className="bg-white text-gray-900 py-2 gap-2 border border-gray-200 rounded-lg px-8 py-6">
+              <div className="flex flex-row items-center justify-between space-y-0 pb-2 border-b border-gray-200">
+                <div className="text-sm font-medium">프로젝트 정보</div>
+                <div className="w-4 h-4 rounded-full bg-blue-500"></div>
+              </div>
+              <div className="flex flex-row items-end justify-between h-24">
+                <div className="text-3xl font-bold text-blue-600">
+                  v1.0.0
+                </div>
+                <div className="text-right">
+                  <div className="text-xs text-gray-800">
+                    커밋: {adminStats.totalCommits || 'N/A'}<br/>
+                    배포: {adminStats.lastDeploy || 'N/A'}<br/>
+                    빌드: {adminStats.lastBuild || 'N/A'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
           <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-xs text-blue-800">
-              • <strong>활성 회원:</strong> 도안 만들기, 도안 다운로드, 갤러리 공유, 갤러리/이야기 박스로 톡 작성 중 하나 이상 활동한 회원<br/>
-              • <strong>비활성 회원:</strong> 회원가입만 하고 아직 활동이 없는 회원<br/>
-              • <strong>통계 계산 기준:</strong> 좋아요 · 다운로드 · 공유는 사용자가 한 활동 수를 기준으로 집계합니다. (같은 작품에 대해 여러 번 해도 1회만 카운트됩니다.)
+              • <strong>회원 기준:</strong><br/>
+                &nbsp;&nbsp;- <strong>활성 회원:</strong> 도안 만들기, 도안 다운로드, 갤러리 공유, 갤러리/이야기 박스로 톡 작성 중 하나 이상 활동한 회원<br/>
+                &nbsp;&nbsp;- <strong>비활성 회원:</strong> 회원가입만 하고 아직 활동이 없는 회원<br/>
+                &nbsp;&nbsp;- <strong>오늘 로그인 수:</strong> 오늘 로그인한 사용자 수<br/>
+                &nbsp;&nbsp;- <strong>24시간 활동량:</strong> 최근 하루 활동량 (작품 생성 + 박스로톡)<br/>
+                &nbsp;&nbsp;- <strong>피크 시간:</strong> 가장 활발한 시간대<br/>
+              • <strong>통계 계산 기준:</strong><br/>
+                &nbsp;&nbsp;- <strong>조회수:</strong> 로그인한 사용자만 카운트 (여러 번 조회해도 매번 카운트)<br/>
+                &nbsp;&nbsp;- <strong>좋아요:</strong> 로그인한 사용자만 카운트 (1회만 카운트)<br/>
+                &nbsp;&nbsp;- <strong>공유:</strong> 로그인 + 비로그인 사용자 모두 카운트 (여러 번 공유해도 매번 카운트)<br/>
+                &nbsp;&nbsp;- <strong>박스로 톡:</strong> 로그인한 사용자만 카운트 (여러 번 작성 가능)<br/>
+                &nbsp;&nbsp;- <strong>다운로드:</strong> 로그인한 사용자만 카운트 (여러 번 다운로드해도 매번 카운트)<br/>
+                &nbsp;&nbsp;- <strong>스토어 바로가기:</strong> 로그인 + 비로그인 사용자 모두 카운트 (여러 번 바로가기해도 매번 카운트)<br/>
+                &nbsp;&nbsp;- <strong>통계 수치:</strong> 전체 합계(로그인 합계 + 비로그인 합계)
             </p>
           </div>
         </div>
@@ -3436,7 +3780,7 @@ export default function AdminPage() {
             {userStatsTotalPages >= 1 && (
               <div className="flex flex-col items-center gap-4 mt-6">
                 {/* 디버그 정보 */}
-                <div className="text-sm text-gray-600">
+                <div className="text-xs text-gray-600">
                   총 데이터: {filteredUserStats.length}개 | 
                   페이지 크기: {userStatsPageSize}개 | 
                   총 페이지: {userStatsTotalPages}개 | 
@@ -3489,7 +3833,7 @@ export default function AdminPage() {
             onClick={closeUserModal}
           >
             <div
-              className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 max-w-4xl w-full h-[60vh] overflow-hidden"
+              className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 max-w-[95vw] md:max-w-5xl w-full h-[70vh] md:h-[60vh] overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex justify-between items-center px-6 py-4 border-b border-white/20">
@@ -3504,17 +3848,17 @@ export default function AdminPage() {
                 </button>
               </div>
               
-              <div className="px-6 py-4 overflow-y-auto max-h-[calc(60vh-80px)]">
+              <div className="px-6 py-4 overflow-y-auto max-h-[calc(70vh-80px)] md:max-h-[calc(60vh-80px)]">
                 {/* 탭 메뉴 */}
-                <div className="flex border-b border-gray-200 mb-4">
+                <div className="flex border-b border-gray-200 mb-4 overflow-x-auto">
                   {['작품', '좋아요', '공유', '박스로 톡', '다운로드', '조회', '스토어'].map((tab) => {
                     const count = tab === '작품' ? userActivities[selectedUser]?.designs?.length || 0 :
                                   tab === '좋아요' ? userActivities[selectedUser]?.likes?.length || 0 :
-                                  tab === '공유' ? userActivities[selectedUser]?.shares?.length || 0 :
+                                  tab === '공유' ? userActivities[selectedUser]?.shares?.reduce((sum: number, share: any) => sum + (share.shares || 0), 0) || 0 :
                                   tab === '박스로 톡' ? userActivities[selectedUser]?.boxroTalks?.length || 0 :
                                   tab === '다운로드' ? userActivities[selectedUser]?.downloads?.length || 0 :
-                                  tab === '조회' ? userActivities[selectedUser]?.views?.length || 0 :
-                                  userActivities[selectedUser]?.storeRedirects?.length || 0;
+                                  tab === '조회' ? userActivities[selectedUser]?.views?.reduce((sum: number, view: any) => sum + (view.views || 0), 0) || 0 :
+                                  userActivities[selectedUser]?.storeRedirects?.reduce((sum: number, redirect: any) => sum + (redirect.storeRedirects || 0), 0) || 0;
                     
                     return (
                       <button
@@ -3523,7 +3867,7 @@ export default function AdminPage() {
                           setActiveActivityTab(tab);
                           setCurrentPage(1);
                         }}
-                        className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                        className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap flex-shrink-0 ${
                           activeActivityTab === tab
                             ? 'border-blue-500 text-gray-800'
                             : 'border-transparent text-gray-800 hover:text-gray-800 hover:border-gray-300'
@@ -3540,7 +3884,7 @@ export default function AdminPage() {
                   {activeActivityTab === '작품' && (
                     <div>
                       <div className="overflow-x-auto">
-                        <table className="w-full text-[13px] bg-white">
+                        <table className="w-full text-[13px] bg-white min-w-[800px]">
                           <thead>
                             <tr className="border-b border-gray-200">
                               <th className="text-left py-1 px-3 font-medium text-gray-800 bg-gray-50">작품</th>
@@ -3559,11 +3903,11 @@ export default function AdminPage() {
                     </th>
                     <th 
                                 className="text-center py-1 px-3 font-medium text-gray-800 bg-gray-50 w-20 cursor-pointer hover:bg-gray-100"
-                                onClick={() => handleActivitySort('views')}
+                                onClick={() => handleActivitySort('likes')}
                     >
                       <div className="flex items-center justify-center gap-1">
-                                  조회
-                                  {activitySortField === 'views' && (
+                        좋아요
+                                  {activitySortField === 'likes' && (
                                     activitySortDirection === 'desc' ? 
                                     <ArrowDown className="w-3 h-3" /> : 
                                     <ArrowUp className="w-3 h-3" />
@@ -3572,11 +3916,24 @@ export default function AdminPage() {
                     </th>
                     <th 
                                 className="text-center py-1 px-3 font-medium text-gray-800 bg-gray-50 w-20 cursor-pointer hover:bg-gray-100"
-                                onClick={() => handleActivitySort('likes')}
+                                onClick={() => handleActivitySort('shares')}
                     >
                       <div className="flex items-center justify-center gap-1">
-                        좋아요
-                                  {activitySortField === 'likes' && (
+                        공유
+                                  {activitySortField === 'shares' && (
+                                    activitySortDirection === 'desc' ? 
+                                    <ArrowDown className="w-3 h-3" /> : 
+                                    <ArrowUp className="w-3 h-3" />
+                        )}
+                      </div>
+                    </th>
+                    <th 
+                                className="text-center py-1 px-3 font-medium text-gray-800 bg-gray-50 w-20 cursor-pointer hover:bg-gray-100"
+                                onClick={() => handleActivitySort('boxroTalks')}
+                    >
+                      <div className="flex items-center justify-center gap-1">
+                        톡
+                                  {activitySortField === 'boxroTalks' && (
                                     activitySortDirection === 'desc' ? 
                                     <ArrowDown className="w-3 h-3" /> : 
                                     <ArrowUp className="w-3 h-3" />
@@ -3632,13 +3989,14 @@ export default function AdminPage() {
                                 <td className="py-1 px-3 text-gray-800 text-xs">
                                   {new Date(design.createdAt?.toDate?.() || design.createdAt).toLocaleString('ko-KR')}
                                 </td>
-                                <td className="py-1 px-3 text-center text-gray-800 w-20">{design.views || 0}</td>
-                                <td className="py-1 px-3 text-center text-gray-800 w-20">{design.likes || 0}</td>
-                                <td className="py-1 px-3 text-center text-gray-800 w-20">{design.downloads || 0}</td>
+                                <td className="py-1 px-3 text-center text-gray-800 w-20">{(design.likes || 0) + (design.popularityBoost?.likes || 0)}</td>
+                                <td className="py-1 px-3 text-center text-gray-800 w-20">{(design.shares || 0) + (design.popularityBoost?.shares || 0)}</td>
+                                <td className="py-1 px-3 text-center text-gray-800 w-20">{design.boxroTalks || 0}</td>
+                                <td className="py-1 px-3 text-center text-gray-800 w-20">{(design.downloads || 0) + (design.popularityBoost?.downloads || 0)}</td>
                               </tr>
                             )) || (
                               <tr>
-                                <td colSpan={5} className="py-4 text-center text-gray-500">작품이 없습니다</td>
+                                <td colSpan={6} className="py-4 text-center text-gray-500">작품이 없습니다</td>
                               </tr>
                             )}
                           </tbody>
@@ -3674,7 +4032,7 @@ export default function AdminPage() {
                   {activeActivityTab === '박스로 톡' && (
                     <div>
                       <div className="overflow-x-auto">
-                        <table className="w-full text-[13px] bg-white">
+                        <table className="w-full text-[13px] bg-white min-w-[800px]">
                           <thead>
                             <tr className="border-b border-gray-200">
                               <th className="text-left py-1 px-3 font-medium text-gray-800 bg-gray-50">내용</th>
@@ -3795,7 +4153,7 @@ export default function AdminPage() {
                   {activeActivityTab === '좋아요' && (
                     <div>
                       <div className="overflow-x-auto">
-                        <table className="w-full text-[13px] bg-white">
+                        <table className="w-full text-[13px] bg-white min-w-[800px]">
                           <thead>
                             <tr className="border-b border-gray-200">
                               <th 
@@ -3915,7 +4273,7 @@ export default function AdminPage() {
                   {activeActivityTab === '다운로드' && (
                     <div>
                       <div className="overflow-x-auto">
-                        <table className="w-full text-[13px] bg-white">
+                        <table className="w-full text-[13px] bg-white min-w-[800px]">
                           <thead>
                             <tr className="border-b border-gray-200">
                               <th 
@@ -4035,7 +4393,7 @@ export default function AdminPage() {
                   {activeActivityTab === '공유' && (
                     <div>
                       <div className="overflow-x-auto">
-                        <table className="w-full text-[13px] bg-white">
+                        <table className="w-full text-[13px] bg-white min-w-[800px]">
                           <thead>
                             <tr className="border-b border-gray-200">
                               <th 
@@ -4155,7 +4513,7 @@ export default function AdminPage() {
                   {activeActivityTab === '조회' && (
                     <div>
                       <div className="overflow-x-auto">
-                        <table className="w-full text-[13px] bg-white">
+                        <table className="w-full text-[13px] bg-white min-w-[800px]">
                           <thead>
                             <tr className="border-b border-gray-200">
                               <th 
@@ -4237,7 +4595,7 @@ export default function AdminPage() {
                                 <td className="py-1 px-3 text-center text-gray-800">{view.views}</td>
                                 <td className="py-1 px-3 text-gray-800 text-xs">
                                   {new Date(view.createdAt?.toDate?.() || view.createdAt).toLocaleString('ko-KR')}
-                                </td>
+                      </td>
                     </tr>
                             )) || (
                               <tr>
@@ -4277,7 +4635,7 @@ export default function AdminPage() {
                   {activeActivityTab === '스토어' && (
                     <div>
                       <div className="overflow-x-auto">
-                        <table className="w-full text-[13px] bg-white">
+                        <table className="w-full text-[13px] bg-white min-w-[800px]">
                           <thead>
                             <tr className="border-b border-gray-200">
                               <th 
@@ -4428,7 +4786,7 @@ export default function AdminPage() {
                         className="px-2 py-2 border border-gray-300 rounded-md text-sm min-w-0 flex-1"
                         placeholder="종료일"
                       />
-                    </div>
+      </div>
                     
                     {/* 검색 필터 */}
                     <input
@@ -5481,7 +5839,7 @@ export default function AdminPage() {
                       {popularityTotalPages >= 1 && (
                         <div className="flex flex-col items-center gap-4 mt-6">
                           {/* 디버그 정보 */}
-                          <div className="text-sm text-gray-600">
+                          <div className="text-xs text-gray-600">
                             총 데이터: {popularityAllItems.length}개 | 
                             페이지 크기: {popularityPageSize}개 | 
                             총 페이지: {popularityTotalPages}개 | 
@@ -5531,14 +5889,6 @@ export default function AdminPage() {
                         </div>
                       )}
                       
-                      {/* 페이지 정보 */}
-                      <div className="text-center mt-2 text-sm text-gray-600">
-                        {popularityTotalItems}개 중 {((popularityCurrentPage - 1) * popularityPageSize) + 1}-{Math.min(popularityCurrentPage * popularityPageSize, popularityTotalItems)}개 표시
-                        <br />
-                        <span className="text-xs text-gray-500">
-                          현재 페이지: {popularityCurrentPage} / {popularityTotalPages} | 페이지 크기: {popularityPageSize}
-                        </span>
-                      </div>
                     </div>
                   )}
               </div>
