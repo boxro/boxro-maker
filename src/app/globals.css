@@ -288,9 +288,16 @@
 
 .rich-text-editor p {
   font-size: 0.875rem !important; /* 14px */
-  margin: 0.75rem 0 !important;
-  line-height: 1.3 !important; /* 기본값 설정 */
+  margin: 0.5rem 0 !important; /* 줄간격 일관성을 위해 줄임 */
+  line-height: 1.5 !important; /* 줄간격 일관성 개선 */
   color: #000000 !important;
+}
+
+/* br 태그 줄간격 일관성 */
+.rich-text-editor br {
+  line-height: 1.5 !important;
+  display: block !important;
+  margin: 0.25rem 0 !important; /* br 태그에도 일관된 간격 적용 */
 }
 
 .rich-text-editor ul, .rich-text-editor ol {
