@@ -307,11 +307,15 @@ export default function DrawPage() {
         const actualCropWidth = maxCropWidth;
         const actualCropHeight = maxCropHeight;
         
-        // 크롭 위치 (Y축 위로 100px, X축 왼쪽으로 40px)
+        // 크롭 위치 (픽셀 밀도 고려하여 조정)
         const centerX = (img.width - actualCropWidth) / 2;
         const centerY = (img.height - actualCropHeight) / 2;
-        const cropX = centerX - 40;
-        const cropY = centerY - 100;
+        // 픽셀 밀도에 따라 크롭 오프셋 조정
+        const pixelRatio = window.devicePixelRatio || 1;
+        const offsetX = Math.round(40 * pixelRatio);
+        const offsetY = Math.round(100 * pixelRatio);
+        const cropX = Math.max(0, centerX - offsetX);
+        const cropY = Math.max(0, centerY - offsetY);
         
         // 캔버스 크기를 원본 크롭 사이즈로 설정 (리사이즈하지 않음)
         canvas.width = actualCropWidth;
