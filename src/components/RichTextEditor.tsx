@@ -541,13 +541,41 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
             </Button>
             
             {isColorPickerOpen && (
-              <div className="absolute top-full left-0 mt-1 p-4 bg-white border border-gray-300 rounded-lg shadow-lg z-[9999] min-w-[280px]">
-                <div className="grid grid-cols-8 gap-2 mb-3">
+              <div className="absolute top-full left-0 mt-1 p-4 bg-white border border-gray-300 rounded-lg shadow-lg z-[9999] min-w-[400px]">
+                <div className="grid grid-cols-10 gap-2 mb-3">
                   {[
-                    '#000000', '#333333', '#666666', '#999999',
-                    '#FF0000', '#FF6600', '#FFCC00', '#00FF00',
-                    '#0066FF', '#6600FF', '#FF00FF', '#00FFFF',
-                    '#8B4513', '#FF69B4', '#32CD32', '#FFD700'
+                    // 기본 색상 (검정, 회색 계열)
+                    '#000000', '#333333', '#666666', '#999999', '#CCCCCC',
+                    // 빨간색 계열
+                    '#FF0000', '#FF3333', '#FF6666', '#FF9999', '#FFCCCC',
+                    // 주황색 계열
+                    '#FF6600', '#FF8833', '#FFAA66', '#FFCC99', '#FFEECC',
+                    // 노란색 계열
+                    '#FFCC00', '#FFDD33', '#FFEE66', '#FFFF99', '#FFFFCC',
+                    // 초록색 계열
+                    '#00FF00', '#33FF33', '#66FF66', '#99FF99', '#CCFFCC',
+                    // 파란색 계열
+                    '#0066FF', '#3388FF', '#66AAFF', '#99CCFF', '#CCEEFF',
+                    // 보라색 계열
+                    '#6600FF', '#8833FF', '#AA66FF', '#CC99FF', '#EECCFF',
+                    // 분홍색 계열
+                    '#FF00FF', '#FF33FF', '#FF66FF', '#FF99FF', '#FFCCFF',
+                    // 청록색 계열
+                    '#00FFFF', '#33FFFF', '#66FFFF', '#99FFFF', '#CCFFFF',
+                    // 갈색 계열
+                    '#8B4513', '#A0522D', '#CD853F', '#DEB887', '#F5DEB3',
+                    // 핫핑크 계열
+                    '#FF69B4', '#FF7FB3', '#FF95C2', '#FFABD1', '#FFC1E0',
+                    // 라임 계열
+                    '#32CD32', '#7CFC00', '#ADFF2F', '#9AFF9A', '#F0FFF0',
+                    // 골드 계열
+                    '#FFD700', '#FFE55C', '#FFEC8C', '#FFF3BC', '#FFF9EC',
+                    // 네이비 계열
+                    '#000080', '#191970', '#4169E1', '#6495ED', '#87CEEB',
+                    // 마젠타 계열
+                    '#FF1493', '#FF69B4', '#FFB6C1', '#FFC0CB', '#FFE4E1',
+                    // 올리브 계열
+                    '#808000', '#9ACD32', '#ADFF2F', '#7FFF00', '#7CFC00'
                   ].map((color) => (
                     <button
                       key={color}
