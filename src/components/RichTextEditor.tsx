@@ -253,7 +253,7 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
     },
     editorProps: {
       attributes: {
-        class: 'rich-text-editor focus:outline-none min-h-[300px] p-4 bg-white',
+        class: 'rich-text-editor focus:outline-none min-h-[500px] p-4 bg-white',
       },
     },
     immediatelyRender: false,
@@ -829,7 +829,7 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
       </div>
 
       {/* 에디터 - 스크롤 가능 */}
-      <div className="text-[15px] max-h-[400px] overflow-y-auto">
+      <div className="text-[15px] max-h-[600px] overflow-y-auto">
         <EditorContent editor={editor} />
       </div>
 
