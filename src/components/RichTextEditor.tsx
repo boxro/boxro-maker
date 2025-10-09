@@ -224,10 +224,13 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
       let html = editor.getHTML();
       console.log('🔍 에디터 HTML 업데이트:', html);
       
-      // 빈 줄바꿈 처리: <p></p>를 <br><br>로 변환
-      html = html.replace(/<p><\/p>/g, '<br><br>');
-      // 연속된 줄바꿈 처리
-      html = html.replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
+      // 엔터 키 동작 정규화: 일관된 줄바꿈 처리
+      // 1. 빈 p 태그를 br로 변환 (단일 줄바꿈)
+      html = html.replace(/<p><\/p>/g, '<br>');
+      // 2. 연속된 빈 p 태그를 br br로 변환 (이중 줄바꿈)
+      html = html.replace(/<p><\/p><p><\/p>/g, '<br><br>');
+      // 3. 남은 줄바꿈 문자 처리
+      html = html.replace(/\n/g, '<br>');
       console.log('🔍 줄바꿈 변환 후:', html);
       
       // content prop과 다를 때만 onChange 호출 (무한 루프 방지)
@@ -308,10 +311,14 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
       }
       
       // 수정된 content로 에디터 업데이트 (한 번만 호출)
-      // 빈 줄바꿈 처리: <p></p>를 <br><br>로 변환
-      let contentWithLineBreaks = processedContent.replace(/<p><\/p>/g, '<br><br>');
-      // 연속된 줄바꿈 처리
-      contentWithLineBreaks = contentWithLineBreaks.replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
+      // 엔터 키 동작 정규화: 일관된 줄바꿈 처리
+      let contentWithLineBreaks = processedContent;
+      // 1. 빈 p 태그를 br로 변환 (단일 줄바꿈)
+      contentWithLineBreaks = contentWithLineBreaks.replace(/<p><\/p>/g, '<br>');
+      // 2. 연속된 빈 p 태그를 br br로 변환 (이중 줄바꿈)
+      contentWithLineBreaks = contentWithLineBreaks.replace(/<p><\/p><p><\/p>/g, '<br><br>');
+      // 3. 남은 줄바꿈 문자 처리
+      contentWithLineBreaks = contentWithLineBreaks.replace(/\n/g, '<br>');
       editor.commands.setContent(contentWithLineBreaks, false, {
         preserveWhitespace: 'full',
         parseOptions: {
