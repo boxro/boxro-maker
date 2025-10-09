@@ -349,8 +349,7 @@ export default function AdminPage() {
   // 홈카드 추가 함수
   const addHomeCard = async () => {
     if (!homeCardTitle.trim() || !homeCardDescription.trim()) {
-      setErrorMessage('제목과 설명을 모두 입력해주세요.');
-      setShowErrorModal(true);
+      alert('제목과 설명을 모두 입력해주세요.');
       return;
     }
 
