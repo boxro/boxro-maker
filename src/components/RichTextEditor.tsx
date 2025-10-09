@@ -258,7 +258,7 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
     },
     editorProps: {
       attributes: {
-        class: 'rich-text-editor focus:outline-none min-h-[700px] p-4 bg-white',
+        class: 'rich-text-editor focus:outline-none min-h-[600px] p-4 bg-white',
       },
       handleKeyDown: (view, event) => {
         // 백스페이스 키 동작 최적화
@@ -887,7 +887,7 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
       </div>
 
       {/* 에디터 - 스크롤 가능 */}
-      <div className="text-[15px] max-h-[800px] overflow-y-auto">
+      <div className="text-[15px] max-h-[700px] overflow-y-auto">
         <EditorContent editor={editor} />
       </div>
 
