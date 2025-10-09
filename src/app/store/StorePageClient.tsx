@@ -861,7 +861,7 @@ export default function StorePageClient() {
                   
                   {article.summary && (
                     <p 
-                      className="text-sm mb-2 whitespace-pre-wrap"
+                      className="text-[15px] mb-2 whitespace-pre-wrap"
                       style={{ color: article.summaryColor || '#6b7280' }}
                     >
                       {article.summary}
