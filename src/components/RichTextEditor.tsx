@@ -258,18 +258,39 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
       
       // 현재 선택된 텍스트의 폰트 정보 업데이트
       const { from, to } = editor.state.selection;
+      console.log('🔍 선택 영역:', { from, to, hasSelection: from !== to });
+      
       if (from !== to) {
         // 텍스트가 선택된 경우
         const selectedText = editor.state.doc.textBetween(from, to);
+        console.log('🔍 선택된 텍스트:', selectedText);
+        
         if (selectedText) {
           // 선택된 텍스트의 스타일 정보 가져오기
-          const { fontFamily, fontSize } = editor.getAttributes('textStyle');
+          const textStyleAttrs = editor.getAttributes('textStyle');
+          console.log('🔍 텍스트 스타일 속성:', textStyleAttrs);
+          
+          const { fontFamily, fontSize } = textStyleAttrs;
           if (fontFamily) {
+            console.log('🔍 폰트 패밀리 업데이트:', fontFamily);
             setSelectedFontFamily(fontFamily);
           }
           if (fontSize) {
+            console.log('🔍 폰트 크기 업데이트:', fontSize);
             setSelectedFontSize(fontSize);
           }
+        }
+      } else {
+        // 커서만 있는 경우 - 현재 위치의 스타일 정보 가져오기
+        const textStyleAttrs = editor.getAttributes('textStyle');
+        console.log('🔍 커서 위치 스타일:', textStyleAttrs);
+        
+        const { fontFamily, fontSize } = textStyleAttrs;
+        if (fontFamily) {
+          setSelectedFontFamily(fontFamily);
+        }
+        if (fontSize) {
+          setSelectedFontSize(fontSize);
         }
       }
     },
