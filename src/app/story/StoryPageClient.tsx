@@ -861,7 +861,7 @@ export default function StoryPageClient() {
                   
                   {article.summary && (
                     <p 
-                      className="text-sm mb-0 whitespace-pre-wrap"
+                      className="text-[15px] mb-0 whitespace-pre-wrap"
                       style={{ color: article.summaryColor || '#6b7280' }}
                     >
                       {article.summary}
