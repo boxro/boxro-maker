@@ -271,13 +271,20 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
           console.log('🔍 텍스트 스타일 속성:', textStyleAttrs);
           
           const { fontFamily, fontSize } = textStyleAttrs;
-          if (fontFamily) {
+          console.log('🔍 추출된 폰트 정보:', { fontFamily, fontSize });
+          
+          if (fontFamily && fontFamily !== 'inherit') {
             console.log('🔍 폰트 패밀리 업데이트:', fontFamily);
             setSelectedFontFamily(fontFamily);
+          } else {
+            console.log('🔍 폰트 패밀리 없음, 기본값 유지');
           }
-          if (fontSize) {
+          
+          if (fontSize && fontSize !== 'inherit') {
             console.log('🔍 폰트 크기 업데이트:', fontSize);
             setSelectedFontSize(fontSize);
+          } else {
+            console.log('🔍 폰트 크기 없음, 기본값 유지');
           }
         }
       } else {
@@ -286,10 +293,12 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
         console.log('🔍 커서 위치 스타일:', textStyleAttrs);
         
         const { fontFamily, fontSize } = textStyleAttrs;
-        if (fontFamily) {
+        console.log('🔍 커서 위치 폰트 정보:', { fontFamily, fontSize });
+        
+        if (fontFamily && fontFamily !== 'inherit') {
           setSelectedFontFamily(fontFamily);
         }
-        if (fontSize) {
+        if (fontSize && fontSize !== 'inherit') {
           setSelectedFontSize(fontSize);
         }
       }
