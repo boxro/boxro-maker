@@ -9,8 +9,20 @@ const inter = Inter({ subsets: ["latin"] });
 
 
 export const metadata: Metadata = {
-  title: "박스로 메이커",
-  description: "상상하는 자동차를 만들어보세요!",
+  title: "BOXRO 박스로 | Eco-Friendly Maker Project",
+  description: "버려진 박스로 자동차를 만들고, 상상력을 움직이는 친환경 놀이 플랫폼",
+  openGraph: {
+    title: "BOXRO 박스로 | Eco-Friendly Maker Project",
+    description: "버려진 박스로 자동차를 만들고, 상상력을 움직이는 친환경 놀이 플랫폼",
+    siteName: "BOXRO 박스로 | Eco-Friendly Maker Project",
+    type: "website",
+    locale: "ko_KR",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "BOXRO 박스로 | Eco-Friendly Maker Project",
+    description: "버려진 박스로 자동차를 만들고, 상상력을 움직이는 친환경 놀이 플랫폼",
+  },
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },
