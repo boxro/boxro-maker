@@ -1157,8 +1157,7 @@ export default function AdminPage() {
       });
       
       await Promise.all(updates);
-      setErrorMessage('홈카드 순서가 저장되었습니다!');
-      setShowErrorModal(true);
+      alert('홈카드 순서가 저장되었습니다!');
     } catch (error) {
       console.error('순서 저장 실패:', error);
       setErrorMessage('순서 저장에 실패했습니다.');
