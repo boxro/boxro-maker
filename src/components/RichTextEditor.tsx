@@ -224,22 +224,31 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
       let html = editor.getHTML();
       console.log('🔍 에디터 HTML 업데이트:', html);
       
-      // 엔터 키 동작 정규화: 일관된 줄바꿈 처리
-      // 1. 빈 p 태그를 br로 변환 (단일 줄바꿈) - 줄간격 일관성을 위해 p 태그 유지
-      html = html.replace(/<p><\/p>/g, '<p><br></p>');
-      // 2. 연속된 빈 p 태그를 p br p br p로 변환 (이중 줄바꿈)
-      html = html.replace(/<p><\/p><p><\/p>/g, '<p><br></p><p><br></p>');
-      // 3. 남은 줄바꿈 문자 처리
-      html = html.replace(/\n/g, '<br>');
-      console.log('🔍 줄바꿈 변환 후:', html);
+      // 백스페이스 키 동작 중에는 HTML 변환 최소화
+      const isBackspaceOperation = html.includes('<p></p>') && html.length < (content?.length || 0);
+      
+      if (!isBackspaceOperation) {
+        // 엔터 키 동작 정규화: 일관된 줄바꿈 처리
+        // 1. 빈 p 태그를 br로 변환 (단일 줄바꿈) - 줄간격 일관성을 위해 p 태그 유지
+        html = html.replace(/<p><\/p>/g, '<p><br></p>');
+        // 2. 연속된 빈 p 태그를 p br p br p로 변환 (이중 줄바꿈)
+        html = html.replace(/<p><\/p><p><\/p>/g, '<p><br></p><p><br></p>');
+        // 3. 남은 줄바꿈 문자 처리
+        html = html.replace(/\n/g, '<br>');
+        console.log('🔍 줄바꿈 변환 후:', html);
+      }
       
       // content prop과 다를 때만 onChange 호출 (무한 루프 방지)
       if (html !== content) {
         console.log('🔍 onChange 함수 호출 전');
-        // 커서 위치 보존을 위해 requestAnimationFrame 사용
-        requestAnimationFrame(() => {
+        // 백스페이스 동작 중에는 즉시 호출, 그 외에는 requestAnimationFrame 사용
+        if (isBackspaceOperation) {
           onChange(html);
-        });
+        } else {
+          requestAnimationFrame(() => {
+            onChange(html);
+          });
+        }
         console.log('🔍 onChange 함수 호출 후');
       }
     },
@@ -252,12 +261,25 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
         class: 'rich-text-editor focus:outline-none min-h-[700px] p-4 bg-white',
       },
       handleKeyDown: (view, event) => {
-        // 엔터 키와 백스페이스 키 조합에서 커서 위치 보존
-        if (event.key === 'Backspace' || event.key === 'Enter') {
-          // 기본 동작을 먼저 실행한 후 커서 위치 보존
+        // 백스페이스 키 동작 최적화
+        if (event.key === 'Backspace') {
+          // 백스페이스 키의 기본 동작을 허용하되, DOM 업데이트 지연
+          setTimeout(() => {
+            // DOM 업데이트 후 커서 위치 보존
+            const selection = view.state.selection;
+            if (selection) {
+              view.dispatch(view.state.tr.setSelection(selection));
+            }
+          }, 0);
           return false; // 기본 동작 허용
         }
-        return false;
+        
+        // 엔터 키는 기본 동작 허용
+        if (event.key === 'Enter') {
+          return false; // 기본 동작 허용
+        }
+        
+        return false; // 다른 키는 기본 동작 허용
       },
     },
     immediatelyRender: false,
