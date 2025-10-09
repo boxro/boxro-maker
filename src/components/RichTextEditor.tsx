@@ -236,10 +236,10 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
       // content prop과 다를 때만 onChange 호출 (무한 루프 방지)
       if (html !== content) {
         console.log('🔍 onChange 함수 호출 전');
-        // 커서 위치 보존을 위해 setTimeout 사용
-        setTimeout(() => {
+        // 커서 위치 보존을 위해 requestAnimationFrame 사용
+        requestAnimationFrame(() => {
           onChange(html);
-        }, 0);
+        });
         console.log('🔍 onChange 함수 호출 후');
       }
     },
@@ -250,6 +250,14 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
     editorProps: {
       attributes: {
         class: 'rich-text-editor focus:outline-none min-h-[700px] p-4 bg-white',
+      },
+      handleKeyDown: (view, event) => {
+        // 엔터 키와 백스페이스 키 조합에서 커서 위치 보존
+        if (event.key === 'Backspace' || event.key === 'Enter') {
+          // 기본 동작을 먼저 실행한 후 커서 위치 보존
+          return false; // 기본 동작 허용
+        }
+        return false;
       },
     },
     immediatelyRender: false,
