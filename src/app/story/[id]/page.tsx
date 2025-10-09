@@ -746,7 +746,7 @@ export default function StoryArticlePage() {
               <div 
                 className="prose prose-lg max-w-none leading-relaxed prose-headings:text-gray-800 prose-p:text-gray-800 prose-a:text-blue-600 prose-strong:text-gray-800 prose-code:bg-gray-100 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-pre:bg-gray-100 prose-blockquote:border-l-4 prose-blockquote:border-gray-300 prose-blockquote:pl-4 whitespace-pre-line"
                 dangerouslySetInnerHTML={{ 
-                  __html: article.content.replace(/\n/g, '<br>')
+                  __html: article.content.replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>')
                 }}
               />
               </div>

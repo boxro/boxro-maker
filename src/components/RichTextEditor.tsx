@@ -224,8 +224,8 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
       let html = editor.getHTML();
       console.log('🔍 에디터 HTML 업데이트:', html);
       
-      // 줄바꿈을 <br> 태그로 변환하여 저장
-      html = html.replace(/\n/g, '<br>');
+      // 줄바꿈을 <br> 태그로 변환하여 저장 (연속된 줄바꿈도 처리)
+      html = html.replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
       console.log('🔍 줄바꿈 변환 후:', html);
       
       // content prop과 다를 때만 onChange 호출 (무한 루프 방지)
@@ -239,8 +239,8 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
       let html = editor.getHTML();
       console.log('🔍 onSelectionUpdate:', html);
       
-      // 줄바꿈을 <br> 태그로 변환하여 저장
-      html = html.replace(/\n/g, '<br>');
+      // 줄바꿈을 <br> 태그로 변환하여 저장 (연속된 줄바꿈도 처리)
+      html = html.replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
       
       // content prop과 다를 때만 onChange 호출 (무한 루프 방지)
       if (html !== content) {
