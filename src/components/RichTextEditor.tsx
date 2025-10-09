@@ -722,7 +722,7 @@ export default function RichTextEditor({ content, onChange, placeholder = "ë‚´ìš
             {isFontSizeOpen && (
               <div className="absolute top-full left-0 mt-1 p-3 bg-white border border-gray-300 rounded-lg shadow-lg z-[9999] min-w-[120px]">
                 <div className="space-y-1">
-                  {['12px', '14px', '16px', '18px', '20px', '24px', '28px', '32px'].map((size) => (
+                  {['12px', '14px', '15px', '16px', '18px', '20px', '24px', '28px', '32px'].map((size) => (
                     <button
                       key={size}
                       className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded"
