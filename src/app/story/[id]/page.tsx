@@ -444,20 +444,23 @@ export default function StoryArticlePage() {
 
   // 공유하기
   const shareArticle = async () => {
-    if (!user) {
-      openLoginModal('share');
-      return;
-    }
-
     if (!article) return;
 
     try {
-      // 공유 횟수 증가
+      // 공유 횟수 증가 (로그인 여부와 관계없이)
       try {
-        await updateDoc(doc(db, 'storyArticles', article.id), {
-          shares: increment(1),
-          sharedBy: arrayUnion(user.uid)
-        });
+        if (user) {
+          // 로그인 사용자: sharedBy 배열에 추가
+          await updateDoc(doc(db, 'storyArticles', article.id), {
+            shares: increment(1),
+            sharedBy: arrayUnion(user.uid)
+          });
+        } else {
+          // 비로그인 사용자: shares만 증가
+          await updateDoc(doc(db, 'storyArticles', article.id), {
+            shares: increment(1)
+          });
+        }
       } catch (firestoreError: any) {
         if (firestoreError.code === 'permission-denied') {
           console.log('🔧 Firebase 보안 규칙 설정 대기 중 - 공유 횟수 증가 건너뜀');
@@ -470,29 +473,14 @@ export default function StoryArticlePage() {
       setArticle(prev => prev ? {
         ...prev,
         shares: (prev.shares || 0) + 1,
-        sharedBy: [...(prev.sharedBy || []), user.uid],
+        sharedBy: user ? [...(prev.sharedBy || []), user.uid] : (prev.sharedBy || []),
         isShared: true
       } : null);
       
       const shareUrl = `${window.location.origin}/story/${article.id}`;
       
-      // 모바일에서만 Web Share API 사용, 데스크톱에서는 공유 모달 표시
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      
-      if (navigator.share && isMobile) {
-        try {
-          await navigator.share({
-            title: '박스카 이야기 공유',
-            text: article.title,
-            url: shareUrl
-          });
-        } catch (shareError) {
-          console.log('공유 취소됨:', shareError);
-        }
-      } else {
-        // 데스크톱에서는 공유 모달 표시
-        setShowShareModal(true);
-      }
+      // 모든 디바이스에서 공유 모달 표시
+      setShowShareModal(true);
     } catch (error) {
       console.error('공유 실패:', error);
       setErrorMessage('공유 중 오류가 발생했습니다.');
@@ -643,6 +631,19 @@ export default function StoryArticlePage() {
     }
 
     try {
+      // 1. 관련 박스로 톡 삭제
+      const boxroTalksQuery = query(
+        collection(db, 'storyBoxroTalks'),
+        where('articleId', '==', id as string)
+      );
+      const boxroTalksSnapshot = await getDocs(boxroTalksQuery);
+      
+      const deletePromises = boxroTalksSnapshot.docs.map(doc => 
+        deleteDoc(doc.ref)
+      );
+      await Promise.all(deletePromises);
+      
+      // 2. 게시물 삭제
       await deleteDoc(doc(db, 'storyArticles', id as string));
       alert('글이 삭제되었습니다.');
       router.push('/story');
@@ -849,7 +850,7 @@ export default function StoryArticlePage() {
                 박스카 이야기 공유하기
               </h3>
               <p className="text-gray-800 text-sm mb-6">
-                박스카 이야기를 다른 사람들과 함께 나눠보세요!
+                박스카 이야기를 다른 사람들과 나눠보세요!
               </p>
               
               <div className="flex gap-3">
@@ -1083,14 +1084,14 @@ export default function StoryArticlePage() {
                   </div>
                 </div>
                 <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
-                  {loginModalType === 'like' && '좋아요'}
+                  {loginModalType === 'like' && '박스카 이야기에 공감하셨나요?'}
                   {loginModalType === 'share' && '공유하기'}
-                  {loginModalType === 'boxroTalk' && '박스로 톡'}
+                  {loginModalType === 'boxroTalk' && '이 이야기에 참여해보세요!'}
                 </h3>
                 <p className="text-gray-800 text-sm mb-6">
-                  {loginModalType === 'like' && '로그인하면 좋아요를 누를 수 있어요'}
+                  {loginModalType === 'like' && '로그인하면 👍 공감을 남길 수 있어요!'}
                   {loginModalType === 'share' && '멋진 작품, 로그인하면 바로 공유할 수 있어요'}
-                  {loginModalType === 'boxroTalk' && '함께 이야기하려면 로그인해보세요'}
+                  {loginModalType === 'boxroTalk' && '로그인하면 톡을 남길 수 있어요!'}
                 </p>
                 
                 <div className="flex gap-3 mt-6">

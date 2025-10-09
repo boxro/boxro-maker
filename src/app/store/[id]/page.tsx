@@ -445,20 +445,23 @@ export default function StoryArticlePage() {
 
   // 공유하기
   const shareArticle = async () => {
-    if (!user) {
-      openLoginModal('share');
-      return;
-    }
-
     if (!article) return;
 
     try {
-      // 공유 횟수 증가
+      // 공유 횟수 증가 (로그인 여부와 관계없이)
       try {
-        await updateDoc(doc(db, 'storeItems', article.id), {
-          shares: increment(1),
-          sharedBy: arrayUnion(user.uid)
-        });
+        if (user) {
+          // 로그인 사용자: sharedBy 배열에 추가
+          await updateDoc(doc(db, 'storeItems', article.id), {
+            shares: increment(1),
+            sharedBy: arrayUnion(user.uid)
+          });
+        } else {
+          // 비로그인 사용자: shares만 증가
+          await updateDoc(doc(db, 'storeItems', article.id), {
+            shares: increment(1)
+          });
+        }
       } catch (firestoreError: any) {
         if (firestoreError.code === 'permission-denied') {
           console.log('🔧 Firebase 보안 규칙 설정 대기 중 - 공유 횟수 증가 건너뜀');
@@ -471,29 +474,14 @@ export default function StoryArticlePage() {
       setArticle(prev => prev ? {
         ...prev,
         shares: (prev.shares || 0) + 1,
-        sharedBy: [...(prev.sharedBy || []), user.uid],
+        sharedBy: user ? [...(prev.sharedBy || []), user.uid] : (prev.sharedBy || []),
         isShared: true
       } : null);
       
       const shareUrl = `${window.location.origin}/store/${article.id}`;
       
-      // 모바일에서만 Web Share API 사용, 데스크톱에서는 공유 모달 표시
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      
-      if (navigator.share && isMobile) {
-        try {
-          await navigator.share({
-            title: '박스카 이야기 공유',
-            text: article.title,
-            url: shareUrl
-          });
-        } catch (shareError) {
-          console.log('공유 취소됨:', shareError);
-        }
-      } else {
-        // 데스크톱에서는 공유 모달 표시
-        setShowShareModal(true);
-      }
+      // 모든 디바이스에서 공유 모달 표시
+      setShowShareModal(true);
     } catch (error) {
       console.error('공유 실패:', error);
       setErrorMessage('공유 중 오류가 발생했습니다.');
@@ -644,6 +632,19 @@ export default function StoryArticlePage() {
     }
 
     try {
+      // 1. 관련 박스로 톡 삭제
+      const boxroTalksQuery = query(
+        collection(db, 'storeBoxroTalks'),
+        where('articleId', '==', id as string)
+      );
+      const boxroTalksSnapshot = await getDocs(boxroTalksQuery);
+      
+      const deletePromises = boxroTalksSnapshot.docs.map(doc => 
+        deleteDoc(doc.ref)
+      );
+      await Promise.all(deletePromises);
+      
+      // 2. 게시물 삭제
       await deleteDoc(doc(db, 'storeItems', id as string));
       alert('글이 삭제되었습니다.');
       router.push('/store');
@@ -756,7 +757,16 @@ export default function StoryArticlePage() {
             {article.storeUrl && article.storeUrl.trim() && (
               <div className="mt-8 mb-6 w-full md:w-1/3 mx-auto">
                 <Button
-                  onClick={() => {
+                  onClick={async () => {
+                    // 스토어 바로가기 카운트 증가
+                    try {
+                      await updateDoc(doc(db, 'storeItems', article.id), {
+                        storeRedirects: increment(1),
+                        storeRedirectedBy: arrayUnion(user?.uid || 'anonymous')
+                      });
+                    } catch (error) {
+                      console.log('스토어 바로가기 카운트 업데이트 실패:', error);
+                    }
                     window.open(article.storeUrl, '_blank');
                   }}
                   className="w-full bg-gradient-to-r from-sky-400 to-sky-500 hover:from-sky-500 hover:to-sky-600 text-white transition-all duration-200 rounded-full py-4 flex items-center justify-center gap-3 font-medium"
@@ -1105,14 +1115,14 @@ export default function StoryArticlePage() {
                   </div>
                 </div>
                 <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
-                  {loginModalType === 'like' && '좋아요'}
+                  {loginModalType === 'like' && '이 도안이 마음에 드셨나요?'}
                   {loginModalType === 'share' && '공유하기'}
-                  {loginModalType === 'boxroTalk' && '박스로 톡'}
+                  {loginModalType === 'boxroTalk' && '이 도안에 대해 질문해보세요!'}
                 </h3>
                 <p className="text-gray-800 text-sm mb-6">
-                  {loginModalType === 'like' && '로그인하면 좋아요를 누를 수 있어요'}
+                  {loginModalType === 'like' && '로그인하면 👍 관심을 표시할 수 있어요!'}
                   {loginModalType === 'share' && '멋진 작품, 로그인하면 바로 공유할 수 있어요'}
-                  {loginModalType === 'boxroTalk' && '함께 이야기하려면 로그인해보세요'}
+                  {loginModalType === 'boxroTalk' && '로그인하면 톡을 남길 수 있어요!'}
                 </p>
                 
                 <div className="flex gap-3 mt-6">

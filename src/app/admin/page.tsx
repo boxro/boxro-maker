@@ -2290,8 +2290,8 @@ export default function AdminPage() {
       
       for (const collectionName of possibleCollections) {
         try {
-          const query = query(collection(db, collectionName));
-          const snapshot = await getDocs(query);
+          const q = query(collection(db, collectionName));
+          const snapshot = await getDocs(q);
           const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
           
           // 각 컬렉션에서 박스로 톡 관련 데이터 찾기

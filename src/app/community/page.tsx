@@ -731,23 +731,26 @@ export default function GalleryPage() {
   };
 
   // ===== 공유 함수 =====
-  // 중요: 좋아요와 동일한 패턴으로 처리됩니다
+  // 중요: 비로그인 사용자도 공유 가능하도록 수정
   // 1. Firestore 업데이트 (increment + arrayUnion)
   // 2. 로컬 상태 업데이트 (숫자 + 배열 + boolean)
   // 3. Web Share API 또는 클립보드 복사 실행
   const shareDesign = async (designId: string) => {
-    if (!user) {
-      openLoginModal('share', designId);
-      return;
-    }
-
     try {
-      // 공유 횟수 증가
+      // 공유 횟수 증가 (로그인 여부와 관계없이)
       try {
-        await updateDoc(doc(db, 'communityDesigns', designId), {
-          shares: increment(1),
-          sharedBy: arrayUnion(user.uid)
-        });
+        if (user) {
+          // 로그인 사용자: sharedBy 배열에 추가
+          await updateDoc(doc(db, 'communityDesigns', designId), {
+            shares: increment(1),
+            sharedBy: arrayUnion(user.uid)
+          });
+        } else {
+          // 비로그인 사용자: shares만 증가
+          await updateDoc(doc(db, 'communityDesigns', designId), {
+            shares: increment(1)
+          });
+        }
       } catch (firestoreError: any) {
         if (firestoreError.code === 'permission-denied') {
           console.log('🔧 Firebase 보안 규칙 설정 대기 중 - 공유 횟수 증가 건너뜀');
@@ -763,7 +766,7 @@ export default function GalleryPage() {
             ? { 
                 ...d, 
                 shares: (d.shares || 0) + 1, 
-                sharedBy: [...(d.sharedBy || []), user.uid],
+                sharedBy: user ? [...(d.sharedBy || []), user.uid] : (d.sharedBy || []),
                 isShared: true
               }
             : d
@@ -773,46 +776,17 @@ export default function GalleryPage() {
       
       const shareUrl = `${window.location.origin}/gallery#${designId}`;
       
-      // 모바일에서만 Web Share API 사용, 데스크톱에서는 공유 모달 표시
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      
-      if (navigator.share && isMobile) {
-        try {
-          await navigator.share({
-            title: 'Boxro 작품 공유',
-            text: 'Boxro에서 만든 멋진 작품을 확인해보세요!',
-            url: shareUrl
-          });
-        } catch (shareError) {
-          console.log('공유 취소됨:', shareError);
-        }
-      } else {
-        // 데스크톱에서는 공유 모달 표시
-        setShareDesignId(designId);
-        setShowShareModal(true);
-      }
+      // 모든 디바이스에서 공유 모달 표시
+      setShareDesignId(designId);
+      setShowShareModal(true);
     } catch (error) {
       console.error('공유 횟수 업데이트 실패:', error);
       // 에러가 발생해도 공유 기능은 계속 진행
       const shareUrl = `${window.location.origin}/gallery#${designId}`;
       
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      
-      if (navigator.share && isMobile) {
-        try {
-          await navigator.share({
-            title: 'Boxro 작품 공유',
-            text: 'Boxro에서 만든 멋진 작품을 확인해보세요!',
-            url: shareUrl
-          });
-        } catch (shareError) {
-          console.log('공유 취소됨:', shareError);
-        }
-      } else {
-        // 데스크톱에서는 공유 모달 표시
-        setShareDesignId(designId);
-        setShowShareModal(true);
-      }
+      // 모든 디바이스에서 공유 모달 표시
+      setShareDesignId(designId);
+      setShowShareModal(true);
     }
   };
 
@@ -2336,15 +2310,15 @@ export default function GalleryPage() {
                   </div>
                 </div>
                 <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
-                  {loginModalType === 'like' && '좋아요'}
+                  {loginModalType === 'like' && '이 박스카, 정말 멋지죠?'}
                   {loginModalType === 'share' && '공유하기'}
-                  {loginModalType === 'comment' && '박스로 톡'}
+                  {loginModalType === 'comment' && '이 작품에 대해 이야기해보세요!'}
                   {loginModalType === 'download' && '다운로드'}
                 </h3>
                 <p className="text-gray-800 text-sm mb-6">
-                  {loginModalType === 'like' && '로그인하면 좋아요를 누를 수 있어요'}
+                  {loginModalType === 'like' && '로그인하고 👍 좋아요로 표현해보세요!'}
                   {loginModalType === 'share' && '멋진 작품, 로그인하면 바로 공유할 수 있어요'}
-                  {loginModalType === 'comment' && '함께 이야기하려면 로그인해보세요'}
+                  {loginModalType === 'comment' && '로그인하면 이야기할 수 있어요!'}
                   {loginModalType === 'download' && '로그인하면 도안을 내려받을 수 있어요'}
                 </p>
                 

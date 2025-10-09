@@ -358,14 +358,15 @@ export default function DrawPage() {
       logoImg.src = '/logo.png';
     });
     
-    // 설명 텍스트 (로고 오른쪽에 좌측 정렬) - 원래 서식
+    // 설명 텍스트 (로고 오른쪽에 좌측 정렬) - 조정된 위치
     ctx.fillStyle = '#000000';
-    ctx.font = 'bold 22px Arial';
+    ctx.font = 'bold 24px Arial';
     ctx.textAlign = 'left';
-    ctx.fillText('이 도안은 박스로에서 만들어졌어요 ✨', 240, 80);
+    ctx.fillText('From BOXRO, Made for the Planet & Play.', 240, 70); // 60 → 70 (10px 아래로)
     
     ctx.font = '22px Arial';
-    ctx.fillText('아이들이 직접 자동차를 디자인하고, 도안을 출력해 조립하며, 친구들과 나누는 창작 놀이 플랫폼이에요.', 240, 110);
+    ctx.fillText('아이들이 직접 디자인하고 조립하며,', 240, 105); // 100 → 105 (5px 아래로)
+    ctx.fillText('창의력과 손끝 감각을 키우는 친환경 메이킹 놀이예요. ✨', 240, 135); // 130 → 135 (5px 아래로)
     
     // 도안 생성날짜 (오른쪽상단) - 원래 서식
     const now = new Date();
@@ -657,20 +658,25 @@ export default function DrawPage() {
       const titleImg = new Image();
       await new Promise((resolve, reject) => {
         titleImg.onload = () => {
-          // 원본 이미지 비율 계산
+          // 원본 이미지 비율 계산 (1526 × 1054)
           const originalWidth = titleImg.naturalWidth;
           const originalHeight = titleImg.naturalHeight;
           const aspectRatio = originalWidth / originalHeight;
           
-          // 최대 너비 설정 (A4 페이지에 맞게) - 크기 증가
+          // 최대 너비 설정 (A4 페이지에 맞게)
           const maxWidth = 400;
           const calculatedWidth = Math.min(maxWidth, originalWidth);
           const calculatedHeight = calculatedWidth / aspectRatio;
           
-                  // 중앙 정렬
-                  const titleImgX = a4Width / 2 - calculatedWidth / 2;
-                  const titleImgY = 150; // Moved down 10px more from 160
+          // 중앙 정렬
+          const titleImgX = a4Width / 2 - calculatedWidth / 2;
+          const titleImgY = 150;
           
+          console.log('🔍 로고 이미지 크기:', {
+            original: `${originalWidth} × ${originalHeight}`,
+            aspectRatio: aspectRatio.toFixed(3),
+            calculated: `${calculatedWidth} × ${calculatedHeight.toFixed(2)}`
+          });
           
           ctx.drawImage(titleImg, titleImgX, titleImgY, calculatedWidth, calculatedHeight);
           resolve(true);
@@ -706,14 +712,16 @@ export default function DrawPage() {
         ctx.fillText('도안 생성일자 : ' + dateStr, a4Width - 50, 80);
       
       // 설명 텍스트 (가운데 정렬) - 스냅샷과 무관하게 고정 위치
-      ctx.font = 'bold 22px Arial';
+      ctx.font = 'bold 24px Arial';
       ctx.textAlign = 'center';
-      const textY1 = 1000; // 모바일/데스크톱 동일한 위치
-      ctx.fillText('이 도안은 박스로에서 만들어졌어요 ✨', a4Width / 2, textY1);
+      const textY1 = 985; // 990 → 985 (5px 위로)
+      ctx.fillText('From BOXRO, Made for the Planet & Play.', a4Width / 2, textY1);
       
       ctx.font = '22px Arial';
-      const textY2 = 1030; // 모바일/데스크톱 동일한 위치
-      ctx.fillText('아이들이 직접 자동차를 디자인하고, 도안을 출력해 조립하며, 친구들과 나누는 창작 놀이 플랫폼이에요.', a4Width / 2, textY2);
+      const textY2 = 1025; // 1030 → 1025 (5px 위로)
+      ctx.fillText('아이들이 직접 디자인하고 조립하며,', a4Width / 2, textY2);
+      const textY3 = 1055; // 1060 → 1055 (5px 위로)
+      ctx.fillText('창의력과 손끝 감각을 키우는 친환경 메이킹 놀이예요. ✨', a4Width / 2, textY3);
       
       // Copyright (가운데 정렬)
       ctx.font = '18px Arial';
@@ -5717,6 +5725,10 @@ export default function DrawPage() {
             <Printer className="w-5 h-5 mr-2 text-blue-600" />
             <span className="bg-gradient-to-r from-blue-600 to-pink-600 bg-clip-text text-transparent">내가 만든 박스카 도안</span>
           </CardTitle>
+          {/* 안내 문구 */}
+          <p className="text-xs text-gray-600 mt-0 mb-0 text-left">
+            나만의 박스카를 완성해보세요. 친구들과 함께 만들면 더 즐겁고, 자랑하면 더 뿌듯해요.
+          </p>
         </CardHeader>
         <CardContent className="px-4 md:px-8 pt-0 pb-0 -mt-3">
           {/* 도안 미리보기 영역 */}
@@ -6361,12 +6373,12 @@ export default function DrawPage() {
                   </div>
                 </div>
                 <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
-                  {loginModalType === 'share' && '공유하기'}
-                  {loginModalType === 'download' && '다운로드'}
+                  {loginModalType === 'share' && '지금 친구들에게 뽐내볼까요?'}
+                  {loginModalType === 'download' && '내 박스카를 지금 만들고 싶나요?'}
                 </h3>
                 <p className="text-gray-600 text-sm mb-6">
-                  {loginModalType === 'share' && '내 작품을 갤러리에 공유하려면 로그인해주세요'}
-                  {loginModalType === 'download' && '내 박스카 도안을 내려받으려면 로그인해주세요'}
+                  {loginModalType === 'share' && '내 박스카를 공유하려면 로그인해보세요!'}
+                  {loginModalType === 'download' && '도안을 내려받으려면 로그인해주세요!'}
                 </p>
                 
                 <div className="flex gap-3 mt-6">

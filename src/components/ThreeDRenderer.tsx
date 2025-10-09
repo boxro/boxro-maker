@@ -165,8 +165,9 @@ const ThreeDRenderer = forwardRef<{ getRenderer: () => THREE.WebGLRenderer | nul
       precision: "highp" // 고정밀도
     });
     
-    // 픽셀 밀도 고정 (모바일/데스크톱 동일한 크기 보장)
-    const pixelRatio = 1; // devicePixelRatio 무시하고 고정값 사용
+    // 모바일 고해상도 최적화
+    const isMobileDevice = window.innerWidth <= 768;
+    const pixelRatio = isMobileDevice ? Math.min(window.devicePixelRatio || 1, 3) : Math.min(window.devicePixelRatio || 1, 2);
     renderer.setPixelRatio(pixelRatio);
     renderer.setSize(renderWidth, renderHeight);
     
@@ -1821,8 +1822,9 @@ const ThreeDRenderer = forwardRef<{ getRenderer: () => THREE.WebGLRenderer | nul
         });
         
         if (newWidth > 0 && newHeight > 0) {
-          // 픽셀 밀도 고정 (모바일/데스크톱 동일한 크기 보장)
-          const pixelRatio = 1; // devicePixelRatio 무시하고 고정값 사용
+          // 모바일 고해상도 최적화
+          const isMobileDevice = window.innerWidth <= 768;
+          const pixelRatio = isMobileDevice ? Math.min(window.devicePixelRatio || 1, 3) : Math.min(window.devicePixelRatio || 1, 2);
           renderer.setPixelRatio(pixelRatio);
           renderer.setSize(newWidth, newHeight);
         camera.aspect = newWidth / newHeight;

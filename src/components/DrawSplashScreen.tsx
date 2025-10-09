@@ -60,7 +60,7 @@ export default function DrawSplashScreen({ onClose, onSignUp }: DrawSplashScreen
             <div className="text-center mb-8">
               <p className="text-gray-700 text-[15px] leading-relaxed">
                 누구나 자유롭게 그리고 꾸밀 수 있어요!<br />
-                하지만 도안 저장과 다운로드는<br />
+                하지만 도안 공유와 다운로드는<br />
                 <span className="font-semibold text-blue-600">회원만 이용할 수 있어요.</span>
               </p>
             </div>
