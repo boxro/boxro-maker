@@ -680,7 +680,7 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
                 <div className="space-y-1 mb-3">
                   <div className="text-xs font-semibold text-gray-500 mb-2">기본 폰트</div>
                   {[
-                    'Inter', 'Arial', 'Times New Roman', 'Georgia', 'Verdana', 
+                    'Inter', 'Pretendard', 'Arial', 'Times New Roman', 'Georgia', 'Verdana', 
                     'Helvetica', 'Courier New', 'Trebuchet MS', 'Arial Black'
                   ].map((font) => (
                     <button
