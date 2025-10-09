@@ -919,8 +919,7 @@ export default function AdminPage() {
       ));
 
       cancelEdit();
-      setErrorMessage('홈카드가 수정되었습니다.');
-      setShowErrorModal(true);
+      alert('홈카드가 수정되었습니다.');
     } catch (error) {
       console.error('홈카드 수정 실패:', error);
       setErrorMessage('홈카드 수정에 실패했습니다.');
