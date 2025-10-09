@@ -221,8 +221,12 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
     content,
     onUpdate: ({ editor }) => {
       // HTML을 가져올 때 인라인 스타일이 포함되도록 함
-      const html = editor.getHTML();
+      let html = editor.getHTML();
       console.log('🔍 에디터 HTML 업데이트:', html);
+      
+      // 줄바꿈을 <br> 태그로 변환하여 저장
+      html = html.replace(/\n/g, '<br>');
+      console.log('🔍 줄바꿈 변환 후:', html);
       
       // content prop과 다를 때만 onChange 호출 (무한 루프 방지)
       if (html !== content) {
@@ -232,8 +236,11 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
       }
     },
     onSelectionUpdate: ({ editor }) => {
-      const html = editor.getHTML();
+      let html = editor.getHTML();
       console.log('🔍 onSelectionUpdate:', html);
+      
+      // 줄바꿈을 <br> 태그로 변환하여 저장
+      html = html.replace(/\n/g, '<br>');
       
       // content prop과 다를 때만 onChange 호출 (무한 루프 방지)
       if (html !== content) {
