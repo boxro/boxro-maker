@@ -255,6 +255,23 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
     onSelectionUpdate: ({ editor }) => {
       // onSelectionUpdate에서는 onChange 호출하지 않음 (커서 위치 문제 방지)
       // 선택 영역 변경 시에는 HTML 변환하지 않음
+      
+      // 현재 선택된 텍스트의 폰트 정보 업데이트
+      const { from, to } = editor.state.selection;
+      if (from !== to) {
+        // 텍스트가 선택된 경우
+        const selectedText = editor.state.doc.textBetween(from, to);
+        if (selectedText) {
+          // 선택된 텍스트의 스타일 정보 가져오기
+          const { fontFamily, fontSize } = editor.getAttributes('textStyle');
+          if (fontFamily) {
+            setSelectedFontFamily(fontFamily);
+          }
+          if (fontSize) {
+            setSelectedFontSize(fontSize);
+          }
+        }
+      }
     },
     editorProps: {
       attributes: {
@@ -621,7 +638,9 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
             >
               <div className="flex items-center gap-1">
                 <Type className="w-4 h-4" />
-                <span className="text-xs">{selectedFontFamily}</span>
+                <span className="text-xs" style={{ fontFamily: selectedFontFamily }}>
+                  {selectedFontFamily}
+                </span>
               </div>
             </Button>
             
@@ -715,7 +734,9 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
             >
               <div className="flex items-center gap-1">
                 <Type className="w-4 h-4" />
-                <span className="text-xs">{selectedFontSize}</span>
+                <span className="text-xs" style={{ fontFamily: selectedFontFamily, fontSize: selectedFontSize }}>
+                  {selectedFontSize}
+                </span>
               </div>
             </Button>
             
