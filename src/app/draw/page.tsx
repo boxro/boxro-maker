@@ -5902,7 +5902,6 @@ export default function DrawPage() {
           disabled={!blueprintGenerated || blueprintImages.length === 0}
           className="bg-gradient-to-r from-sky-400 to-sky-500 hover:from-sky-500 hover:to-sky-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-3xl w-[70px] h-[70px] md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <Share2 className="w-4 h-4 md:w-5 md:h-5" />
           <div className="text-center" style={{ lineHeight: '1.15' }}>
             <div className="font-medium" style={{ lineHeight: '1.15', fontSize: '15px' }}>갤러리</div>
             <div className="font-medium" style={{ lineHeight: '1.15', fontSize: '15px' }}>공유</div>
@@ -5919,7 +5918,6 @@ export default function DrawPage() {
               disabled={!blueprintGenerated || blueprintImages.length === 0}
               className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-3xl w-[70px] h-[70px] md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Download className="w-4 h-4 md:w-5 md:h-5" />
               <div className="text-center" style={{ lineHeight: '1.15' }}>
                 <div className="font-medium" style={{ lineHeight: '1.15', fontSize: '15px' }}>도안</div>
                 <div className="font-medium" style={{ lineHeight: '1.15', fontSize: '15px' }}>다운로드</div>
