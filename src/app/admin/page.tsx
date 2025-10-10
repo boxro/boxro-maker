@@ -3278,7 +3278,7 @@ export default function AdminPage() {
                   : 'text-white/50 hover:text-white/80'
               }`}
             >
-              회원 통계
+              대시보드
               {activeTab === 'dashboard' && (
                 <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white rounded-full"></div>
               )}
