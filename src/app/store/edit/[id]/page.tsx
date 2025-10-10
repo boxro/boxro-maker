@@ -1133,7 +1133,7 @@ export default function EditStoryPage() {
           <div className="flex justify-between items-center">
             <Link href="/store">
               <Button 
-                className="bg-pink-500 hover:bg-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-full w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1"
+                className="bg-pink-500 hover:bg-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-full w-[74px] h-[74px] md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1"
               >
                 <ArrowLeft className="w-4 h-4 md:w-5 md:h-5" />
                 <span className="text-xs md:text-sm font-medium">목록으로</span>
@@ -1143,7 +1143,7 @@ export default function EditStoryPage() {
               <Button 
                 onClick={saveArticle}
                 disabled={saving}
-                className="bg-sky-500 hover:bg-sky-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-full w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1"
+                className="bg-sky-500 hover:bg-sky-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-full w-[74px] h-[74px] md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1"
               >
                 <ShoppingBag className="w-4 h-4 md:w-5 md:h-5" />
                 <span className="text-xs md:text-sm font-medium">도안수정</span>
