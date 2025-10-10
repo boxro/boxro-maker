@@ -854,7 +854,6 @@ export default function StorePageClient() {
                 <div className="px-7 py-4">
                   <h3 
                     className="text-lg font-semibold mb-2 mt-1"
-                    style={{ color: article.titleColor || '#1f2937' }}
                   >
                     {article.title.length > 20 ? `${article.title.substring(0, 20)}...` : article.title}
                   </h3>
@@ -862,7 +861,6 @@ export default function StorePageClient() {
                   {article.summary && (
                     <p 
                       className="text-[15px] mb-2 whitespace-pre-wrap"
-                      style={{ color: article.summaryColor || '#6b7280' }}
                     >
                       {article.summary}
                     </p>
