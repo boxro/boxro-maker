@@ -235,7 +235,7 @@ export default function HomeStoryCards() {
               <div 
                 className="absolute inset-0 w-full h-full"
                 style={{ 
-                  backgroundColor: article.backgroundColor === 'transparent' ? 'transparent' : (article.backgroundColor || 'transparent'),
+                  backgroundColor: article.homeCardBackgroundColor === 'transparent' ? 'transparent' : (article.homeCardBackgroundColor || 'transparent'),
                   background: article.homeCardBackgroundColor === 'transparent' ? 'transparent' : (article.homeCardBackgroundColor ? `linear-gradient(135deg, ${article.homeCardBackgroundColor} 0%, ${article.homeCardBackgroundColor} 100%)` : 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)')
                 }}
               >
