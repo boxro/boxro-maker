@@ -4592,7 +4592,7 @@ export default function DrawPage() {
               <Button 
                 variant="outline" 
                 onClick={clearCanvas}
-                className="bg-white/80 backdrop-blur-sm border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 rounded-full w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1 text-gray-900"
+                className="bg-white/80 backdrop-blur-sm border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 rounded-full w-[70px] h-[70px] md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1 text-gray-900"
               >
                 <Eraser className="w-4 h-4 md:w-5 md:h-5" />
                 <span className="font-medium" style={{fontSize: '15px'}}>초기화</span>
@@ -4602,7 +4602,7 @@ export default function DrawPage() {
               <Button 
                 onClick={saveDrawing}
                 disabled={!hasDrawing && !hasBeenToPreview}
-                className={`rounded-full w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1 transition-all duration-200 ${
+                className={`rounded-full w-[70px] h-[70px] md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1 transition-all duration-200 ${
                   !hasDrawing && !hasBeenToPreview
                     ? 'opacity-50 cursor-not-allowed bg-gray-300' 
                     : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg hover:shadow-xl'
@@ -4725,14 +4725,14 @@ export default function DrawPage() {
                       <Button 
                         variant="outline" 
                         onClick={() => setCurrentStep('draw')}
-                        className="bg-white/80 backdrop-blur-sm border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 rounded-full w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1 text-gray-900"
+                        className="bg-white/80 backdrop-blur-sm border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 rounded-full w-[70px] h-[70px] md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1 text-gray-900"
                       >
                         <ArrowLeft className="w-4 h-4 md:w-5 md:h-5" />
                         <span className="font-medium" style={{fontSize: '15px'}}>뒤로</span>
                       </Button>
                       <Button 
                         onClick={() => setCurrentStep('decorate')} 
-                        className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-full w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1"
+                        className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-full w-[70px] h-[70px] md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1"
                       >
                         <Sparkles className="w-4 h-4 md:w-5 md:h-5" />
                         <span className="font-medium" style={{fontSize: '15px'}}>꾸미기</span>
@@ -4979,14 +4979,14 @@ export default function DrawPage() {
             <Button 
               variant="outline" 
               onClick={() => setCurrentStep('preview')}
-              className="bg-white/80 backdrop-blur-sm border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 rounded-full w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1 text-gray-900"
+              className="bg-white/80 backdrop-blur-sm border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 rounded-full w-[70px] h-[70px] md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1 text-gray-900"
             >
               <ArrowLeft className="w-4 h-4 md:w-5 md:h-5" />
               <span className="font-medium" style={{fontSize: '15px'}}>뒤로</span>
             </Button>
             <Button 
               onClick={handleGenerateBlueprint} 
-              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-full w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1"
+              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-full w-[70px] h-[70px] md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1"
             >
               <Sparkles className="w-4 h-4 md:w-5 md:h-5" />
               <span className="font-medium" style={{fontSize: '15px'}}>도안생성</span>
@@ -5824,7 +5824,7 @@ export default function DrawPage() {
               <Button 
                 variant="outline" 
                 onClick={() => setCurrentStep('decorate')}
-                className="bg-white/80 backdrop-blur-sm border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 rounded-full w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1 text-gray-900"
+                className="bg-white/80 backdrop-blur-sm border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 rounded-full w-[70px] h-[70px] md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1 text-gray-900"
               >
                 <ArrowLeft className="w-4 h-4 md:w-5 md:h-5" />
                 <span className="font-medium" style={{fontSize: '15px'}}>뒤로</span>
@@ -5900,7 +5900,7 @@ export default function DrawPage() {
             setShowGalleryShareModal(true);
           }}
           disabled={!blueprintGenerated || blueprintImages.length === 0}
-          className="bg-gradient-to-r from-sky-400 to-sky-500 hover:from-sky-500 hover:to-sky-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-3xl w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="bg-gradient-to-r from-sky-400 to-sky-500 hover:from-sky-500 hover:to-sky-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-3xl w-[70px] h-[70px] md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Share2 className="w-4 h-4 md:w-5 md:h-5" />
           <div className="text-center" style={{ lineHeight: '1.15' }}>
@@ -5917,7 +5917,7 @@ export default function DrawPage() {
                 downloadAllPagesAsPDF();
               }}
               disabled={!blueprintGenerated || blueprintImages.length === 0}
-              className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-3xl w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-3xl w-[70px] h-[70px] md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Download className="w-4 h-4 md:w-5 md:h-5" />
               <div className="text-center" style={{ lineHeight: '1.15' }}>
