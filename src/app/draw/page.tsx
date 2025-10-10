@@ -5002,7 +5002,7 @@ export default function DrawPage() {
             onClick={() => setSelectedItem(null)}
           >
             <div 
-              className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 max-w-4xl w-full max-h-[80vh] overflow-y-auto mx-6"
+              className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 max-w-4xl w-full max-h-[calc(80vh+10px)] overflow-y-auto mx-6"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="p-6">
