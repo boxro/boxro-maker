@@ -1080,7 +1080,10 @@ export default function WriteStoryPage() {
                 {successMessage}
               </p>
               <Button
-                onClick={() => setShowSuccessModal(false)}
+                onClick={() => {
+                  setShowSuccessModal(false);
+                  router.push('/store');
+                }}
                 className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white transition-all duration-200 rounded-full"
                 style={{fontSize: '15px'}}
               >
