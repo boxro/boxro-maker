@@ -734,7 +734,7 @@ export default function StoryArticlePage() {
                 ))}
               </div>
               
-              <CardTitle className="text-[20px] md:text-[22px] font-bold mb-2" style={{ fontFamily: 'CookieRun' }}>{article.title}</CardTitle>
+              <CardTitle className="text-[20px] md:text-[22px] font-bold mb-2 text-foreground" style={{ fontFamily: 'CookieRun' }}>{article.title}</CardTitle>
               
               <p className="text-[15px] md:text-[15px] text-gray-800 leading-relaxed whitespace-pre-wrap">{article.summary}</p>
             </div>

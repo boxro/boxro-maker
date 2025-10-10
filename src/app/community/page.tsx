@@ -1707,7 +1707,7 @@ export default function GalleryPage() {
                   </div>
                   
                   <div className="flex justify-between items-start">
-                    <CardTitle className="text-lg font-semibold flex-1" title={design.name}>
+                    <CardTitle className="text-lg font-semibold flex-1 text-foreground" title={design.name}>
                       {design.name.length > 20 ? `${design.name.substring(0, 20)}...` : design.name}
                     </CardTitle>
                   </div>
