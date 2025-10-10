@@ -4592,10 +4592,10 @@ export default function DrawPage() {
               <Button 
                 variant="outline" 
                 onClick={clearCanvas}
-                className="bg-white/80 backdrop-blur-sm border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 rounded-full w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1"
+                className="bg-white/80 backdrop-blur-sm border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 rounded-full w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1 text-gray-900"
               >
                 <Eraser className="w-4 h-4 md:w-5 md:h-5" />
-                <span className="text-xs md:text-sm font-medium">초기화</span>
+                <span className="font-medium" style={{fontSize: '15px'}}>초기화</span>
               </Button>
             </div>
             <div>
@@ -4609,7 +4609,7 @@ export default function DrawPage() {
                 }`}
               >
                 <Sparkles className="w-4 h-4 md:w-5 md:h-5" />
-                <span className="text-xs md:text-sm font-medium">3D 생성</span>
+                <span className="font-medium" style={{fontSize: '15px'}}>3D생성</span>
               </Button>
             </div>
           </div>
@@ -4677,7 +4677,7 @@ export default function DrawPage() {
                           onClick={() => {
                             setSelectedCarType(car.type);
                           }}
-                          className={`flex flex-col items-center justify-center px-2 py-1 md:p-2 rounded-xl border-2 transition-all duration-200 h-[85px] md:h-[106px] ${
+                          className={`flex flex-col items-center justify-center px-2 py-2 md:p-2 rounded-xl border-2 transition-all duration-200 h-[85px] md:h-[106px] ${
                             selectedCarType === car.type
                               ? 'border-transparent bg-gradient-to-br from-blue-500 to-purple-500 text-white'
                               : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50 text-gray-700'
@@ -4688,7 +4688,7 @@ export default function DrawPage() {
                             alt={car.label}
                             className="w-16 h-16 md:w-24 md:h-24 mb-1 object-contain"
                           />
-                          <span className="text-xs font-medium">{car.label}</span>
+                          <span className="font-medium" style={{fontSize: '13px'}}>{car.label}</span>
                         </button>
                       );
                     })}
@@ -4725,17 +4725,17 @@ export default function DrawPage() {
                       <Button 
                         variant="outline" 
                         onClick={() => setCurrentStep('draw')}
-                        className="bg-white/80 backdrop-blur-sm border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 rounded-full w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1"
+                        className="bg-white/80 backdrop-blur-sm border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 rounded-full w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1 text-gray-900"
                       >
                         <ArrowLeft className="w-4 h-4 md:w-5 md:h-5" />
-                        <span className="text-xs md:text-sm font-medium">뒤로</span>
+                        <span className="font-medium" style={{fontSize: '15px'}}>뒤로</span>
                       </Button>
                       <Button 
                         onClick={() => setCurrentStep('decorate')} 
                         className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-full w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1"
                       >
                         <Sparkles className="w-4 h-4 md:w-5 md:h-5" />
-                        <span className="text-xs md:text-sm font-medium">꾸미기</span>
+                        <span className="font-medium" style={{fontSize: '15px'}}>꾸미기</span>
                       </Button>
                     </div>
                   </div>
@@ -4943,7 +4943,7 @@ export default function DrawPage() {
                     alt={item.label}
                     className="w-16 h-16 md:w-[90px] md:h-[90px] mb-1 object-contain"
                   />
-                  <span className="text-xs font-medium">{item.label}</span>
+                  <span className="font-medium" style={{fontSize: '13px'}}>{item.label}</span>
                 </button>
               );
             })}
@@ -4979,17 +4979,17 @@ export default function DrawPage() {
             <Button 
               variant="outline" 
               onClick={() => setCurrentStep('preview')}
-              className="bg-white/80 backdrop-blur-sm border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 rounded-full w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1"
+              className="bg-white/80 backdrop-blur-sm border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 rounded-full w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1 text-gray-900"
             >
               <ArrowLeft className="w-4 h-4 md:w-5 md:h-5" />
-              <span className="text-xs md:text-sm font-medium">뒤로</span>
+              <span className="font-medium" style={{fontSize: '15px'}}>뒤로</span>
             </Button>
             <Button 
               onClick={handleGenerateBlueprint} 
               className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-full w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1"
             >
               <Sparkles className="w-4 h-4 md:w-5 md:h-5" />
-              <span className="text-xs md:text-sm font-medium">도안 생성</span>
+              <span className="font-medium" style={{fontSize: '15px'}}>도안생성</span>
             </Button>
           </div>
         </CardContent>
@@ -5714,7 +5714,7 @@ export default function DrawPage() {
       {/* 도안 생성 중 로딩 상태 */}
       {blueprintGenerating && (
         <div className="fixed inset-0 bg-gradient-to-br from-purple-900/20 via-blue-900/20 to-pink-900/20 backdrop-blur-md z-50 flex items-center justify-center">
-          <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8 max-w-md w-full mx-6">
+          <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 px-6 py-8 max-w-md w-full mx-6">
             <div className="text-center">
               {/* 모던한 로딩 애니메이션 */}
               <div className="relative mb-6">
@@ -5732,7 +5732,7 @@ export default function DrawPage() {
               <h3 className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-pink-600 bg-clip-text text-transparent mb-2">
                 박스카 도안을 준비하고 있어요!
               </h3>
-              <p className="text-gray-600 text-sm">3D 박스카가 종이 도안으로 변신 중이에요...</p>
+              <p className="text-gray-900" style={{fontSize: '15px'}}>3D 박스카가 도안으로 변신 중이에요...</p>
             </div>
           </div>
         </div>
@@ -5824,10 +5824,10 @@ export default function DrawPage() {
               <Button 
                 variant="outline" 
                 onClick={() => setCurrentStep('decorate')}
-                className="bg-white/80 backdrop-blur-sm border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 rounded-full w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1"
+                className="bg-white/80 backdrop-blur-sm border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 rounded-full w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1 text-gray-900"
               >
                 <ArrowLeft className="w-4 h-4 md:w-5 md:h-5" />
-                <span className="text-xs md:text-sm font-medium">뒤로</span>
+                <span className="font-medium" style={{fontSize: '15px'}}>뒤로</span>
               </Button>
             </div>
             <div className="flex items-center gap-2">
@@ -5904,8 +5904,8 @@ export default function DrawPage() {
         >
           <Share2 className="w-4 h-4 md:w-5 md:h-5" />
           <div className="text-center" style={{ lineHeight: '1.15' }}>
-            <div className="text-xs md:text-sm font-medium" style={{ lineHeight: '1.15' }}>갤러리</div>
-            <div className="text-xs md:text-sm font-medium" style={{ lineHeight: '1.15' }}>공유</div>
+            <div className="font-medium" style={{ lineHeight: '1.15', fontSize: '15px' }}>갤러리</div>
+            <div className="font-medium" style={{ lineHeight: '1.15', fontSize: '15px' }}>공유</div>
           </div>
         </Button>
             <Button 
@@ -5921,8 +5921,8 @@ export default function DrawPage() {
             >
               <Download className="w-4 h-4 md:w-5 md:h-5" />
               <div className="text-center" style={{ lineHeight: '1.15' }}>
-                <div className="text-xs md:text-sm font-medium" style={{ lineHeight: '1.15' }}>도안</div>
-                <div className="text-xs md:text-sm font-medium" style={{ lineHeight: '1.15' }}>다운로드</div>
+                <div className="font-medium" style={{ lineHeight: '1.15', fontSize: '15px' }}>도안</div>
+                <div className="font-medium" style={{ lineHeight: '1.15', fontSize: '15px' }}>다운로드</div>
               </div>
             </Button>
             </div>
@@ -6077,7 +6077,7 @@ export default function DrawPage() {
               <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
                 멋진 작품이네요!
               </h3>
-              <p className="text-gray-600 text-sm mb-6">
+              <p className="text-gray-900 mb-6" style={{fontSize: '15px'}}>
                 박스카 갤러리에 공유할까요?
               </p>
             
@@ -6156,7 +6156,7 @@ export default function DrawPage() {
                   {!shareTitle.trim() && (
                     <p className="text-red-500 text-xs mt-1">제목을 입력하거나 랜덤 버튼을 눌러주세요</p>
                   )}
-                  <p className="text-gray-600 text-xs mt-2">
+                  <p className="text-gray-900 mt-2" style={{fontSize: '13px'}}>
                     이 작품에 어울리는 이름을 지어보세요.<br />
                     랜덤 버튼으로 재밌게 바꿀 수도 있어요.
                   </p>
@@ -6168,7 +6168,8 @@ export default function DrawPage() {
                 <Button
                   variant="outline"
                   onClick={() => setShowGalleryShareModal(false)}
-                  className="flex-1 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-full"
+                  className="flex-1 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-full text-gray-900"
+                  style={{fontSize: '15px'}}
                 >
                   취소
                 </Button>
@@ -6176,6 +6177,7 @@ export default function DrawPage() {
                   onClick={shareToGallery}
                   disabled={!shareTitle.trim()}
                   className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 rounded-full"
+                  style={{fontSize: '15px'}}
                 >
                   공유하기
                 </Button>
@@ -6320,14 +6322,15 @@ export default function DrawPage() {
               <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
                 성공적으로 공유되었습니다!
               </h3>
-              <p className="text-gray-600 text-sm mb-7">
+              <p className="text-gray-900 mb-7" style={{fontSize: '15px'}}>
                 다른 사람들과 함께 멋진 작품을 나눠보세요
               </p>
               <div className="flex gap-3">
                 <Button
                   variant="outline"
                   onClick={() => setShowGallerySuccessModal(false)}
-                  className="flex-1 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-full"
+                  className="flex-1 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-full text-gray-900"
+                  style={{fontSize: '15px'}}
                 >
                   나중에
                 </Button>
@@ -6337,6 +6340,7 @@ export default function DrawPage() {
                     router.push('/gallery');
                   }}
                   className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 rounded-full"
+                  style={{fontSize: '15px'}}
                 >
                   박스카 갤러리 보러가기
                 </Button>

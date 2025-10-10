@@ -15,7 +15,8 @@ import {
   BookOpen,
   Settings,
   User,
-  Home
+  Home,
+  LogOut
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -136,38 +137,38 @@ export default function CommonHeader({ className = "" }: CommonHeaderProps) {
               <div className="menu-dropdown absolute top-full right-0 mt-2 w-64 rounded-lg shadow-xl transition-all duration-200 bg-white border border-gray-200">
                 <div className="p-4">
                   <nav className="space-y-2">
-                    <Link href="/" onClick={() => setIsMenuOpen(false)} className="block px-3 py-2 rounded-md transition-colors text-gray-700 hover:bg-purple-100">
+                    <Link href="/" onClick={() => setIsMenuOpen(false)} className="block px-6 py-2 rounded-full transition-colors text-gray-900 hover:bg-purple-100">
                       <div className="flex items-center gap-3">
                         <Home className="w-4 h-4" />
                         <span>홈</span>
                       </div>
                     </Link>
-                    <Link href="/draw" onClick={() => setIsMenuOpen(false)} className="block px-3 py-2 rounded-md transition-colors text-gray-700 hover:bg-purple-100">
+                    <Link href="/draw" onClick={() => setIsMenuOpen(false)} className="block px-6 py-2 rounded-full transition-colors text-gray-900 hover:bg-purple-100">
                       <div className="flex items-center gap-3">
                         <Palette className="w-4 h-4" />
                         <span>박스카 그리기</span>
                       </div>
                     </Link>
-                    <Link href="/gallery" onClick={() => setIsMenuOpen(false)} className="block px-3 py-2 rounded-md transition-colors text-gray-700 hover:bg-purple-100">
+                    <Link href="/gallery" onClick={() => setIsMenuOpen(false)} className="block px-6 py-2 rounded-full transition-colors text-gray-900 hover:bg-purple-100">
                       <div className="flex items-center gap-3">
                         <Users className="w-4 h-4" />
                         <span>박스카 갤러리</span>
                       </div>
                     </Link>
-                    <Link href="/story" onClick={() => setIsMenuOpen(false)} className="block px-3 py-2 rounded-md transition-colors text-gray-700 hover:bg-purple-100">
+                    <Link href="/story" onClick={() => setIsMenuOpen(false)} className="block px-6 py-2 rounded-full transition-colors text-gray-900 hover:bg-purple-100">
                       <div className="flex items-center gap-3">
                         <BookOpen className="w-4 h-4" />
                         <span>박스카 이야기</span>
                       </div>
                     </Link>
-                    <Link href="/store" onClick={() => setIsMenuOpen(false)} className="block px-3 py-2 rounded-md transition-colors text-gray-700 hover:bg-purple-100">
+                    <Link href="/store" onClick={() => setIsMenuOpen(false)} className="block px-6 py-2 rounded-full transition-colors text-gray-900 hover:bg-purple-100">
                       <div className="flex items-center gap-3">
                         <ShoppingBag className="w-4 h-4" />
                         <span>박스로 스토어</span>
                       </div>
                     </Link>
                     {isAdmin && (
-                      <Link href="/admin" onClick={() => setIsMenuOpen(false)} className="block px-3 py-2 rounded-md transition-colors text-gray-700 hover:bg-red-100">
+                      <Link href="/admin" onClick={() => setIsMenuOpen(false)} className="block px-6 py-2 rounded-full transition-colors text-gray-900 hover:bg-red-100">
                         <div className="flex items-center gap-3">
                           <Settings className="w-4 h-4" />
                           <span className="font-semibold text-red-600">관리자</span>
@@ -175,8 +176,8 @@ export default function CommonHeader({ className = "" }: CommonHeaderProps) {
                       </Link>
                     )}
                     {user ? (
-                      <div className="border-t border-gray-300 pt-2 mt-2">
-                        <Link href="/profile/edit" onClick={() => setIsMenuOpen(false)} className="block px-3 py-2 rounded-md transition-colors text-gray-700 hover:bg-purple-100">
+                      <div className="border-t border-gray-300 pt-2 mt-2 space-y-2">
+                        <Link href="/profile/edit" onClick={() => setIsMenuOpen(false)} className="block px-6 py-2 rounded-full transition-colors text-gray-900 hover:bg-purple-100">
                           <div className="flex items-center gap-3">
                             <User className="w-4 h-4" />
                             <span>프로필 수정</span>
@@ -184,18 +185,29 @@ export default function CommonHeader({ className = "" }: CommonHeaderProps) {
                         </Link>
                         <button
                           onClick={handleLogout}
-                          className="block w-full text-left px-3 py-2 rounded-md transition-colors text-gray-700 hover:bg-red-100"
+                          className="block w-full text-left px-6 py-2 rounded-full transition-colors text-gray-900 hover:bg-red-100"
                         >
-                          로그아웃
+                          <div className="flex items-center gap-3">
+                            <LogOut className="w-4 h-4" />
+                            <span>로그아웃</span>
+                          </div>
                         </button>
                       </div>
                     ) : (
-                      <Link href="/auth" onClick={() => setIsMenuOpen(false)} className="block px-3 py-2 rounded-md transition-colors text-gray-700 hover:bg-purple-100">
-                        <div className="flex items-center gap-3">
-                          <span className="font-bold text-gray-700">←</span>
-                          <span>로그인</span>
-                        </div>
-                      </Link>
+                      <div className="border-t border-gray-300 pt-2 mt-2 space-y-2">
+                        <Link href="/auth" onClick={() => setIsMenuOpen(false)} className="block px-6 py-2 rounded-full transition-colors text-gray-900 hover:bg-purple-100">
+                          <div className="flex items-center gap-3">
+                            <span className="font-bold text-gray-900">←</span>
+                            <span>로그인</span>
+                          </div>
+                        </Link>
+                        <Link href="/auth?mode=signup" onClick={() => setIsMenuOpen(false)} className="block px-6 py-2 rounded-full transition-colors text-gray-900 bg-blue-100 hover:bg-blue-200">
+                          <div className="flex items-center gap-3">
+                            <User className="w-4 h-4" />
+                            <span>회원가입</span>
+                          </div>
+                        </Link>
+                      </div>
                     )}
                   </nav>
                 </div>

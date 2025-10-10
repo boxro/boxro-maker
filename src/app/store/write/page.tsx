@@ -17,7 +17,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useStory } from "@/contexts/StoryContext";
 import CommonHeader from "@/components/CommonHeader";
 import CommonBackground from "@/components/CommonBackground";
-import PageHeader from "@/components/PageHeader";
 
 export default function WriteStoryPage() {
   const { user } = useAuth();
@@ -369,17 +368,10 @@ export default function WriteStoryPage() {
   return (
     <CommonBackground>
       <CommonHeader />
-      <div className="max-w-7xl mx-auto px-0 md:px-8 flex-1">
-        {/* Header */}
-        <div className="mt-10 px-4 md:px-0">
-          <PageHeader 
-            title="새 도안 등록"
-            description="새로운 박스카 도안을 등록해보세요"
-          />
-        </div>
-
-        {/* 작성 폼 */}
-        <Card className="bg-white/95 backdrop-blur-sm border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden py-5 w-full rounded-2xl">
+      <div className="max-w-7xl mx-auto px-4 md:px-8 flex-1">
+        {/* 글 내용 */}
+        <div className="mt-12">
+          <Card className="bg-white/95 backdrop-blur-sm border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden py-5 w-full rounded-2xl">
           <CardHeader>
             <CardTitle className="text-[18px]">새 도안 등록</CardTitle>
           </CardHeader>
@@ -1015,6 +1007,7 @@ export default function WriteStoryPage() {
               </Button>
             </div>
           </div>
+        </div>
         </div>
       </div>
 

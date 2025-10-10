@@ -334,18 +334,11 @@ export default function WriteStoryPage() {
   return (
     <CommonBackground>
       <CommonHeader />
-      <div className="max-w-7xl mx-auto px-0 md:px-8 flex-1">
-        {/* Header */}
-        <div className="mt-10 px-4 md:px-0">
-          <PageHeader 
-            title="박스카 이야기 작성"
-            description="새로운 박스카 이야기를 작성해보세요"
-          />
-        </div>
-
-        {/* 작성 폼 */}
-        <Card className="bg-white/95 backdrop-blur-sm border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden py-5 w-full rounded-2xl">
-          <CardHeader>
+      <div className="max-w-7xl mx-auto px-4 md:px-8 flex-1">
+        {/* 글 내용 */}
+        <div className="mt-12">
+          <Card className="bg-white/97 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden w-full rounded-2xl pt-0 pb-6 border-0">
+          <CardHeader className="pt-8">
             <CardTitle className="text-[18px]">박스카 이야기 작성</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -911,7 +904,7 @@ export default function WriteStoryPage() {
                 className="bg-pink-500 hover:bg-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-full w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1"
               >
                 <ArrowLeft className="w-4 h-4 md:w-5 md:h-5" />
-                <span className="text-xs md:text-sm font-medium">목록으로</span>
+                <span className="font-medium" style={{fontSize: '15px'}}>목록으로</span>
               </Button>
             </Link>
             <div className="flex gap-3">
@@ -921,9 +914,10 @@ export default function WriteStoryPage() {
                 className="bg-sky-500 hover:bg-sky-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-full w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1"
               >
                 <BookOpen className="w-4 h-4 md:w-5 md:h-5" />
-                <span className="text-xs md:text-sm font-medium">발행하기</span>
+                <span className="font-medium" style={{fontSize: '15px'}}>발행하기</span>
               </Button>
             </div>
+          </div>
           </div>
         </div>
       </div>

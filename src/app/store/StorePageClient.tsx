@@ -783,6 +783,7 @@ export default function StorePageClient() {
                 <Button
                   onClick={() => router.push('/store/write')}
                   className="bg-indigo-600 hover:bg-indigo-700 text-white transition-all duration-200 rounded-full px-8 py-3"
+                  style={{fontSize: '15px'}}
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   새 도안 등록하기
@@ -853,14 +854,14 @@ export default function StorePageClient() {
                 {/* 제목, 요약 */}
                 <div className="px-7 py-4 flex-1 flex flex-col">
                   <h3 
-                    className="text-lg font-semibold mb-2 mt-1"
+                    className="text-lg font-semibold mb-2 mt-1 text-gray-900"
                   >
                     {article.title.length > 20 ? `${article.title.substring(0, 20)}...` : article.title}
                   </h3>
                   
                   {article.summary && (
                     <p 
-                      className="text-[15px] mb-2 whitespace-pre-wrap flex-1"
+                      className="text-[15px] mb-2 whitespace-pre-wrap flex-1 text-gray-900"
                     >
                       {article.summary}
                     </p>
@@ -981,6 +982,7 @@ export default function StorePageClient() {
                     setShowFloatingMenu(false);
                   }}
                   className="bg-indigo-600 hover:bg-indigo-700 text-white transition-all duration-200 rounded-full px-8 py-3"
+                  style={{fontSize: '15px'}}
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   새 도안 등록하기
@@ -1010,14 +1012,15 @@ export default function StorePageClient() {
               <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
                 박스로 스토어 공유하기
               </h3>
-              <p className="text-gray-800 text-sm mb-6 whitespace-pre-line">
+              <p className="text-gray-900 mb-6 whitespace-pre-line" style={{fontSize: '15px'}}>
                 이 도안을 친구들과 함께 구경해보세요!{'\n'}멋진 박스카 아이디어가 기다리고 있어요.
               </p>
               
               <div className="flex gap-3">
                 <Button
                   onClick={() => setShowShareModal(false)}
-                  className="flex-1 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 rounded-full"
+                  className="flex-1 bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 rounded-full"
+                  style={{fontSize: '15px'}}
                 >
                   취소
                 </Button>
@@ -1040,6 +1043,7 @@ export default function StorePageClient() {
                     }
                   }}
                   className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-full"
+                  style={{fontSize: '15px'}}
                 >
                   링크 복사
                 </Button>
@@ -1084,7 +1088,7 @@ export default function StorePageClient() {
                 </div>
               ) : boxroTalksForDesign.length === 0 ? (
                 <div className="text-center py-8">
-                  <div className="text-gray-500 text-sm">아직 톡이 없어요. ✨ 첫 톡을 남겨보세요!</div>
+                  <div className="text-gray-900" style={{fontSize: '15px'}}>아직 톡이 없어요. ✨ 첫 톡을 남겨보세요!</div>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -1113,7 +1117,7 @@ export default function StorePageClient() {
                         {/* 박스로 톡 박스 */}
                         <div className="bg-gray-100 rounded-lg p-4">
                           <div className="flex justify-between items-start">
-                            <div className="text-gray-800 whitespace-pre-wrap break-words text-sm flex-1">
+                            <div className="text-gray-900 whitespace-pre-wrap break-words flex-1" style={{fontSize: '15px'}}>
                               {comment.text}
                             </div>
                             {/* 박스로 톡 삭제 버튼 (작성자 또는 관리자) */}
@@ -1197,6 +1201,7 @@ export default function StorePageClient() {
                     onClick={addBoxroTalk}
                     disabled={!boxroTalkText.trim()}
                     className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white disabled:opacity-50 disabled:cursor-not-allowed rounded-full px-12"
+                    style={{fontSize: '15px'}}
                   >
                     톡 남기기
                   </Button>
@@ -1259,7 +1264,7 @@ export default function StorePageClient() {
                 </div>
               ) : boxroTalksForDesign.length === 0 ? (
                 <div className="text-center py-8">
-                  <div className="text-gray-500 text-sm">아직 톡이 없어요. ✨ 첫 톡을 남겨보세요!</div>
+                  <div className="text-gray-900" style={{fontSize: '15px'}}>아직 톡이 없어요. ✨ 첫 톡을 남겨보세요!</div>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -1288,7 +1293,7 @@ export default function StorePageClient() {
                         {/* 박스로 톡 박스 */}
                         <div className="bg-gray-100 rounded-lg p-4">
                           <div className="flex justify-between items-start">
-                            <div className="text-gray-800 whitespace-pre-wrap break-words text-sm flex-1">
+                            <div className="text-gray-900 whitespace-pre-wrap break-words flex-1" style={{fontSize: '15px'}}>
                               {comment.text}
                             </div>
                             {/* 박스로 톡 삭제 버튼 (작성자 또는 관리자) */}
@@ -1372,6 +1377,7 @@ export default function StorePageClient() {
                     onClick={addBoxroTalk}
                     disabled={!boxroTalkText.trim()}
                     className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white disabled:opacity-50 disabled:cursor-not-allowed rounded-full px-12"
+                    style={{fontSize: '15px'}}
                   >
                     톡 남기기
                   </Button>
@@ -1426,7 +1432,7 @@ export default function StorePageClient() {
                   {loginModalType === 'share' && '공유하기'}
                   {loginModalType === 'boxroTalk' && '이 도안에 대해 질문해보세요!'}
                 </h3>
-                <p className="text-gray-800 text-sm mb-6">
+                <p className="text-gray-900 mb-6" style={{fontSize: '15px'}}>
                   {loginModalType === 'like' && '로그인하면 👍 관심을 표시할 수 있어요!'}
                   {loginModalType === 'share' && '멋진 작품, 로그인하면 바로 공유할 수 있어요'}
                   {loginModalType === 'boxroTalk' && '로그인하면 톡을 남길 수 있어요!'}
@@ -1436,13 +1442,15 @@ export default function StorePageClient() {
                   <Button
                     variant="outline"
                     onClick={closeLoginModal}
-                    className="flex-1 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-full"
+                    className="flex-1 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-full text-gray-900"
+                    style={{fontSize: '15px'}}
                   >
                     나중에 할래
                   </Button>
                   <Button
                     onClick={handleLoginAndAction}
                     className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-full"
+                    style={{fontSize: '15px'}}
                   >
                     지금 로그인하기
                   </Button>

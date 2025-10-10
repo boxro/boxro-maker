@@ -1056,7 +1056,7 @@ export default function GalleryPage() {
       }
 
       // Firestore에서 박스로 톡 수정
-      await updateDoc(doc(db, 'comments', commentId), {
+      await updateDoc(doc(db, 'boxroTalks', commentId), {
         text: editCommentText.trim(),
         authorNickname: userNickname, // 최신 닉네임으로 업데이트
         updatedAt: new Date()
@@ -1064,7 +1064,7 @@ export default function GalleryPage() {
 
       // 박스로 톡 목록 새로고침
       if (selectedDesign) {
-        await fetchComments(selectedDesign.id);
+        await fetchBoxroTalks(selectedDesign.id);
       }
 
       setEditingComment(null);
@@ -1097,7 +1097,7 @@ export default function GalleryPage() {
 
     try {
       // 박스로 톡 삭제
-      await deleteDoc(doc(db, 'comments', commentId));
+      await deleteDoc(doc(db, 'boxroTalks', commentId));
 
       // 박스로 톡 수 감소
       if (selectedDesign) {
@@ -1125,7 +1125,7 @@ export default function GalleryPage() {
 
       // 박스로 톡 목록 새로고침
       if (selectedDesign) {
-        await fetchComments(selectedDesign.id);
+        await fetchBoxroTalks(selectedDesign.id);
         // 추가로 박스로 톡 목록 상태도 직접 업데이트
         setBoxroTalksForDesign(prev => prev.filter(comment => comment.id !== commentId));
       }
@@ -1540,11 +1540,12 @@ export default function GalleryPage() {
             <div className="flex items-center gap-6">
               <button
                 onClick={() => setShowMyDesigns(false)}
-                className={`relative text-sm font-medium transition-all duration-200 ${
+                className={`relative font-medium transition-all duration-200 ${
                   !showMyDesigns 
                     ? 'text-white' 
                     : 'text-white/50 hover:text-white/80'
                 }`}
+                style={{fontSize: '15px'}}
               >
                 전체 갤러리
                 {!showMyDesigns && (
@@ -1554,11 +1555,12 @@ export default function GalleryPage() {
               {user && (
                 <button
                   onClick={() => setShowMyDesigns(true)}
-                  className={`relative text-sm font-medium transition-all duration-200 ${
+                  className={`relative font-medium transition-all duration-200 ${
                     showMyDesigns 
                       ? 'text-white' 
                       : 'text-white/50 hover:text-white/80'
                   }`}
+                  style={{fontSize: '15px'}}
                 >
                   내가 만든 박스카
                   {showMyDesigns && (
@@ -1571,7 +1573,7 @@ export default function GalleryPage() {
           {user && (
             <div className="hidden sm:flex gap-3">
               <Link href="/draw" prefetch={false}>
-                <Button className="bg-pink-500 hover:bg-pink-600 text-white transition-all duration-200 rounded-full px-6 py-3">
+                <Button className="bg-pink-500 hover:bg-pink-600 text-white transition-all duration-200 rounded-full px-6 py-3" style={{fontSize: '15px'}}>
                   <Plus className="w-4 h-4 mr-2" />
                   박스카 그리기
                 </Button>
@@ -1579,6 +1581,7 @@ export default function GalleryPage() {
               <Button 
                 onClick={() => setShowUploadModal(true)}
                 className="bg-indigo-600 hover:bg-indigo-700 text-white transition-all duration-200 rounded-full px-6 py-3"
+                style={{fontSize: '15px'}}
               >
                 <Upload className="w-4 h-4 mr-2" />
                 내 작품 올리기
@@ -1738,7 +1741,7 @@ export default function GalleryPage() {
                   </div>
                   
                   <div className="flex justify-between items-start">
-                    <CardTitle className="text-lg font-semibold flex-1" style={{ color: 'var(--foreground)' }} title={design.name}>
+                    <CardTitle className="text-lg font-semibold flex-1 text-gray-900" title={design.name}>
                       {design.name.length > 20 ? `${design.name.substring(0, 20)}...` : design.name}
                     </CardTitle>
                   </div>
@@ -1867,7 +1870,7 @@ export default function GalleryPage() {
                   </div>
                 ) : boxroTalksForDesign.length === 0 ? (
                   <div className="text-center py-8">
-                    <div className="text-gray-500 text-sm">아직 톡이 없어요. ✨ 첫 톡을 남겨보세요!</div>
+                    <div className="text-gray-900" style={{fontSize: '15px'}}>아직 톡이 없어요. ✨ 첫 톡을 남겨보세요!</div>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -1896,7 +1899,7 @@ export default function GalleryPage() {
                           {/* 박스로 톡 박스 */}
                           <div className="bg-gray-100 rounded-lg p-4">
                             <div className="flex justify-between items-start">
-                              <div className="text-gray-800 whitespace-pre-wrap break-words text-sm flex-1">
+                              <div className="text-gray-900 whitespace-pre-wrap break-words flex-1" style={{fontSize: '15px'}}>
                                 {comment.text}
                               </div>
                             {/* 박스로 톡 삭제 버튼 (작성자 또는 관리자) */}
@@ -1977,6 +1980,7 @@ export default function GalleryPage() {
                     <Button
                       onClick={() => addComment()}
                       className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-full px-12"
+                      style={{fontSize: '15px'}}
                     >
                       톡 남기기
                     </Button>
@@ -2000,14 +2004,15 @@ export default function GalleryPage() {
               <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
                 작품 공유하기
               </h3>
-              <p className="text-gray-800 text-sm mb-6 whitespace-pre-line">
-                내 박스카를 친구들과 함께 자랑해보세요!{'\n'}카카오톡이나 페이스북으로 공유할 수도 있어요.
+              <p className="text-gray-900 mb-6 whitespace-pre-line" style={{fontSize: '15px'}}>
+                내 박스카를 친구들과 함께 자랑해보세요!{'\n'}카카오톡, 페이스북으로 공유할 수도 있어요.
               </p>
               
               <div className="flex gap-3">
                 <Button
                   onClick={() => setShowShareModal(false)}
-                  className="flex-1 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 rounded-full"
+                  className="flex-1 bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 rounded-full"
+                  style={{fontSize: '15px'}}
                 >
                   취소
                 </Button>
@@ -2030,6 +2035,7 @@ export default function GalleryPage() {
                     }
                   }}
                   className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-full"
+                  style={{fontSize: '15px'}}
                 >
                   링크 복사
                 </Button>
@@ -2050,13 +2056,14 @@ export default function GalleryPage() {
               <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
                 링크 복사 완료!
               </h3>
-              <p className="text-gray-800 text-sm mb-6">
+              <p className="text-gray-900 mb-6" style={{fontSize: '15px'}}>
                 친구들에게 지금 바로 공유해보세요!
               </p>
               
               <Button
                 onClick={() => setShowShareSuccessModal(false)}
                 className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-full"
+                style={{fontSize: '15px'}}
               >
                 확인
               </Button>
@@ -2346,7 +2353,7 @@ export default function GalleryPage() {
                   {loginModalType === 'comment' && '이 작품에 대해 이야기해보세요!'}
                   {loginModalType === 'download' && '다운로드'}
                 </h3>
-                <p className="text-gray-800 text-sm mb-6">
+                <p className="text-gray-900 mb-6" style={{fontSize: '15px'}}>
                   {loginModalType === 'like' && '로그인하고 👍 좋아요로 표현해보세요!'}
                   {loginModalType === 'share' && '멋진 작품, 로그인하면 바로 공유할 수 있어요'}
                   {loginModalType === 'comment' && '로그인하면 이야기할 수 있어요!'}
@@ -2357,13 +2364,15 @@ export default function GalleryPage() {
                   <Button
                     variant="outline"
                     onClick={closeLoginModal}
-                    className="flex-1 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-full"
+                    className="flex-1 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-full text-gray-900"
+                    style={{fontSize: '15px'}}
                   >
                     나중에 할래
                   </Button>
                   <Button
                     onClick={handleLoginAndAction}
                     className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-full"
+                    style={{fontSize: '15px'}}
                   >
                     지금 로그인하기
                   </Button>
@@ -2381,6 +2390,7 @@ export default function GalleryPage() {
             <Link href="/draw" onClick={() => setShowFloatingMenu(false)}>
               <Button
                 className="bg-pink-500 hover:bg-pink-600 text-white transition-all duration-200 rounded-full px-6 py-3"
+                style={{fontSize: '15px'}}
               >
                 <Plus className="w-4 h-4 mr-2" />
                 박스카 그리기
@@ -2392,6 +2402,7 @@ export default function GalleryPage() {
                 setShowFloatingMenu(false);
               }}
               className="bg-indigo-600 hover:bg-indigo-700 text-white transition-all duration-200 rounded-full px-6 py-3"
+              style={{fontSize: '15px'}}
             >
               <Upload className="w-4 h-4 mr-2" />
               내 작품 올리기
