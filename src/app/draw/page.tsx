@@ -4943,7 +4943,7 @@ export default function DrawPage() {
                     alt={item.label}
                     className="w-16 h-16 md:w-[90px] md:h-[90px] mb-1 object-contain"
                   />
-                  <span className="font-medium" style={{fontSize: '15px'}}>{item.label}</span>
+                  <span className="font-medium" style={{fontSize: '13px'}}>{item.label}</span>
                 </button>
               );
             })}
@@ -5640,6 +5640,7 @@ export default function DrawPage() {
                       setSelectedItem(null);
                     }}
                     className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-full px-12 py-3"
+                    style={{fontSize: '15px'}}
                   >
                     선택
           </Button>
