@@ -236,6 +236,10 @@ export default function StoryPageClient() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loginModalType, setLoginModalType] = useState<'like' | 'share' | 'boxroTalk'>('like');
   const [loginModalArticleId, setLoginModalArticleId] = useState<string | null>(null);
+  
+  // 삭제 확인 모달 상태
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteArticleId, setDeleteArticleId] = useState<string | null>(null);
 
   // 관리자 이메일 목록
   const adminEmails = [
@@ -345,14 +349,21 @@ export default function StoryPageClient() {
     }
   };
 
+  // 삭제 확인 모달 열기
+  const openDeleteModal = (id: string) => {
+    setDeleteArticleId(id);
+    setShowDeleteModal(true);
+  };
+
+  // 삭제 확인 모달 닫기
+  const closeDeleteModal = () => {
+    setShowDeleteModal(false);
+    setDeleteArticleId(null);
+  };
+
   // 글 삭제
-  const deleteArticle = async (id: string) => {
-    if (!user) {
-      alert('로그인이 필요합니다.');
-      return;
-    }
-    
-    if (!confirm('정말로 이 글을 삭제하시겠습니까?')) {
+  const deleteArticle = async () => {
+    if (!user || !deleteArticleId) {
       return;
     }
 
@@ -360,7 +371,7 @@ export default function StoryPageClient() {
       // 1. 관련 박스로 톡 삭제
       const boxroTalksQuery = query(
         collection(db, 'storyBoxroTalks'),
-        where('articleId', '==', id)
+        where('articleId', '==', deleteArticleId)
       );
       const boxroTalksSnapshot = await getDocs(boxroTalksQuery);
       
@@ -370,9 +381,9 @@ export default function StoryPageClient() {
       await Promise.all(deletePromises);
       
       // 2. 게시물 삭제
-      await deleteDoc(doc(db, 'storyArticles', id));
-      setArticles(articles.filter(article => article.id !== id));
-      alert('글이 삭제되었습니다.');
+      await deleteDoc(doc(db, 'storyArticles', deleteArticleId));
+      setArticles(articles.filter(article => article.id !== deleteArticleId));
+      closeDeleteModal();
     } catch (error) {
       console.error('삭제 실패:', error);
       setErrorMessage('삭제 중 오류가 발생했습니다.');
@@ -843,7 +854,7 @@ export default function StoryPageClient() {
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        deleteArticle(article.id);
+                        openDeleteModal(article.id);
                       }}
                     >
                       <Trash2 className="w-4 h-4" />
@@ -1434,6 +1445,38 @@ export default function StoryPageClient() {
         onClose={() => setShowErrorModal(false)}
         message={errorMessage}
       />
+
+      {/* 삭제 확인 모달 */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-gradient-to-br from-green-900/20 via-blue-900/20 to-purple-900/20 backdrop-blur-md z-50 flex items-center justify-center">
+          <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-6 max-w-sm w-full mx-6">
+            <div className="text-center">
+              <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+                삭제 확인
+              </h3>
+              <p className="text-gray-900 mb-4" style={{fontSize: '15px'}}>
+                정말로 이 글을 삭제하시겠습니까?
+              </p>
+              <div className="flex gap-3">
+                <Button
+                  onClick={closeDeleteModal}
+                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-300 rounded-full"
+                  style={{fontSize: '15px'}}
+                >
+                  취소
+                </Button>
+                <Button
+                  onClick={deleteArticle}
+                  className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-full"
+                  style={{fontSize: '15px'}}
+                >
+                  삭제
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </CommonBackground>
   );
 }
