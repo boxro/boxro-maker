@@ -224,31 +224,24 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
       let html = editor.getHTML();
       console.log('🔍 에디터 HTML 업데이트:', html);
       
-      // 백스페이스 키 동작 중에는 HTML 변환 최소화
-      const isBackspaceOperation = html.includes('<p></p>') && html.length < (content?.length || 0);
-      
-      if (!isBackspaceOperation) {
-        // 엔터 키 동작 정규화: 일관된 줄바꿈 처리
-        // 1. 빈 p 태그를 br로 변환 (단일 줄바꿈) - 줄간격 일관성을 위해 p 태그 유지
-        html = html.replace(/<p><\/p>/g, '<p><br></p>');
-        // 2. 연속된 빈 p 태그를 p br p br p로 변환 (이중 줄바꿈)
-        html = html.replace(/<p><\/p><p><\/p>/g, '<p><br></p><p><br></p>');
-        // 3. 남은 줄바꿈 문자 처리
-        html = html.replace(/\n/g, '<br>');
-        console.log('🔍 줄바꿈 변환 후:', html);
-      }
+      // HTML 정규화: 일관된 줄간격을 위한 처리
+      // 1. 빈 p 태그 정리
+      html = html.replace(/<p><\/p>/g, '<p><br></p>');
+      // 2. 연속된 빈 p 태그 정리
+      html = html.replace(/<p><\/p><p><\/p>/g, '<p><br></p><p><br></p>');
+      // 3. p 태그에 일관된 스타일 적용
+      html = html.replace(/<p>/g, '<p style="margin: 0 0 1em 0; line-height: 1.1;">');
+      // 4. 남은 줄바꿈 문자 처리
+      html = html.replace(/\n/g, '<br>');
+      console.log('🔍 줄바꿈 변환 후:', html);
       
       // content prop과 다를 때만 onChange 호출 (무한 루프 방지)
       if (html !== content) {
         console.log('🔍 onChange 함수 호출 전');
-        // 백스페이스 동작 중에는 즉시 호출, 그 외에는 requestAnimationFrame 사용
-        if (isBackspaceOperation) {
+        // 커서 위치 보존을 위해 지연 호출
+        requestAnimationFrame(() => {
           onChange(html);
-        } else {
-          requestAnimationFrame(() => {
-            onChange(html);
-          });
-        }
+        });
         console.log('🔍 onChange 함수 호출 후');
       }
     },
@@ -303,30 +296,46 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
         }
       }
     },
+    onFocus: ({ editor }) => {
+      // 포커스 시 커서 위치 보존
+      console.log('🔍 에디터 포커스됨');
+    },
+    onBlur: ({ editor }) => {
+      // 블러 시에도 커서 위치 보존
+      console.log('🔍 에디터 블러됨');
+    },
     editorProps: {
       attributes: {
         class: 'rich-text-editor focus:outline-none min-h-[600px] p-4 bg-white',
+        style: 'line-height: 1.1; font-size: 14px; font-family: Inter, sans-serif;',
       },
       handleKeyDown: (view, event) => {
-        // 백스페이스 키 동작 최적화
+        // 백스페이스 키 처리 개선
         if (event.key === 'Backspace') {
-          // 백스페이스 키의 기본 동작을 허용하되, DOM 업데이트 지연
-          setTimeout(() => {
-            // DOM 업데이트 후 커서 위치 보존
-            const selection = view.state.selection;
-            if (selection) {
-              view.dispatch(view.state.tr.setSelection(selection));
-            }
-          }, 0);
-          return false; // 기본 동작 허용
+          // 백스페이스 키의 기본 동작을 허용하되, 커서 위치 보존
+          const { state, dispatch } = view;
+          const { selection } = state;
+          
+          // 빈 노드에서 백스페이스 시 커서 위치 보존
+          if (selection.empty && selection.$from.parent.textContent === '') {
+            // 커서 위치를 유지하면서 백스페이스 처리
+            return false; // 기본 동작 허용
+          }
+          
+          // 백스페이스 키의 기본 동작을 허용
+          return false;
         }
         
-        // 엔터 키는 기본 동작 허용
-        if (event.key === 'Enter') {
-          return false; // 기본 동작 허용
-        }
-        
-        return false; // 다른 키는 기본 동작 허용
+        // 모든 키 이벤트를 기본 동작으로 처리
+        return false;
+      },
+      handleClick: (view, event) => {
+        // 클릭 시 커서 위치 보존
+        return false;
+      },
+      handleMouseDown: (view, event) => {
+        // 마우스 다운 시 커서 위치 보존
+        return false;
       },
     },
     immediatelyRender: false,
@@ -350,6 +359,10 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
       console.log('🔍 content prop 변경됨, 에디터 업데이트:', content);
       console.log('🔍 현재 에디터 HTML:', currentEditorHTML);
       console.log('🔍 content와 에디터 HTML이 다른가?', content !== currentEditorHTML);
+      
+      // 커서 위치 보존을 위해 현재 선택 영역 저장
+      const currentSelection = editor.state.selection;
+      const currentPosition = currentSelection.from;
       
       // base64 이미지 데이터 검증 및 수정
       let processedContent = content;
@@ -396,12 +409,23 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
       contentWithLineBreaks = contentWithLineBreaks.replace(/<p><\/p><p><\/p>/g, '<p><br></p><p><br></p>');
       // 3. 남은 줄바꿈 문자 처리
       contentWithLineBreaks = contentWithLineBreaks.replace(/\n/g, '<br>');
+      
+      // 에디터 업데이트 후 커서 위치 복원
       editor.commands.setContent(contentWithLineBreaks, false, {
         preserveWhitespace: 'full',
         parseOptions: {
           preserveWhitespace: 'full'
         }
       });
+      
+      // 커서 위치 복원 (문서 길이 내에서)
+      try {
+        const docSize = editor.state.doc.content.size;
+        const safePosition = Math.min(currentPosition, docSize);
+        editor.commands.setTextSelection(safePosition);
+      } catch (error) {
+        console.warn('🔍 커서 위치 복원 실패:', error);
+      }
     } else {
       console.log('🔍 content와 에디터 HTML이 동일하여 업데이트 건너뜀');
     }
@@ -462,7 +486,23 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
   // 폰트 패밀리 적용 함수
   const applyFontFamily = (fontFamily: string) => {
     if (editor) {
-      editor.chain().focus().setFontFamily(fontFamily).run();
+      // 현재 선택 영역 저장
+      const currentSelection = editor.state.selection;
+      const { from, to } = currentSelection;
+      
+      // 선택된 텍스트가 있는 경우
+      if (from !== to) {
+        // 선택 영역을 유지하면서 폰트 적용
+        editor.chain()
+          .focus()
+          .setTextSelection({ from, to })
+          .setFontFamily(fontFamily)
+          .run();
+      } else {
+        // 커서만 있는 경우 현재 위치에 폰트 적용
+        editor.chain().focus().setFontFamily(fontFamily).run();
+      }
+      
       setSelectedFontFamily(fontFamily);
       setIsFontFamilyOpen(false);
     }
@@ -471,7 +511,23 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
   // 폰트 크기 적용 함수
   const applyFontSize = (fontSize: string) => {
     if (editor) {
-      editor.chain().focus().setFontSize(fontSize).run();
+      // 현재 선택 영역 저장
+      const currentSelection = editor.state.selection;
+      const { from, to } = currentSelection;
+      
+      // 선택된 텍스트가 있는 경우
+      if (from !== to) {
+        // 선택 영역을 유지하면서 폰트 크기 적용
+        editor.chain()
+          .focus()
+          .setTextSelection({ from, to })
+          .setFontSize(fontSize)
+          .run();
+      } else {
+        // 커서만 있는 경우 현재 위치에 폰트 크기 적용
+        editor.chain().focus().setFontSize(fontSize).run();
+      }
+      
       setSelectedFontSize(fontSize);
       setIsFontSizeOpen(false);
     }
@@ -524,14 +580,23 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
   return (
     <div className="rounded-lg border border-gray-200 bg-white">
       {/* 툴바 - 고정 */}
-      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 p-2 flex flex-wrap gap-1">
+      <div 
+        className="sticky top-0 z-10 bg-white border-b border-gray-200 p-2 flex flex-wrap gap-1"
+        onClick={(e) => {
+          // 툴바 클릭 시 커서 위치 보존
+          e.preventDefault();
+        }}
+      >
         {/* 텍스트 스타일 */}
         <div className="flex gap-1 border-r border-gray-200 pr-2 mr-2">
           <Button
             variant={editor.isActive('bold') ? 'default' : 'outline'}
             size="sm"
             className={editor.isActive('bold') ? 'bg-gray-500 hover:bg-gray-600 text-white' : 'border-gray-300 text-gray-600 hover:bg-gray-50'}
-            onClick={() => editor.chain().focus().toggleBold().run()}
+            onClick={(e) => {
+              e.preventDefault();
+              editor.chain().focus().toggleBold().run();
+            }}
           >
             <Bold className="w-4 h-4" />
           </Button>
@@ -539,7 +604,10 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
             variant={editor.isActive('italic') ? 'default' : 'outline'}
             size="sm"
             className={editor.isActive('italic') ? 'bg-gray-500 hover:bg-gray-600 text-white' : 'border-gray-300 text-gray-600 hover:bg-gray-50'}
-            onClick={() => editor.chain().focus().toggleItalic().run()}
+            onClick={(e) => {
+              e.preventDefault();
+              editor.chain().focus().toggleItalic().run();
+            }}
           >
             <Italic className="w-4 h-4" />
           </Button>
@@ -547,7 +615,10 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
             variant={editor.isActive('underline') ? 'default' : 'outline'}
             size="sm"
             className={editor.isActive('underline') ? 'bg-gray-500 hover:bg-gray-600 text-white' : 'border-gray-300 text-gray-600 hover:bg-gray-50'}
-            onClick={() => editor.chain().focus().toggleUnderline().run()}
+            onClick={(e) => {
+              e.preventDefault();
+              editor.chain().focus().toggleUnderline().run();
+            }}
           >
             <UnderlineIcon className="w-4 h-4" />
           </Button>
@@ -566,6 +637,43 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
             onClick={() => editor.chain().focus().toggleCode().run()}
           >
             <Code className="w-4 h-4" />
+          </Button>
+        </div>
+
+        {/* 제목 버튼 */}
+        <div className="flex gap-1 border-r border-gray-200 pr-2 mr-2">
+          <Button
+            variant={editor.isActive('heading', { level: 1 }) ? 'default' : 'outline'}
+            size="sm"
+            className={editor.isActive('heading', { level: 1 }) ? 'bg-gray-500 hover:bg-gray-600 text-white' : 'border-gray-300 text-gray-600 hover:bg-gray-50'}
+            onClick={(e) => {
+              e.preventDefault();
+              editor.chain().focus().toggleHeading({ level: 1 }).run();
+            }}
+          >
+            <Heading1 className="w-4 h-4" />
+          </Button>
+          <Button
+            variant={editor.isActive('heading', { level: 2 }) ? 'default' : 'outline'}
+            size="sm"
+            className={editor.isActive('heading', { level: 2 }) ? 'bg-gray-500 hover:bg-gray-600 text-white' : 'border-gray-300 text-gray-600 hover:bg-gray-50'}
+            onClick={(e) => {
+              e.preventDefault();
+              editor.chain().focus().toggleHeading({ level: 2 }).run();
+            }}
+          >
+            <Heading2 className="w-4 h-4" />
+          </Button>
+          <Button
+            variant={editor.isActive('heading', { level: 3 }) ? 'default' : 'outline'}
+            size="sm"
+            className={editor.isActive('heading', { level: 3 }) ? 'bg-gray-500 hover:bg-gray-600 text-white' : 'border-gray-300 text-gray-600 hover:bg-gray-50'}
+            onClick={(e) => {
+              e.preventDefault();
+              editor.chain().focus().toggleHeading({ level: 3 }).run();
+            }}
+          >
+            <Heading3 className="w-4 h-4" />
           </Button>
         </div>
 
@@ -789,33 +897,6 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
           </div>
         </div>
 
-        {/* 헤딩 */}
-        <div className="flex gap-1 border-r border-gray-200 pr-2 mr-2">
-          <Button
-            variant={editor.isActive('heading', { level: 1 }) ? 'default' : 'outline'}
-            size="sm"
-            className={editor.isActive('heading', { level: 1 }) ? 'bg-gray-500 hover:bg-gray-600 text-white' : 'border-gray-300 text-gray-600 hover:bg-gray-50'}
-            onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-          >
-            <Heading1 className="w-4 h-4" />
-          </Button>
-          <Button
-            variant={editor.isActive('heading', { level: 2 }) ? 'default' : 'outline'}
-            size="sm"
-            className={editor.isActive('heading', { level: 2 }) ? 'bg-gray-500 hover:bg-gray-600 text-white' : 'border-gray-300 text-gray-600 hover:bg-gray-50'}
-            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-          >
-            <Heading2 className="w-4 h-4" />
-          </Button>
-          <Button
-            variant={editor.isActive('heading', { level: 3 }) ? 'default' : 'outline'}
-            size="sm"
-            className={editor.isActive('heading', { level: 3 }) ? 'bg-gray-500 hover:bg-gray-600 text-white' : 'border-gray-300 text-gray-600 hover:bg-gray-50'}
-            onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-          >
-            <Heading3 className="w-4 h-4" />
-          </Button>
-        </div>
 
 
 

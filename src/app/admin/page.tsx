@@ -15,7 +15,9 @@ import AdminDashboard from '@/components/admin/AdminDashboard';
 import PopularityManagement from '@/components/admin/PopularityManagement';
 import HomeCardManagement from '@/components/admin/HomeCardManagement';
 import HomeCardOrder from '@/components/admin/HomeCardOrder';
+import TermsManagement from '@/components/admin/TermsManagement';
 import { Users, Calendar, MessageCircle, Heart, Download, Share2, Eye, Trash2, ChevronUp, ChevronDown, ArrowUp, ArrowDown, EyeOff, Save, RotateCcw, GripVertical, ArrowLeft, ArrowRight, ShoppingBag } from 'lucide-react';
+import { DragEndEvent } from '@dnd-kit/core';
 import Image from 'next/image';
 
 interface UserStats {
@@ -86,6 +88,19 @@ interface HomeCard {
   homeOrder?: number;
   isPublished: boolean;
   createdAt: any;
+  source?: string;
+  description?: string;
+  titleColor?: string;
+  descriptionColor?: string;
+  textPosition?: number;
+  backgroundColor?: string;
+  authorId?: string;
+  authorNickname?: string;
+  updatedAt?: any;
+  likes?: number;
+  shares?: number;
+  boxroTalks?: number;
+  views?: number;
 }
 
 export default function AdminPage() {
@@ -240,7 +255,7 @@ export default function AdminPage() {
   const [popularityFilter, setPopularityFilter] = useState('all'); // all, community, story, store
   const [popularityItems, setPopularityItems] = useState<any[]>([]);
   const [popularityLoading, setPopularityLoading] = useState(false);
-  const [popularityBoosts, setPopularityBoosts] = useState<{[key: string]: {likes: number, shares: number, views: number}}>({});
+  const [popularityBoosts, setPopularityBoosts] = useState<{[key: string]: {likes: number, shares: number, views: number, downloads: number}}>({});
   
   // 오류 모달 상태
   const [showErrorModal, setShowErrorModal] = useState(false);
@@ -394,7 +409,7 @@ export default function AdminPage() {
       
       resetForm();
       alert('홈카드가 성공적으로 추가되었습니다!');
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('홈카드 추가 실패:', error);
       setErrorMessage('홈카드 추가에 실패했습니다.');
       setShowErrorModal(true);
@@ -458,7 +473,7 @@ export default function AdminPage() {
       console.log('최종 홈카드 목록 (homeCards 컬렉션만):', homeCardsList);
       console.log('홈카드 목록에 저장되는 데이터 소스 확인:', homeCardsList.map(card => ({ id: card.id, title: card.title, source: card.source })));
       setHomeCardList(homeCardsList);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('홈카드 목록 불러오기 실패:', error);
     }
   };
@@ -545,7 +560,7 @@ export default function AdminPage() {
       setPopularityTotalItems(allItems.length);
       
       // 기존 popularityBoost 데이터 로드
-      const existingBoosts: {[key: string]: {likes: number, shares: number, views: number}} = {};
+      const existingBoosts: {[key: string]: {likes: number, shares: number, views: number, downloads: number}} = {};
       allItems.forEach(item => {
         if (item.popularityBoost) {
           existingBoosts[item.id] = item.popularityBoost;
@@ -555,7 +570,7 @@ export default function AdminPage() {
       
       console.log('인기도 관리 데이터 로드 완료:', allItems.length);
       console.log('기존 가산점 데이터:', existingBoosts);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('인기도 관리 데이터 불러오기 실패:', error);
     } finally {
       setPopularityLoading(false);
@@ -635,7 +650,7 @@ export default function AdminPage() {
   };
 
   // 인기도 가산점 업데이트
-  const updatePopularityBoost = async (itemId: string, type: string, boosts: {likes: number, shares: number, views: number}) => {
+  const updatePopularityBoost = async (itemId: string, type: string, boosts: {likes: number, shares: number, views: number, downloads: number}) => {
     try {
       console.log('인기도 가산점 업데이트 시작:', { itemId, type, boosts });
       
@@ -669,7 +684,7 @@ export default function AdminPage() {
       setShowErrorModal(true);
       
       console.log('인기도 가산점 업데이트 완료:', { itemId, type, boosts });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('인기도 가산점 업데이트 실패:', error);
       console.error('오류 상세:', error);
       setErrorMessage(`저장에 실패했습니다: ${error.message || error}`);
@@ -826,7 +841,7 @@ export default function AdminPage() {
         setErrorMessage('모든 하드코딩된 홈카드가 이미 존재합니다.');
         setShowErrorModal(true);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('하드코딩된 홈카드 추가 실패:', error);
       setErrorMessage('하드코딩된 홈카드 추가에 실패했습니다.');
       setShowErrorModal(true);
@@ -847,7 +862,7 @@ export default function AdminPage() {
       setHomeCardList(prev => prev.filter(card => card.id !== cardId));
       setErrorMessage('홈카드가 삭제되었습니다.');
       setShowErrorModal(true);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('홈카드 삭제 실패:', error);
       setErrorMessage('홈카드 삭제에 실패했습니다.');
       setShowErrorModal(true);
@@ -922,7 +937,7 @@ export default function AdminPage() {
 
       cancelEdit();
       alert('홈카드가 수정되었습니다.');
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('홈카드 수정 실패:', error);
       setErrorMessage('홈카드 수정에 실패했습니다.');
       setShowErrorModal(true);
@@ -957,29 +972,41 @@ export default function AdminPage() {
       // storyArticles 데이터 변환 (유효한 데이터만)
       const storyCards = storyQuery.docs
         .filter(doc => doc.exists())
-        .map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-          source: 'storyArticles' // 출처 구분용
-        })) as (HomeCard & { source: string })[];
+        .map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+            source: 'storyArticles', // 출처 구분용
+            createdAt: data.createdAt?.toDate?.() || new Date()
+          };
+        }) as (HomeCard & { source: string })[];
       
       // storeItems 데이터 변환 (유효한 데이터만)
       const storeCards = storeQuery.docs
         .filter(doc => doc.exists())
-        .map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-          source: 'storeItems' // 출처 구분용
-        })) as (HomeCard & { source: string })[];
+        .map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+            source: 'storeItems', // 출처 구분용
+            createdAt: data.createdAt?.toDate?.() || new Date()
+          };
+        }) as (HomeCard & { source: string })[];
       
       // homeCards 데이터 변환 (유효한 데이터만)
       const homeCards = homeCardsQuery.docs
         .filter(doc => doc.exists())
-        .map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-          source: 'homeCards' // 출처 구분용
-        })) as (HomeCard & { source: string })[];
+        .map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+            source: 'homeCards', // 출처 구분용
+            createdAt: data.createdAt?.toDate?.() || new Date()
+          };
+        }) as (HomeCard & { source: string })[];
       
       console.log('storyCards:', storyCards);
       console.log('storeCards:', storeCards);
@@ -1058,7 +1085,7 @@ export default function AdminPage() {
       
       setHomeCards(visibleCards);
       setHiddenCards(hiddenCards);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('홈카드 데이터 불러오기 실패:', error);
     } finally {
       setHomeCardsLoading(false);
@@ -1071,6 +1098,22 @@ export default function AdminPage() {
     
     if (newIndex >= 0 && newIndex < newCards.length) {
       [newCards[index], newCards[newIndex]] = [newCards[newIndex], newCards[index]];
+      setHomeCards(newCards);
+    }
+  };
+
+  // 드래그 앤 드롭 핸들러
+  const onDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (active.id !== over?.id) {
+      const oldIndex = homeCards.findIndex(card => card.id === active.id);
+      const newIndex = over ? homeCards.findIndex(card => card.id === over.id) : -1;
+      
+      const newCards = [...homeCards];
+      const [removed] = newCards.splice(oldIndex, 1);
+      newCards.splice(newIndex, 0, removed);
+      
       setHomeCards(newCards);
     }
   };
@@ -1098,7 +1141,14 @@ export default function AdminPage() {
       }
 
       // 카드의 출처에 따라 적절한 컬렉션에서 업데이트
-      const collectionName = card.source === 'storyArticles' ? 'storyArticles' : 'homeCards';
+      let collectionName;
+      if (card.source === 'storyArticles') {
+        collectionName = 'storyArticles';
+      } else if (card.source === 'storeItems') {
+        collectionName = 'storeItems';
+      } else {
+        collectionName = 'homeCards';
+      }
       const docRef = doc(db, collectionName, cardId);
       
       try {
@@ -1124,16 +1174,9 @@ export default function AdminPage() {
         showOnHome: newShowOnHome
       });
 
-      if (newShowOnHome) {
-        // 숨겨진 카드를 다시 보이게 하기
-        setHomeCards([...homeCards, card]);
-        setHiddenCards(hiddenCards.filter(c => c.id !== cardId));
-      } else {
-        // 보이는 카드를 숨기기
-        setHiddenCards([...hiddenCards, card]);
-        setHomeCards(homeCards.filter(c => c.id !== cardId));
-      }
-    } catch (error) {
+      // 상태 업데이트 후 데이터 다시 불러오기
+      await fetchHomeCards();
+    } catch (error: unknown) {
       console.error('카드 가시성 변경 실패:', error);
       if (error.code === 'not-found') {
         setErrorMessage('해당 카드가 더 이상 존재하지 않습니다. 페이지를 새로고침해주세요.');
@@ -1152,7 +1195,14 @@ export default function AdminPage() {
       setSaving(true);
       
       const updates = homeCards.map((card, index) => {
-        const collectionName = card.source === 'storyArticles' ? 'storyArticles' : 'homeCards';
+        let collectionName;
+        if (card.source === 'storyArticles') {
+          collectionName = 'storyArticles';
+        } else if (card.source === 'storeItems') {
+          collectionName = 'storeItems';
+        } else {
+          collectionName = 'homeCards';
+        }
         return updateDoc(doc(db, collectionName, card.id), {
           homeOrder: index + 1
         });
@@ -1160,7 +1210,7 @@ export default function AdminPage() {
       
       await Promise.all(updates);
       alert('홈카드 순서가 저장되었습니다!');
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('순서 저장 실패:', error);
       setErrorMessage('순서 저장에 실패했습니다.');
       setShowErrorModal(true);
@@ -1421,7 +1471,7 @@ export default function AdminPage() {
         const testQuery = query(collection(db, 'communityDesigns'), limit(1));
         await getDocs(testQuery);
         dbConnected = true;
-      } catch (error) {
+      } catch (error: unknown) {
         console.warn('Firestore 연결 확인 실패:', error);
         dbConnected = false;
       }
@@ -1432,7 +1482,7 @@ export default function AdminPage() {
         if (storage) {
           storageConnected = true;
         }
-      } catch (error) {
+      } catch (error: unknown) {
         console.warn('Storage 연결 확인 실패:', error);
         storageConnected = false;
       }
@@ -1442,7 +1492,7 @@ export default function AdminPage() {
         dbConnected,
         storageConnected
       };
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Firebase 연결 상태 확인 실패:', error);
       return {
         firebaseConnected: false,
@@ -1462,7 +1512,7 @@ export default function AdminPage() {
         return data.totalCommits || 0;
       }
       return 0;
-    } catch (error) {
+    } catch (error: unknown) {
       console.warn('Git 커밋 수 가져오기 실패:', error);
       return 0;
     }
@@ -1478,7 +1528,7 @@ export default function AdminPage() {
         return data.lastDeploy || 'N/A';
       }
       return new Date().toLocaleDateString('ko-KR');
-    } catch (error) {
+    } catch (error: unknown) {
       console.warn('마지막 배포 시간 가져오기 실패:', error);
       return 'N/A';
     }
@@ -1494,7 +1544,7 @@ export default function AdminPage() {
         return data.lastBuild || 'N/A';
       }
       return new Date().toLocaleDateString('ko-KR');
-    } catch (error) {
+    } catch (error: unknown) {
       console.warn('마지막 빌드 시간 가져오기 실패:', error);
       return 'N/A';
     }
@@ -1541,7 +1591,7 @@ export default function AdminPage() {
       const todayActiveCount = activeUserIds.size;
       console.log('오늘 활성 사용자 수:', todayActiveCount);
       return todayActiveCount;
-    } catch (error) {
+    } catch (error: unknown) {
       console.warn('오늘 활성 사용자 수 가져오기 실패:', error);
       return 0;
     }
@@ -1570,7 +1620,7 @@ export default function AdminPage() {
       const recentBoxroTalks = boxroTalksSnapshot.docs.length;
       
       return recentDesigns + recentBoxroTalks;
-    } catch (error) {
+    } catch (error: unknown) {
       console.warn('최근 24시간 활동량 가져오기 실패:', error);
       return 0;
     }
@@ -1641,7 +1691,7 @@ export default function AdminPage() {
       const result = `${peakHour}:00`;
       console.log('피크 시간 결과:', result);
       return result;
-    } catch (error) {
+    } catch (error: unknown) {
       console.warn('피크 시간 가져오기 실패:', error);
       return '14:00'; // 기본값 반환
     }
@@ -1827,7 +1877,7 @@ export default function AdminPage() {
               console.log('박스로 톡에 source나 ID가 없음:', boxroTalk);
               isOrphaned = true;
             }
-          } catch (error) {
+          } catch (error: unknown) {
             console.warn('작품 정보 가져오기 실패:', error);
           }
           
@@ -2251,7 +2301,7 @@ export default function AdminPage() {
         views: userViews,
         storeRedirects: userStoreRedirects
       };
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('사용자 활동 데이터 로드 실패:', error);
       return {
         designs: [],
@@ -2289,7 +2339,7 @@ export default function AdminPage() {
             isOrphaned = true;
           }
         }
-      } catch (error) {
+      } catch (error: unknown) {
         console.warn('고아 박스로톡 확인 실패:', error);
         isOrphaned = true;
       }
@@ -2349,7 +2399,7 @@ export default function AdminPage() {
         }
         
         
-      } catch (error) {
+      } catch (error: unknown) {
         console.warn('⚠️ 스토리 데이터 접근 권한 없음, 빈 배열로 처리:', error);
         stories = [];
         storyBoxroTalks = [];
@@ -2361,7 +2411,7 @@ export default function AdminPage() {
         const usersQuery = query(collection(db, 'users'));
         const usersSnapshot = await getDocs(usersQuery);
         users = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      } catch (error) {
+      } catch (error: unknown) {
         console.warn('⚠️ users 컬렉션 접근 권한 없음, 빈 배열로 처리:', error);
         users = [];
       }
@@ -2376,6 +2426,7 @@ export default function AdminPage() {
           userStatsMap.set(email, {
             email,
             displayName: design.author || '익명',
+            authorNickname: design.authorNickname || design.author || '익명',
             photoURL: '',
             createdAt: design.createdAt || '',
             lastSignIn: '',
@@ -2402,6 +2453,7 @@ export default function AdminPage() {
           userStatsMap.set(email, {
             email,
             displayName: story.author || '익명',
+            authorNickname: story.authorNickname || story.author || '익명',
             photoURL: '',
             createdAt: story.createdAt || '',
             lastSignIn: '',
@@ -2432,6 +2484,7 @@ export default function AdminPage() {
           userStatsMap.set(email, {
             email,
             displayName: boxroTalk.author || '익명',
+            authorNickname: boxroTalk.authorNickname || boxroTalk.author || '익명',
             photoURL: '',
             createdAt: boxroTalk.createdAt || '',
             lastSignIn: '',
@@ -2465,6 +2518,7 @@ export default function AdminPage() {
           userStatsMap.set(email, {
             email,
             displayName: boxroTalk.author || '익명',
+            authorNickname: boxroTalk.authorNickname || boxroTalk.author || '익명',
             photoURL: '',
             createdAt: boxroTalk.createdAt || '',
             lastSignIn: '',
@@ -2495,6 +2549,7 @@ export default function AdminPage() {
           userStatsMap.set(email, {
             email,
             displayName: storeItem.author || '익명',
+            authorNickname: storeItem.authorNickname || storeItem.author || '익명',
             photoURL: '',
             createdAt: storeItem.createdAt || '',
             lastSignIn: '',
@@ -2531,7 +2586,7 @@ export default function AdminPage() {
         const storeBoxroTalksSnapshot = await getDocs(storeBoxroTalksQuery);
         storeBoxroTalks = storeBoxroTalksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         console.log('🔍 storeBoxroTalks 컬렉션:', storeBoxroTalks.length);
-      } catch (error) {
+      } catch (error: unknown) {
         console.warn('⚠️ storeBoxroTalks 컬렉션 접근 권한 없음:', error);
       }
       
@@ -2555,7 +2610,7 @@ export default function AdminPage() {
           }
         });
         console.log('🔍 store 컬렉션에서 박스로 톡:', storeBoxroTalksFromStore.length);
-      } catch (error) {
+      } catch (error: unknown) {
         console.warn('⚠️ store 컬렉션 접근 권한 없음:', error);
       }
       
@@ -2585,7 +2640,7 @@ export default function AdminPage() {
           
           console.log(`🔍 ${collectionName} 컬렉션에서 박스로 톡:`, 
             items.filter(item => item.boxroTalks && item.boxroTalks.length > 0).length);
-        } catch (error) {
+        } catch (error: unknown) {
           console.warn(`⚠️ ${collectionName} 컬렉션 접근 권한 없음:`, error);
         }
       }
@@ -2614,6 +2669,7 @@ export default function AdminPage() {
           userStatsMap.set(email, {
             email,
             displayName: boxroTalk.author || '익명',
+            authorNickname: boxroTalk.authorNickname || boxroTalk.author || '익명',
             photoURL: '',
             createdAt: boxroTalk.createdAt || '',
             lastSignIn: '',
@@ -2696,6 +2752,7 @@ export default function AdminPage() {
               userStatsMap.set(email, {
                 email,
                 displayName: user.displayName || '익명',
+                authorNickname: user.authorNickname || user.displayName || '익명',
                 photoURL: user.photoURL || '',
                 createdAt: user.createdAt || '',
                 lastSignIn: user.lastSignIn || '',
@@ -2722,6 +2779,7 @@ export default function AdminPage() {
               userStatsMap.set(email, {
                 email,
                 displayName: user.displayName || '익명',
+                authorNickname: user.authorNickname || user.displayName || '익명',
                 photoURL: user.photoURL || '',
                 createdAt: user.createdAt || '',
                 lastSignIn: user.lastSignIn || '',
@@ -2779,6 +2837,7 @@ export default function AdminPage() {
               userStatsMap.set(email, {
                 email,
                 displayName: user.displayName || '익명',
+                authorNickname: user.authorNickname || user.displayName || '익명',
                 photoURL: user.photoURL || '',
                 createdAt: user.createdAt || '',
                 lastSignIn: user.lastSignIn || '',
@@ -2813,6 +2872,7 @@ export default function AdminPage() {
               userStatsMap.set(email, {
                 email,
                 displayName: user.displayName || '익명',
+                authorNickname: user.authorNickname || user.displayName || '익명',
                 photoURL: user.photoURL || '',
                 createdAt: user.createdAt || '',
                 lastSignIn: user.lastSignIn || '',
@@ -2870,6 +2930,7 @@ export default function AdminPage() {
               userStatsMap.set(email, {
                 email,
                 displayName: user.displayName || '익명',
+                authorNickname: user.authorNickname || user.displayName || '익명',
                 photoURL: user.photoURL || '',
                 createdAt: user.createdAt || '',
                 lastSignIn: user.lastSignIn || '',
@@ -2904,6 +2965,7 @@ export default function AdminPage() {
               userStatsMap.set(email, {
                 email,
                 displayName: user.displayName || '익명',
+                authorNickname: user.authorNickname || user.displayName || '익명',
                 photoURL: user.photoURL || '',
                 createdAt: user.createdAt || '',
                 lastSignIn: user.lastSignIn || '',
@@ -2961,6 +3023,7 @@ export default function AdminPage() {
               userStatsMap.set(email, {
                 email,
                 displayName: user.displayName || '익명',
+                authorNickname: user.authorNickname || user.displayName || '익명',
                 photoURL: user.photoURL || '',
                 createdAt: user.createdAt || '',
                 lastSignIn: user.lastSignIn || '',
@@ -3131,7 +3194,7 @@ export default function AdminPage() {
 
       setAdminStats(totalStats);
 
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('관리자 데이터 로드 실패:', error);
     } finally {
       setLoading(false);
@@ -3186,16 +3249,17 @@ export default function AdminPage() {
       <div className="max-w-7xl mx-auto px-0 md:px-8">
         <div className="mb-6 mt-10 px-4 md:px-0">
         <PageHeader 
-          title="관리자 대시보드" 
+          title="관리자 대시보드"
+          description="시스템 통계 및 사용자 관리"
          />
         </div>
 
         {/* 탭 메뉴 */}
         <div className="flex justify-between items-center mb-8 px-4 md:px-0">
-          <div className="flex gap-4">
+          <div className="flex gap-4 overflow-x-auto scrollbar-hide min-w-0 pb-1">
             <button
               onClick={() => setActiveTab('overall-stats')}
-              className={`relative px-0 py-2 text-sm font-medium transition-colors ${
+              className={`relative px-0 py-2 text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
                 activeTab === 'overall-stats' 
                   ? 'text-white' 
                   : 'text-white/50 hover:text-white/80'
@@ -3203,12 +3267,12 @@ export default function AdminPage() {
             >
               대시보드
               {activeTab === 'overall-stats' && (
-                <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-white rounded-full"></div>
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white rounded-full"></div>
               )}
             </button>
             <button
               onClick={() => setActiveTab('dashboard')}
-              className={`relative px-0 py-2 text-sm font-medium transition-colors ${
+              className={`relative px-0 py-2 text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
                 activeTab === 'dashboard' 
                   ? 'text-white' 
                   : 'text-white/50 hover:text-white/80'
@@ -3216,46 +3280,59 @@ export default function AdminPage() {
             >
               회원 통계
               {activeTab === 'dashboard' && (
-                <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-white rounded-full"></div>
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white rounded-full"></div>
               )}
             </button>
             <button
               onClick={() => setActiveTab('home-cards')}
-              className={`relative px-0 py-2 text-sm font-medium transition-colors ${
+              className={`relative px-0 py-2 text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
                 activeTab === 'home-cards' 
                   ? 'text-white' 
                   : 'text-white/50 hover:text-white/80'
               }`}
             >
-                  홈카드 노출순서
+              홈카드 노출순서
               {activeTab === 'home-cards' && (
-                <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-white rounded-full"></div>
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white rounded-full"></div>
               )}
             </button>
             <button
               onClick={() => setActiveTab('home-card-management')}
-              className={`relative px-0 py-2 text-sm font-medium transition-colors ${
+              className={`relative px-0 py-2 text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
                 activeTab === 'home-card-management' 
                   ? 'text-white' 
                   : 'text-white/50 hover:text-white/80'
               }`}
             >
-                  홈카드 관리
+              홈카드 관리
               {activeTab === 'home-card-management' && (
-                <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-white rounded-full"></div>
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white rounded-full"></div>
               )}
             </button>
             <button
               onClick={() => setActiveTab('popularity-management')}
-              className={`relative px-0 py-2 text-sm font-medium transition-colors ${
+              className={`relative px-0 py-2 text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
                 activeTab === 'popularity-management' 
                   ? 'text-white' 
                   : 'text-white/50 hover:text-white/80'
               }`}
             >
-                  인기도 관리
+              인기도 관리
               {activeTab === 'popularity-management' && (
-                <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-white rounded-full"></div>
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white rounded-full"></div>
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab('terms-management')}
+              className={`relative px-0 py-2 text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
+                activeTab === 'terms-management' 
+                  ? 'text-white' 
+                  : 'text-white/50 hover:text-white/80'
+              }`}
+            >
+              이용약관 관리
+              {activeTab === 'terms-management' && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white rounded-full"></div>
               )}
             </button>
           </div>
@@ -3284,6 +3361,7 @@ export default function AdminPage() {
               </Button>
             </div>
           )}
+
         </div>
 
         {/* 모바일 전용 홈 카드 버튼들 */}
@@ -3310,6 +3388,7 @@ export default function AdminPage() {
             </Button>
           </div>
         )}
+
 
         {/* 탭 내용 */}
         {activeTab === 'dashboard' && (
@@ -3838,7 +3917,10 @@ export default function AdminPage() {
                                           className="w-full h-full object-cover"
                                           onError={(e) => {
                                             e.currentTarget.style.display = 'none';
-                                            e.currentTarget.nextElementSibling.style.display = 'flex';
+                                            const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                                            if (nextElement) {
+                                              nextElement.style.display = 'flex';
+                                            }
                                           }}
                                         />
                                       ) : null}
@@ -4543,7 +4625,10 @@ export default function AdminPage() {
                                           className="w-full h-full object-cover"
                                           onError={(e) => {
                                             e.currentTarget.style.display = 'none';
-                                            e.currentTarget.nextElementSibling.style.display = 'flex';
+                                            const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                                            if (nextElement) {
+                                              nextElement.style.display = 'flex';
+                                            }
                                           }}
                                         />
                                       ) : null}
@@ -4635,6 +4720,7 @@ export default function AdminPage() {
               setFilterDateTo('');
               setFilterSearch('');
             }}
+            onDragEnd={onDragEnd}
           />
         )}
 
@@ -4700,6 +4786,10 @@ export default function AdminPage() {
             popularityCurrentPage={popularityCurrentPage}
             popularityAllItems={popularityAllItems}
           />
+        )}
+
+        {activeTab === 'terms-management' && (
+          <TermsManagement />
         )}
       </div>
       {/* 오류 모달 */}

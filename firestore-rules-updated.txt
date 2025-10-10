@@ -111,5 +111,12 @@ service cloud.firestore {
       allow update, delete: if request.auth != null && 
         request.auth.token.email in ["beagle3651@gmail.com", "boxro.crafts@gmail.com"]; // 관리자만 수정/삭제 가능
     }
+    
+    // 이용약관 버전 관리 (관리자만 접근 가능)
+    match /termsVersions/{document} {
+      allow read: if true; // 모든 사용자가 읽기 가능 (약관 표시용)
+      allow create, update, delete: if request.auth != null && 
+        request.auth.token.email in ["admin@boxro.com", "dongwoo.kang@boxro.com", "beagle3651@gmail.com", "boxro.crafts@gmail.com"]; // 관리자만 생성/수정/삭제 가능
+    }
   }
 }

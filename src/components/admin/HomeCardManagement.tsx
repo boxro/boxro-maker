@@ -390,7 +390,7 @@ const HomeCardManagement: React.FC<HomeCardManagementProps> = ({
               </button>
             </div>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-2">
             {getFilteredHomeCardList().length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 {homeCardList.length === 0 ? (
@@ -404,8 +404,8 @@ const HomeCardManagement: React.FC<HomeCardManagementProps> = ({
               </div>
             ) : (
               getFilteredHomeCardList().map((card, index) => (
-                <div key={card.id} className="flex flex-col md:flex-row items-start md:items-center gap-4 px-6 py-4 bg-gray-50 rounded-lg border border-gray-200">
-                  <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0">
+                <div key={card.id} className="flex flex-col md:flex-row items-start md:items-center gap-4 px-6 py-6 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
                     {card.cardThumbnail ? (
                       <img 
                         src={card.cardThumbnail} 

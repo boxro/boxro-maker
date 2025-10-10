@@ -11,6 +11,8 @@ export default function AuthPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLogin, setIsLogin] = useState(true);
+  const [agreeToTerms, setAgreeToTerms] = useState(false);
+  const [agreeToPrivacy, setAgreeToPrivacy] = useState(false);
   
   const { user, loading, signInWithEmail, signUpWithEmail, signInWithGoogle } = useAuth();
   const router = useRouter();
@@ -56,6 +58,12 @@ export default function AuthPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    // 회원가입 시 약관 동의 검증
+    if (!isLogin && (!agreeToTerms || !agreeToPrivacy)) {
+      setError('서비스이용약관과 개인정보처리방침에 동의해주세요.');
+      return;
+    }
 
     try {
       if (isLogin) {
@@ -162,6 +170,53 @@ export default function AuthPage() {
               required
             />
           </div>
+
+          {/* 회원가입 시 약관 동의 체크박스 */}
+          {!isLogin && (
+            <div className="space-y-3">
+              <div className="flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  id="agreeToTerms"
+                  checked={agreeToTerms}
+                  onChange={(e) => setAgreeToTerms(e.target.checked)}
+                  className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <label htmlFor="agreeToTerms" className="text-sm text-gray-700">
+                  <a 
+                    href="/terms" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-700 underline"
+                  >
+                    서비스이용약관
+                  </a>
+                  에 동의합니다 (필수)
+                </label>
+              </div>
+              
+              <div className="flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  id="agreeToPrivacy"
+                  checked={agreeToPrivacy}
+                  onChange={(e) => setAgreeToPrivacy(e.target.checked)}
+                  className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <label htmlFor="agreeToPrivacy" className="text-sm text-gray-700">
+                  <a 
+                    href="/privacy" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-700 underline"
+                  >
+                    개인정보처리방침
+                  </a>
+                  에 동의합니다 (필수)
+                </label>
+              </div>
+            </div>
+          )}
 
           <button 
             type="submit" 
