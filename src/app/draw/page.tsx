@@ -4943,7 +4943,7 @@ export default function DrawPage() {
                     alt={item.label}
                     className="w-16 h-16 md:w-[90px] md:h-[90px] mb-1 object-contain"
                   />
-                  <span className="font-medium" style={{fontSize: '13px'}}>{item.label}</span>
+                  <span className="font-medium" style={{fontSize: '15px'}}>{item.label}</span>
                 </button>
               );
             })}
