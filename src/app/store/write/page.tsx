@@ -998,7 +998,7 @@ export default function WriteStoryPage() {
                 className="bg-pink-500 hover:bg-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-full w-[74px] h-[74px] md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1"
               >
                 <ArrowLeft className="w-4 h-4 md:w-5 md:h-5" />
-                <span className="text-xs md:text-sm font-medium">목록으로</span>
+                <span className="font-medium" style={{fontSize: '15px'}}>목록으로</span>
               </Button>
             </Link>
             <div className="flex gap-3">
@@ -1008,7 +1008,7 @@ export default function WriteStoryPage() {
                 className="bg-sky-500 hover:bg-sky-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-full w-[74px] h-[74px] md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1"
               >
                 <ShoppingBag className="w-4 h-4 md:w-5 md:h-5" />
-                <span className="text-xs md:text-sm font-medium">도안등록</span>
+                <span className="font-medium" style={{fontSize: '15px'}}>도안등록</span>
               </Button>
             </div>
           </div>
