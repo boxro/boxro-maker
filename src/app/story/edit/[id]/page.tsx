@@ -1022,7 +1022,7 @@ export default function EditStoryPage() {
           <div className="flex justify-between items-center">
             <Link href="/story">
               <Button 
-                className="bg-pink-500 hover:bg-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-full w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1"
+                className="bg-pink-500 hover:bg-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-full w-[74px] h-[74px] md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1"
               >
                 <ArrowLeft className="w-4 h-4 md:w-5 md:h-5" />
                 <span className="font-medium" style={{fontSize: '15px'}}>목록으로</span>
@@ -1032,7 +1032,7 @@ export default function EditStoryPage() {
               <Button 
                 onClick={saveArticle}
                 disabled={saving}
-                className="bg-sky-500 hover:bg-sky-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-full w-16 h-16 md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1"
+                className="bg-sky-500 hover:bg-sky-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-full w-[74px] h-[74px] md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1"
               >
                 <BookOpen className="w-4 h-4 md:w-5 md:h-5" />
                 <span className="font-medium" style={{fontSize: '15px'}}>발행하기</span>
