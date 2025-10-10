@@ -50,6 +50,10 @@ export default function WriteStoryPage() {
   // 성공 메시지 모달 상태
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  
+  // 안내 메시지 모달 상태
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  const [infoMessage, setInfoMessage] = useState('');
 
   // 이미지 리사이즈 함수 (투명도 감지)
   const resizeImage = (file: File, maxWidth: number = 800): Promise<string> => {
@@ -237,14 +241,16 @@ export default function WriteStoryPage() {
     if (!user) return;
     
     if (!title.trim()) {
-      alert('제목을 입력해주세요.');
+      setInfoMessage('제목을 입력해주세요.');
+      setShowInfoModal(true);
       return;
     }
 
     // 홈카드 정보 유효성 검사
     if (showOnHome) {
       if (!cardTitle.trim() || !cardDescription.trim() || !cardThumbnail) {
-        alert('홈카드에 노출하려면 제목, 설명, 썸네일을 모두 입력해주세요.');
+        setInfoMessage('홈카드에 노출하려면 제목, 설명, 썸네일을 모두 입력해주세요.');
+        setShowInfoModal(true);
         return;
       }
     }
@@ -306,8 +312,8 @@ export default function WriteStoryPage() {
       const docRef = await addDoc(collection(db, 'storyArticles'), articleData);
       console.log('박스카 이야기 저장 완료, ID:', docRef.id);
       
-      alert('박스카 이야기가 성공적으로 발행되었습니다!');
-      router.push('/story');
+      setSuccessMessage('박스카 이야기가 성공적으로 발행되었습니다!');
+      setShowSuccessModal(true);
       
     } catch (error) {
       console.error('저장 실패:', error);
@@ -934,15 +940,42 @@ export default function WriteStoryPage() {
         <div className="fixed inset-0 bg-gradient-to-br from-green-900/20 via-blue-900/20 to-purple-900/20 backdrop-blur-md z-50 flex items-center justify-center">
           <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-6 max-w-sm w-full mx-6">
             <div className="text-center">
-              <h3 className="text-[18px] font-semibold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-2">
-                복사 완료
+              <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+                발행 완료
               </h3>
-              <p className="text-gray-600 text-[14px] mb-4">
+              <p className="text-gray-900 mb-4" style={{fontSize: '15px'}}>
                 {successMessage}
               </p>
               <Button
-                onClick={() => setShowSuccessModal(false)}
-                className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white transition-all duration-200 rounded-full text-[14px]"
+                onClick={() => {
+                  setShowSuccessModal(false);
+                  router.push('/story');
+                }}
+                className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white transition-all duration-200 rounded-full"
+                style={{fontSize: '15px'}}
+              >
+                확인
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 안내 메시지 모달 */}
+      {showInfoModal && (
+        <div className="fixed inset-0 bg-gradient-to-br from-green-900/20 via-blue-900/20 to-purple-900/20 backdrop-blur-md z-50 flex items-center justify-center">
+          <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-6 max-w-sm w-full mx-6">
+            <div className="text-center">
+              <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+                입력 안내
+              </h3>
+              <p className="text-gray-900 mb-4" style={{fontSize: '15px'}}>
+                {infoMessage}
+              </p>
+              <Button
+                onClick={() => setShowInfoModal(false)}
+                className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white transition-all duration-200 rounded-full"
+                style={{fontSize: '15px'}}
               >
                 확인
               </Button>

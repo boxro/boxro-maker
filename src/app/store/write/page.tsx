@@ -30,6 +30,11 @@ export default function WriteStoryPage() {
   const [thumbnail, setThumbnail] = useState("");
   const [isPublished, setIsPublished] = useState(false);
   const [showOnHome, setShowOnHome] = useState(false);
+  
+  // 안내 메시지 모달 상태
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  const [infoMessage, setInfoMessage] = useState('');
+  
   const [cardTitle, setCardTitle] = useState("");
   const [cardDescription, setCardDescription] = useState("");
   const [cardThumbnail, setCardThumbnail] = useState("");
@@ -241,7 +246,8 @@ export default function WriteStoryPage() {
     if (!user) return;
     
     if (!title.trim()) {
-      alert('제목을 입력해주세요.');
+      setInfoMessage('제목을 입력해주세요.');
+      setShowInfoModal(true);
       return;
     }
     
@@ -252,7 +258,8 @@ export default function WriteStoryPage() {
     // 홈카드 정보 유효성 검사
     if (showOnHome) {
       if (!cardTitle.trim() || !cardDescription.trim() || !cardThumbnail) {
-        alert('홈카드에 노출하려면 제목, 설명, 썸네일을 모두 입력해주세요.');
+        setInfoMessage('홈카드에 노출하려면 제목, 설명, 썸네일을 모두 입력해주세요.');
+        setShowInfoModal(true);
         return;
       }
     }
@@ -1032,6 +1039,29 @@ export default function WriteStoryPage() {
               <Button
                 onClick={() => setShowSuccessModal(false)}
                 className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white transition-all duration-200 rounded-full text-[14px]"
+              >
+                확인
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 안내 메시지 모달 */}
+      {showInfoModal && (
+        <div className="fixed inset-0 bg-gradient-to-br from-green-900/20 via-blue-900/20 to-purple-900/20 backdrop-blur-md z-50 flex items-center justify-center">
+          <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-6 max-w-sm w-full mx-6">
+            <div className="text-center">
+              <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+                입력 안내
+              </h3>
+              <p className="text-gray-900 mb-4" style={{fontSize: '15px'}}>
+                {infoMessage}
+              </p>
+              <Button
+                onClick={() => setShowInfoModal(false)}
+                className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white transition-all duration-200 rounded-full"
+                style={{fontSize: '15px'}}
               >
                 확인
               </Button>
