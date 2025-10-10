@@ -58,11 +58,6 @@ export default function WriteStoryPage() {
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   
-  // 성공 메시지 모달 상태
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
-  
-
   // 이미지 리사이즈 함수 (투명도 감지)
   const resizeImage = (file: File, maxWidth: number = 800): Promise<string> => {
     return new Promise((resolve) => {
