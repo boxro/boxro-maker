@@ -142,9 +142,9 @@ export const BoxcarConverter: React.FC<BoxcarConverterProps> = ({ drawingData, o
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     const w = mountRef.current.clientWidth || 800;
     const h = mountRef.current.clientHeight || 400;
-    // 모바일 해상도 제한
+    // 모바일 해상도 개선 (2배 해상도 적용)
     const isMobile = window.innerWidth <= 768;
-    const pixelRatio = isMobile ? 1 : Math.min(window.devicePixelRatio || 1, 2);
+    const pixelRatio = isMobile ? 2 : Math.min(window.devicePixelRatio || 1, 2);
     renderer.setPixelRatio(pixelRatio);
     renderer.setSize(w, h);
     

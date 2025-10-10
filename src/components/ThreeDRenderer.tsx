@@ -165,9 +165,9 @@ const ThreeDRenderer = forwardRef<{ getRenderer: () => THREE.WebGLRenderer | nul
       precision: "highp" // 고정밀도
     });
     
-    // 모바일 해상도 제한 (성능과 품질 균형)
+    // 모바일 해상도 개선 (2배 해상도 적용)
     const isMobileDevice = window.innerWidth <= 768;
-    const pixelRatio = isMobileDevice ? 1 : Math.min(window.devicePixelRatio || 1, 2);
+    const pixelRatio = isMobileDevice ? 2 : Math.min(window.devicePixelRatio || 1, 2);
     renderer.setPixelRatio(pixelRatio);
     renderer.setSize(renderWidth, renderHeight);
     

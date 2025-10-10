@@ -28,6 +28,7 @@ import CommonBackground from "@/components/CommonBackground";
 import { doc, updateDoc, increment, arrayUnion, arrayRemove, collection, addDoc, query, where, getDocs, orderBy, deleteDoc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useScrollLock } from "@/hooks/useScrollLock";
+import Head from "next/head";
 
 // ProfileImage 컴포넌트
 const ProfileImage = ({ authorId, authorName, authorEmail, size = "w-8 h-8" }: { 
@@ -704,6 +705,51 @@ export default function StoryArticlePage() {
 
   return (
     <CommonBackground>
+      <Head>
+        <title>{article.title} | BOXRO 박스로</title>
+        <meta name="description" content={article.summary} />
+        <meta name="keywords" content={article.tags.join(', ')} />
+        <meta property="og:title" content={article.title} />
+        <meta property="og:description" content={article.summary} />
+        <meta property="og:type" content="article" />
+        <meta property="og:url" content={`${process.env.NEXT_PUBLIC_SITE_URL || 'https://boxro-maker.vercel.app'}/story/${id}`} />
+        {article.thumbnail && <meta property="og:image" content={article.thumbnail} />}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={article.title} />
+        <meta name="twitter:description" content={article.summary} />
+        {article.thumbnail && <meta name="twitter:image" content={article.thumbnail} />}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Article",
+              "headline": article.title,
+              "description": article.summary,
+              "author": {
+                "@type": "Person",
+                "name": article.authorName
+              },
+              "datePublished": article.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+              "dateModified": article.updatedAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+              "publisher": {
+                "@type": "Organization",
+                "name": "BOXRO 박스로",
+                "logo": {
+                  "@type": "ImageObject",
+                  "url": "/og-image.png"
+                }
+              },
+              "mainEntityOfPage": {
+                "@type": "WebPage",
+                "@id": `${process.env.NEXT_PUBLIC_SITE_URL || 'https://boxro-maker.vercel.app'}/story/${id}`
+              },
+              "image": article.thumbnail ? [article.thumbnail] : undefined,
+              "keywords": article.tags.join(', ')
+            })
+          }}
+        />
+      </Head>
       <CommonHeader />
       <div className="max-w-7xl mx-auto px-4 md:px-8 flex-1">
         {/* 글 내용 */}

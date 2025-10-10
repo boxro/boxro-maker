@@ -1495,6 +1495,37 @@ export default function GalleryPage() {
 
   return (
     <CommonBackground>
+      <Head>
+        <title>박스카 갤러리 | BOXRO 박스로</title>
+        <meta name="description" content="친구들의 박스카를 구경하고, 내 작품도 뽐내보세요! 버려진 박스로 만든 창의적인 자동차 작품들을 만나보세요." />
+        <meta name="keywords" content="박스카, 갤러리, 친환경, 자동차, 만들기, 창의적, 아이들, 놀이" />
+        <meta property="og:title" content="박스카 갤러리 | BOXRO 박스로" />
+        <meta property="og:description" content="친구들의 박스카를 구경하고, 내 작품도 뽐내보세요! 버려진 박스로 만든 창의적인 자동차 작품들을 만나보세요." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={`${process.env.NEXT_PUBLIC_SITE_URL || 'https://boxro-maker.vercel.app'}/community`} />
+        <meta property="og:image" content="/og-image.png" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="박스카 갤러리 | BOXRO 박스로" />
+        <meta name="twitter:description" content="친구들의 박스카를 구경하고, 내 작품도 뽐내보세요! 버려진 박스로 만든 창의적인 자동차 작품들을 만나보세요." />
+        <meta name="twitter:image" content="/og-image.png" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "CollectionPage",
+              "name": "박스카 갤러리",
+              "description": "친구들의 박스카를 구경하고, 내 작품도 뽐내보세요! 버려진 박스로 만든 창의적인 자동차 작품들을 만나보세요.",
+              "url": `${process.env.NEXT_PUBLIC_SITE_URL || 'https://boxro-maker.vercel.app'}/community`,
+              "mainEntity": {
+                "@type": "ItemList",
+                "name": "박스카 작품들",
+                "description": "친환경 박스카 작품 컬렉션"
+              }
+            })
+          }}
+        />
+      </Head>
       <CommonHeader />
       <div className="max-w-7xl mx-auto px-4 md:px-8">
         <div className="mb-6 mt-10 px-0 md:px-0">

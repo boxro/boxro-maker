@@ -286,7 +286,7 @@ export default function DrawPage() {
   }, [thumbnailRendererRef]);
 
 
-  // 블루프린트용 이미지 생성 함수 (크롭만 하고 리사이즈하지 않음 - 고해상도 유지)
+  // 블루프린트용 이미지 생성 함수 (모바일 해상도에 따른 리사이징 적용)
   const createBlueprintFromSnapshot = (snapshotDataUrl: string): Promise<string> => {
     return new Promise((resolve) => {
       const img = new Image();
@@ -298,9 +298,16 @@ export default function DrawPage() {
           return;
         }
 
-        // 블루프린트용 크롭 사이즈 (4:3 비율, 고해상도 유지)
-        const cropWidth = 650;
-        const cropHeight = 488; // 4:3 비율
+        // 모바일 여부 확인
+        const isMobile = window.innerWidth <= 768;
+        
+        // 모바일에서 크롭 사이즈 확대 (3D 렌더링 크기에 맞춤)
+        const baseCropWidth = 650;
+        const baseCropHeight = 488; // 4:3 비율
+        
+        // 모바일에서 2배 해상도에 맞춰 크롭 사이즈 확대 (2배 해상도에 맞춤)
+        const cropWidth = isMobile ? baseCropWidth * 2 : baseCropWidth; // 모바일: 1300
+        const cropHeight = isMobile ? baseCropHeight * 2 : baseCropHeight; // 모바일: 976
         
         // 스냅샷의 크기에 맞춰 크롭 사이즈 조정
         const maxCropWidth = Math.min(cropWidth, img.width);
@@ -308,22 +315,43 @@ export default function DrawPage() {
         const actualCropWidth = maxCropWidth;
         const actualCropHeight = maxCropHeight;
         
-        // 크롭 위치 (Y축 위로 100px, X축 왼쪽으로 40px)
+        // 크롭 위치 (해상도에 따라 조정)
         const centerX = (img.width - actualCropWidth) / 2;
         const centerY = (img.height - actualCropHeight) / 2;
-        const cropX = centerX - 40;
-        const cropY = centerY - 100;
         
-        // 캔버스 크기를 원본 크롭 사이즈로 설정 (리사이즈하지 않음)
-        canvas.width = actualCropWidth;
-        canvas.height = actualCropHeight;
+        // 모바일에서 2배 해상도인 경우 오프셋도 2배로 조정
+        const offsetX = isMobile ? 40 * 2 : 40; // 모바일: 80px, 데스크톱: 40px
+        const offsetY = isMobile ? 100 * 2 : 100; // 모바일: 200px, 데스크톱: 100px
         
-        // 크롭된 이미지를 원본 크기로 그리기 (리사이즈 없음)
-        ctx.drawImage(
-          img,
-          cropX, cropY, actualCropWidth, actualCropHeight,  // 소스 크롭 영역
-          0, 0, actualCropWidth, actualCropHeight  // 타겟 크기 (원본 크기 유지)
-        );
+        const cropX = centerX - offsetX;
+        const cropY = centerY - offsetY;
+        
+        // 모바일에서 2배 해상도인 경우 리사이징 적용
+        if (isMobile && img.width > 1000) {
+          // 모바일 2배 해상도 스냅샷을 기본 크기로 리사이징
+          const targetWidth = baseCropWidth; // 650
+          const targetHeight = baseCropHeight; // 488
+          
+          canvas.width = targetWidth;
+          canvas.height = targetHeight;
+          
+          // 크롭된 이미지를 기본 크기로 리사이징하여 그리기
+          ctx.drawImage(
+            img,
+            cropX, cropY, actualCropWidth, actualCropHeight,  // 소스 크롭 영역 (2배 크기)
+            0, 0, targetWidth, targetHeight  // 타겟 크기 (기본 크기로 리사이징)
+          );
+        } else {
+          // 데스크톱 또는 일반 해상도는 원본 크기 유지
+          canvas.width = actualCropWidth;
+          canvas.height = actualCropHeight;
+          
+          ctx.drawImage(
+            img,
+            cropX, cropY, actualCropWidth, actualCropHeight,  // 소스 크롭 영역
+            0, 0, actualCropWidth, actualCropHeight  // 타겟 크기 (원본 크기 유지)
+          );
+        }
         
         resolve(canvas.toDataURL('image/png'));
       };
