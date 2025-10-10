@@ -803,11 +803,11 @@ export default function StoryPageClient() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="columns-1 md:columns-2 lg:columns-3 gap-3 space-y-3">
             {articles.map((article) => (
               <div 
                 key={article.id} 
-                className="group shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden w-full rounded-2xl relative cursor-pointer"
+                className="group shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden w-full rounded-2xl relative cursor-pointer flex flex-col break-inside-avoid mb-3"
                 style={{ backgroundColor: article.cardBackgroundColor || 'rgba(255, 255, 255, 0.97)' }}
                 onClick={() => router.push(`/story/${article.id}`)}
               >
@@ -851,7 +851,7 @@ export default function StoryPageClient() {
                 )}
 
                 {/* 제목, 요약 */}
-                <div className="px-7 py-4">
+                <div className="px-7 py-4 flex-1 flex flex-col">
                   <h3 
                         className="text-lg font-semibold mb-2 mt-1"
                   >
@@ -860,7 +860,7 @@ export default function StoryPageClient() {
                   
                   {article.summary && (
                     <p 
-                      className="text-[15px] mb-0 whitespace-pre-wrap"
+                      className="text-[15px] mb-0 whitespace-pre-wrap flex-1"
                     >
                       {article.summary}
                     </p>
