@@ -82,9 +82,9 @@ export default function AdminDashboard({ adminStats, loading }: AdminDashboardPr
               <div className="text-xs text-gray-800">
                 활성: {adminStats.activeUsers || 0}<br/>
                 비활성: {adminStats.inactiveUsers || 0}<br/>
-                오늘 로그인 수: {adminStats.todayActiveUsers || 0}<br/>
-                24시간 활동량: {adminStats.recent24hActivity || 0}<br/>
-                피크 시간: {adminStats.peakTime || 'N/A'}
+                활동 사용자 수(최근 24시간): {adminStats.todayActiveUsers || 0}<br/>
+                활동량(최근 24시간): {adminStats.recent24hActivity || 0}<br/>
+                피크 시간(최근 30일): {adminStats.peakTime || 'N/A'}
               </div>
             </div>
           </div>
@@ -194,9 +194,9 @@ export default function AdminDashboard({ adminStats, loading }: AdminDashboardPr
           • <strong>회원 기준:</strong><br/>
             &nbsp;&nbsp;- <strong>활성 회원:</strong> 도안 만들기, 도안 다운로드, 갤러리 공유, 갤러리/이야기 박스로 톡 작성 중 하나 이상 활동한 회원<br/>
             &nbsp;&nbsp;- <strong>비활성 회원:</strong> 회원가입만 하고 아직 활동이 없는 회원<br/>
-            &nbsp;&nbsp;- <strong>오늘 로그인 수:</strong> 오늘 로그인한 사용자 수<br/>
-            &nbsp;&nbsp;- <strong>24시간 활동량:</strong> 최근 하루 활동량 (작품 생성 + 박스로톡)<br/>
-            &nbsp;&nbsp;- <strong>피크 시간:</strong> 가장 활발한 시간대<br/>
+            &nbsp;&nbsp;- <strong>활동 사용자 수(최근 24시간):</strong> 작품을 만들거나 박스로톡을 작성한 사용자만 카운트(단순히 로그인만 한 사용자는 카운트 안 됨)<br/>
+            &nbsp;&nbsp;- <strong>활동량(최근 24시간):</strong> 최근 24시간 동안의 작품 생성 + 박스로톡 작성 수(같은 사용자가 여러 번 활동하면 모두 카운트됨)<br/>
+            &nbsp;&nbsp;- <strong>피크 시간(최근 30일):</strong> 최근 30일간의 활동 데이터를 시간대별로 분석<br/>
           • <strong>통계 계산 기준:</strong><br/>
             &nbsp;&nbsp;- <strong>조회수:</strong> 로그인한 사용자만 카운트 (여러 번 조회해도 매번 카운트)<br/>
             &nbsp;&nbsp;- <strong>좋아요:</strong> 로그인한 사용자만 카운트 (1회만 카운트)<br/>
