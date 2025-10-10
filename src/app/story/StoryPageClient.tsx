@@ -1460,7 +1460,7 @@ export default function StoryPageClient() {
               <div className="flex gap-3">
                 <Button
                   onClick={closeDeleteModal}
-                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-300 rounded-full"
+                  className="flex-1 bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 rounded-full"
                   style={{fontSize: '15px'}}
                 >
                   취소
