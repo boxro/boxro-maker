@@ -2084,7 +2084,7 @@ export default function GalleryPage() {
                 <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
                   작품 삭제
                 </h3>
-                <p className="text-gray-800 text-sm mb-6">
+                <p className="text-gray-900 mb-6" style={{fontSize: '15px'}}>
                   정말 삭제할까요?<br/>
                   이 작품과 관련된 박스로 톡도 함께 없어집니다.
                 </p>
@@ -2093,13 +2093,15 @@ export default function GalleryPage() {
                   <Button
                     variant="outline"
                     onClick={closeDeleteModal}
-                    className="flex-1 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-full"
+                    className="flex-1 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-full text-gray-900"
+                    style={{fontSize: '15px'}}
                   >
                     취소
                   </Button>
                   <Button
                     onClick={deleteDesign}
                     className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 rounded-full"
+                    style={{fontSize: '15px'}}
                   >
                     삭제하기
                   </Button>
