@@ -4657,7 +4657,7 @@ export default function DrawPage() {
             <CardContent className="px-4 md:px-8 pt-0 pb-0 -mt-3">
               {/* 분석 결과 표시 */}
               {drawingAnalysis && (
-                <div className="mb-4">
+                <div className="mb-2">
                   
                   {/* 차종 선택 버튼들 */}
                   <div className="grid grid-cols-4 md:grid-cols-7 gap-3">
