@@ -82,9 +82,9 @@ export default function AdminDashboard({ adminStats, loading }: AdminDashboardPr
               <div className="text-xs text-gray-800">
                 활성: {adminStats.activeUsers || 0}<br/>
                 비활성: {adminStats.inactiveUsers || 0}<br/>
-                활동 사용자 수(최근 24시간): {adminStats.todayActiveUsers || 0}<br/>
-                활동량(최근 24시간): {adminStats.recent24hActivity || 0}<br/>
-                피크 시간(최근 30일): {adminStats.peakTime || 'N/A'}
+                활동 사용자 수: {adminStats.todayActiveUsers || 0}<br/>
+                활동량: {adminStats.recent24hActivity || 0}<br/>
+                피크 시간: {adminStats.peakTime || 'N/A'}
               </div>
             </div>
           </div>
