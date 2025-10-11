@@ -147,19 +147,6 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
             )}
           </div>
 
-          {/* 하단 체크박스 (모든 단계에서 표시) */}
-          <div className="mb-6">
-            <label className="flex items-center justify-center space-x-2 text-gray-700">
-              <input
-                type="checkbox"
-                checked={dontShowAgain}
-                onChange={(e) => setDontShowAgain(e.target.checked)}
-                className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-              />
-              <span className="text-xs sm:text-sm" style={{fontSize: '12px'}}>다시보지 않기</span>
-            </label>
-          </div>
-
           {/* 버튼들 */}
           <div className="flex gap-3">
             {currentStep > 0 && (
@@ -191,6 +178,19 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
                 </>
               )}
             </Button>
+          </div>
+
+          {/* 하단 체크박스 (모든 단계에서 표시) */}
+          <div className="mt-4">
+            <label className="flex items-center justify-center space-x-2 text-gray-700">
+              <input
+                type="checkbox"
+                checked={dontShowAgain}
+                onChange={(e) => setDontShowAgain(e.target.checked)}
+                className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+              />
+              <span className="text-xs sm:text-sm" style={{fontSize: '12px'}}>다시보지 않기</span>
+            </label>
           </div>
         </div>
       </div>
