@@ -130,18 +130,18 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
             </h2>
 
             {/* 메인 텍스트 */}
-            <p className="text-base sm:text-lg text-gray-800 mb-3" style={{fontSize: '16px'}}>
+            <p className="text-gray-900 mb-3 font-bold" style={{fontSize: '16px'}}>
               {currentTutorial.mainText}
             </p>
 
             {/* 서브 텍스트 */}
-            <p className="text-gray-700 mb-2 text-sm sm:text-base" style={{fontSize: '14px'}}>
+            <p className="text-gray-900 mb-2" style={{fontSize: '15px'}}>
               {currentTutorial.subText}
             </p>
 
             {/* 디테일 텍스트 */}
             {currentTutorial.detailText && (
-              <p className="text-gray-600 text-xs sm:text-sm">
+              <p className="text-gray-900" style={{fontSize: '15px'}}>
                 {currentTutorial.detailText}
               </p>
             )}
@@ -153,8 +153,8 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
             <Button
               variant="outline"
               onClick={handlePrev}
-              className="flex-1 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-full text-gray-900 text-sm sm:text-base"
-              style={{fontSize: '14px'}}
+              className="flex-1 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-full text-gray-900"
+              style={{fontSize: '15px'}}
             >
               <ChevronLeft className="w-4 h-4 mr-1" />
               이전
@@ -163,8 +163,8 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
 
             <Button
               onClick={handleNext}
-              className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-full text-sm sm:text-base"
-              style={{fontSize: '14px'}}
+              className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-full"
+              style={{fontSize: '15px'}}
             >
               {isLastStep ? (
                 <>
@@ -189,7 +189,7 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
                 onChange={(e) => setDontShowAgain(e.target.checked)}
                 className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
               />
-              <span className="text-xs sm:text-sm" style={{fontSize: '12px'}}>다시보지 않기</span>
+                <span style={{fontSize: '13px'}}>다시보지 않기</span>
             </label>
           </div>
         </div>
