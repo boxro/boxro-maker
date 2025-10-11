@@ -2225,7 +2225,7 @@ export default function GalleryPage() {
               <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
                 작품 수정하기
               </h3>
-              <p className="text-gray-800 text-sm mb-6">
+              <p className="text-gray-900 mb-6" style={{fontSize: '15px'}}>
                 {editingDesign.type === 'uploaded' ? '이름이나 사진을 살짝 바꿔볼까요?' : '이 작품의 이름만 살짝 바꿔볼까요?'}
               </p>
               
@@ -2289,13 +2289,15 @@ export default function GalleryPage() {
                 <Button
                   variant="outline"
                   onClick={closeEditModal}
-                  className="flex-1 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-full"
+                  className="flex-1 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-full text-gray-900"
+                  style={{fontSize: '15px'}}
                 >
                   취소
                 </Button>
                 <Button
                   onClick={handleEdit}
                   className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 rounded-full"
+                  style={{fontSize: '15px'}}
                 >
                   수정하기
                 </Button>
