@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
+import Image from "next/image";
 
 interface OnboardingTutorialProps {
   isOpen: boolean;
@@ -18,7 +19,8 @@ const tutorialSteps = [
     subText: "화면 위에 쓱쓱, 자유롭게 그리면 시작돼요!",
     detailText: "색깔 펜으로 그리고, 지우개로 수정할 수 있어요.",
     visual: "✏️🎨",
-    bgColor: "from-blue-500 to-cyan-500"
+    bgColor: "from-blue-500 to-cyan-500",
+    image: "/onboarding_1.png"
   },
   {
     id: 2,
@@ -102,95 +104,106 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
           </button>
         </div>
 
-        <div className="p-4 sm:p-6 flex-1 flex flex-col">
-          {/* 진행 표시 */}
-          <div className="flex justify-center mb-6">
-            <div className="flex space-x-2">
-              {tutorialSteps.map((_, index) => (
-                <div
-                  key={index}
-                  className={`w-2 h-2 rounded-full transition-colors ${
-                    index === currentStep ? 'bg-purple-500' : 'bg-gray-300'
-                  }`}
-                />
-              ))}
-            </div>
+        <div className="p-0 flex-1 flex flex-col">
+          {/* 상단 이미지 영역 */}
+          <div className="relative w-full h-[230px] sm:h-64 md:h-80">
+            <Image
+              src={currentTutorial.image || "/onboarding_1.png"}
+              alt={`온보딩 ${currentStep + 1}단계`}
+              fill
+              className="object-cover"
+              priority
+            />
           </div>
 
-          {/* 메인 콘텐츠 */}
-          <div className="text-center mb-8 flex-1 flex flex-col justify-center">
-            {/* 비주얼 아이콘 */}
-            <div className="text-6xl mb-4">
-              {currentTutorial.visual}
+          {/* 하단 콘텐츠 영역 */}
+          <div className="p-8">
+            {/* 진행 표시 */}
+            <div className="flex justify-center mb-6">
+              <div className="flex space-x-2">
+                {tutorialSteps.map((_, index) => (
+                  <div
+                    key={index}
+                    className={`w-2 h-2 rounded-full transition-colors ${
+                      index === currentStep ? 'bg-purple-500' : 'bg-gray-300'
+                    }`}
+                  />
+                ))}
+              </div>
             </div>
 
             {/* 제목 */}
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4" style={{fontFamily: 'CookieRun, sans-serif'}}>
-              {currentTutorial.title}
-            </h2>
+            <div className="text-center mb-6">
+              <h2 className="text-[22px] font-bold text-gray-800 mb-4" style={{fontFamily: 'CookieRun, sans-serif'}}>
+                {currentTutorial.title}
+              </h2>
+            </div>
 
-            {/* 메인 텍스트 */}
-            <p className="text-gray-900 mb-3 font-bold" style={{fontSize: '16px'}}>
-              {currentTutorial.mainText}
-            </p>
-
-            {/* 서브 텍스트 */}
-            <p className="text-gray-900 mb-2" style={{fontSize: '15px'}}>
-              {currentTutorial.subText}
-            </p>
-
-            {/* 디테일 텍스트 */}
-            {currentTutorial.detailText && (
-              <p className="text-gray-900" style={{fontSize: '15px'}}>
-                {currentTutorial.detailText}
+            {/* 설명 */}
+            <div className="text-center mb-8">
+              {/* 메인 텍스트 */}
+              <p className="text-gray-900 mb-3 font-bold" style={{fontSize: '16px'}}>
+                {currentTutorial.mainText}
               </p>
-            )}
-          </div>
 
-          {/* 버튼들 */}
-          <div className="flex gap-3">
-            {currentStep > 0 && (
-            <Button
-              variant="outline"
-              onClick={handlePrev}
-              className="flex-1 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-full text-gray-900"
-              style={{fontSize: '15px'}}
-            >
-              <ChevronLeft className="w-4 h-4 mr-1" />
-              이전
-            </Button>
-            )}
+              {/* 서브 텍스트 */}
+              <p className="text-gray-900 mb-2" style={{fontSize: '15px'}}>
+                {currentTutorial.subText}
+              </p>
 
-            <Button
-              onClick={handleNext}
-              className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-full"
-              style={{fontSize: '15px'}}
-            >
-              {isLastStep ? (
-                <>
-                  지금 나만의 박스카를 만들어볼까요?
-                  <ChevronRight className="w-4 h-4 ml-1" />
-                </>
-              ) : (
-                <>
-                  다음
-                  <ChevronRight className="w-4 h-4 ml-1" />
-                </>
+              {/* 디테일 텍스트 */}
+              {currentTutorial.detailText && (
+                <p className="text-gray-900" style={{fontSize: '15px'}}>
+                  {currentTutorial.detailText}
+                </p>
               )}
-            </Button>
-          </div>
+            </div>
 
-          {/* 하단 체크박스 (모든 단계에서 표시) */}
-          <div className="mt-4">
-            <label className="flex items-center justify-center space-x-2 text-gray-700">
-              <input
-                type="checkbox"
-                checked={dontShowAgain}
-                onChange={(e) => setDontShowAgain(e.target.checked)}
-                className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-              />
-                <span style={{fontSize: '13px'}}>다시보지 않기</span>
-            </label>
+            {/* 버튼들 */}
+            <div className="flex flex-col sm:flex-row gap-3 mt-6">
+              {currentStep > 0 && (
+              <Button
+                variant="outline"
+                onClick={handlePrev}
+                className="flex-1 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-full text-gray-900"
+                style={{fontSize: '15px'}}
+              >
+                <ChevronLeft className="w-4 h-4 mr-1" />
+                이전
+              </Button>
+              )}
+
+              <Button
+                onClick={handleNext}
+                className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-full"
+                style={{fontSize: '15px'}}
+              >
+                {isLastStep ? (
+                  <>
+                    지금 나만의 박스카를 만들어볼까요?
+                    <ChevronRight className="w-4 h-4 ml-1" />
+                  </>
+                ) : (
+                  <>
+                    다음
+                    <ChevronRight className="w-4 h-4 ml-1" />
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {/* 하단 체크박스 (모든 단계에서 표시) */}
+            <div className="mt-4">
+              <label className="flex items-center justify-center space-x-2 text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={dontShowAgain}
+                  onChange={(e) => setDontShowAgain(e.target.checked)}
+                  className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                />
+                  <span style={{fontSize: '13px'}}>다시보지 않기</span>
+              </label>
+            </div>
           </div>
         </div>
       </div>
