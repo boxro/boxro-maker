@@ -137,7 +137,7 @@ export default function CommonHeader({ className = "" }: CommonHeaderProps) {
             {isMenuOpen && (
               <div className="menu-dropdown absolute top-full right-0 mt-2 w-64 rounded-lg shadow-xl transition-all duration-200 bg-white border border-gray-200">
                 <div className="p-4">
-                  <nav className="space-y-2">
+                  <nav className="space-y-1">
                     <Link href="/" onClick={() => setIsMenuOpen(false)} className="block px-6 py-2 rounded-full transition-colors text-gray-900 hover:bg-purple-100">
                       <div className="flex items-center gap-3">
                         <Home className="w-4 h-4" />
@@ -189,7 +189,7 @@ export default function CommonHeader({ className = "" }: CommonHeaderProps) {
                       </Link>
                     )}
                     {user ? (
-                      <div className="border-t border-gray-300 pt-2 mt-2 space-y-2">
+                      <div className="border-t border-gray-300 pt-2 mt-2 space-y-1">
                         <Link href="/profile/edit" onClick={() => setIsMenuOpen(false)} className="block px-6 py-2 rounded-full transition-colors text-gray-900 hover:bg-purple-100">
                           <div className="flex items-center gap-3">
                             <User className="w-4 h-4" />
@@ -207,7 +207,7 @@ export default function CommonHeader({ className = "" }: CommonHeaderProps) {
                         </button>
                       </div>
                     ) : (
-                      <div className="border-t border-gray-300 pt-2 mt-2 space-y-2">
+                      <div className="border-t border-gray-300 pt-2 mt-2 space-y-1">
                         <Link href="/auth" onClick={() => setIsMenuOpen(false)} className="block px-6 py-2 rounded-full transition-colors text-gray-900 hover:bg-purple-100">
                           <div className="flex items-center gap-3">
                             <span className="font-bold text-gray-900">←</span>
