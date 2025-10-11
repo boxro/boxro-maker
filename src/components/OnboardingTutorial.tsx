@@ -140,7 +140,7 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
 
             {/* 제목 */}
             <div className="text-center mb-4">
-              <h2 className="text-[22px] font-bold text-gray-800 mb-2" style={{fontFamily: 'CookieRun, sans-serif'}}>
+              <h2 className="text-[22px] font-bold text-gray-800 mb-0" style={{fontFamily: 'CookieRun, sans-serif'}}>
                 {currentTutorial.title}
               </h2>
             </div>
@@ -153,7 +153,7 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
               </p>
 
               {/* 서브 텍스트 */}
-              <p className="text-gray-900 mb-2" style={{fontSize: '15px'}}>
+              <p className="text-gray-900 mb-0" style={{fontSize: '15px'}}>
                 {currentTutorial.subText}
               </p>
 
