@@ -5033,7 +5033,7 @@ export default function DrawPage() {
               {/* 박스카 색상 */}
               {selectedItem === 'body-color' && (
                 <div className="space-y-4">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                     {[
                       '#FF6B6B', // 짙은 빨간색 (페라리 레드)
                       '#7FE5E0', // 밝은 청록색 (포르쉐 청록)
@@ -5094,7 +5094,7 @@ export default function DrawPage() {
               {/* 헤드램프 */}
               {selectedItem === 'headlight' && (
                 <div className="space-y-4">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                     {[
                       // { type: 'round-yellow', label: '동그란 헤드램프 (노란색)', icon: '🟡', color: '#FFD700' },
                       // { type: 'round-white', label: '동그란 헤드램프 (하얀색)', icon: '⚪', color: '#FFFFFF' },
@@ -5313,7 +5313,7 @@ export default function DrawPage() {
               {/* 리어램프 */}
               {selectedItem === 'taillight' && (
                 <div className="space-y-4">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                     {[
                       { type: 'rearlight-1', label: '리어램프 1' },
                       { type: 'rearlight-2', label: '리어램프 2' },
@@ -5375,7 +5375,7 @@ export default function DrawPage() {
               {/* 라디에이터 그릴 */}
               {selectedItem === 'grille' && (
                 <div className="space-y-4">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                     {[
                       { type: 'grill-1', label: '그릴 1' },
                       { type: 'grill-2', label: '그릴 2' },
@@ -5429,7 +5429,7 @@ export default function DrawPage() {
 
          {/* 뱃지 */}
          {selectedItem === 'badge' && (
-           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+           <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
              {[
                { type: 'badge-1', image: '/badges/badge-1.png' },
                { type: 'badge-2', image: '/badges/badge-2.png' },
@@ -5486,7 +5486,7 @@ export default function DrawPage() {
 
          {/* 번호판 */}
          {selectedItem === 'plate' && (
-           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+           <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
              {[
                { type: 'plate-1', label: '번호판 1' },
                { type: 'plate-2', label: '번호판 2' },
@@ -5539,7 +5539,7 @@ export default function DrawPage() {
 
             {/* 타이어 휠 */}
               {selectedItem === 'wheel' && (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                   {[
                     { type: 'wheel-1', label: '휠 1', icon: '⚫' },
                     { type: 'wheel-2', label: '휠 2', icon: '⚫' },
