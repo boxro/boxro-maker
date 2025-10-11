@@ -91,16 +91,18 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
 
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-purple-900/20 via-blue-900/20 to-pink-900/20 backdrop-blur-md z-50 flex items-center justify-center p-4">
-      <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 max-w-md sm:max-w-lg w-full mx-2 sm:mx-6 relative">
+      <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 max-w-md sm:max-w-lg w-full mx-2 sm:mx-6 relative h-[500px] flex flex-col">
         {/* 닫기 버튼 */}
-        <button
-          onClick={handleSkip}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 transition-colors z-10"
-        >
-          <X className="w-6 h-6" />
-        </button>
+        <div className="absolute top-2 right-4 z-10">
+          <button
+            onClick={handleSkip}
+            className="text-gray-500 hover:text-gray-700 text-2xl font-bold flex-shrink-0"
+          >
+            ×
+          </button>
+        </div>
 
-        <div className="p-4 sm:p-6">
+        <div className="p-4 sm:p-6 flex-1 flex flex-col">
           {/* 진행 표시 */}
           <div className="flex justify-center mb-6">
             <div className="flex space-x-2">
@@ -116,7 +118,7 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
           </div>
 
           {/* 메인 콘텐츠 */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-8 flex-1 flex flex-col justify-center">
             {/* 비주얼 아이콘 */}
             <div className="text-6xl mb-4">
               {currentTutorial.visual}
@@ -145,20 +147,18 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
             )}
           </div>
 
-          {/* 하단 체크박스 (마지막 단계에서만) */}
-          {isLastStep && (
-            <div className="mb-6">
-              <label className="flex items-center justify-center space-x-2 text-gray-700">
-                <input
-                  type="checkbox"
-                  checked={dontShowAgain}
-                  onChange={(e) => setDontShowAgain(e.target.checked)}
-                  className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                />
-                <span className="text-xs sm:text-sm" style={{fontSize: '12px'}}>다시보지 않기</span>
-              </label>
-            </div>
-          )}
+          {/* 하단 체크박스 (모든 단계에서 표시) */}
+          <div className="mb-6">
+            <label className="flex items-center justify-center space-x-2 text-gray-700">
+              <input
+                type="checkbox"
+                checked={dontShowAgain}
+                onChange={(e) => setDontShowAgain(e.target.checked)}
+                className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+              />
+              <span className="text-xs sm:text-sm" style={{fontSize: '12px'}}>다시보지 않기</span>
+            </label>
+          </div>
 
           {/* 버튼들 */}
           <div className="flex gap-3">
