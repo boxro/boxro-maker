@@ -4911,7 +4911,7 @@ export default function DrawPage() {
         </CardHeader>
         <CardContent className="px-4 md:px-8 pt-0 pb-0 -mt-3">
           {/* 꾸미기 아이템 선택 버튼들 */}
-          <div className="grid grid-cols-4 md:grid-cols-7 gap-3">
+          <div className="grid grid-cols-4 md:grid-cols-7 gap-2">
             {[
               { type: 'headlight', label: '헤드램프', image: 'button-headlamps.png' },
               { type: 'taillight', label: '리어램프', image: 'button-realamps.png' },
@@ -4950,7 +4950,7 @@ export default function DrawPage() {
           </div>
           
           {/* 3D 렌더링 영역 */}
-          <div className={`${THREE_D_RENDERER_CONTAINER} mt-4 mb-4`} style={{ aspectRatio: isClient ? (isMobile ? '4/3' : '2/1') : '2/1' }}>
+          <div className={`${THREE_D_RENDERER_CONTAINER} mt-2 mb-4`} style={{ aspectRatio: isClient ? (isMobile ? '4/3' : '2/1') : '2/1' }}>
             <ThreeDRenderer 
               ref={threeDRendererRef}
               carType={(() => {
