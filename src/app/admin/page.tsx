@@ -113,7 +113,7 @@ export default function AdminPage() {
   const [sortBy, setSortBy] = useState('recent');
   const [tableSortField, setTableSortField] = useState('');
   const [tableSortDirection, setTableSortDirection] = useState<'asc' | 'desc'>('asc');
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('overall-stats');
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [userActivities, setUserActivities] = useState<any>({});
   const [showUserModal, setShowUserModal] = useState(false);
