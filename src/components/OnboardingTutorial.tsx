@@ -109,7 +109,7 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
 
         <div className="p-0 flex-1 flex flex-col">
           {/* 상단 이미지 영역 */}
-          <div className="relative w-full h-[230px] sm:h-64 md:h-80">
+          <div className="relative w-full h-[280px] sm:h-80 md:h-96">
             <Image
               src={currentTutorial.image || "/onboarding_01.png"}
               alt={`온보딩 ${currentStep + 1}단계`}
