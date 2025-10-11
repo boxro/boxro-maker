@@ -4633,7 +4633,7 @@ export default function DrawPage() {
         {/* Main 3D Preview */}
         <div className="w-full">
           <Card className="bg-white/95 border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden py-5 w-full rounded-2xl">
-            <CardHeader className="text-gray-800 px-4 md:px-8 pb-0">
+            <CardHeader className="text-gray-800 px-4 md:px-8 pb-0 pt-0">
               <CardTitle className="text-lg flex items-center">
                 <Brain className="w-5 h-5 mr-2 text-blue-600" />
                 <span className="bg-gradient-to-r from-blue-600 to-pink-600 bg-clip-text text-transparent">AI가 분석한 박스카</span>
@@ -4899,7 +4899,7 @@ export default function DrawPage() {
 
       {/* 3D 박스카 미리보기 + 꾸미기 아이템 */}
       <Card className="bg-white/95 border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden py-5 w-full rounded-2xl mb-6 relative">
-        <CardHeader className="text-gray-800 px-4 md:px-8 pb-0">
+        <CardHeader className="text-gray-800 px-4 md:px-8 pb-0 pt-0">
           <CardTitle className="text-lg flex items-center">
             <Palette className="w-5 h-5 mr-2 text-blue-600" />
             <span className="bg-gradient-to-r from-blue-600 to-pink-600 bg-clip-text text-transparent">꾸미기 아이템</span>
@@ -5749,7 +5749,7 @@ export default function DrawPage() {
 
       {/* 3D 박스카 미리보기 + 도안 다운로드 */}
       <Card className="bg-white/95 border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden py-5 w-full rounded-2xl mb-6 relative">
-        <CardHeader className="text-gray-800 px-4 md:px-8 pb-0">
+        <CardHeader className="text-gray-800 px-4 md:px-8 pb-0 pt-0">
           <CardTitle className="text-lg flex items-center">
             <Printer className="w-5 h-5 mr-2 text-blue-600" />
             <span className="bg-gradient-to-r from-blue-600 to-pink-600 bg-clip-text text-transparent">내가 만든 박스카 도안</span>
