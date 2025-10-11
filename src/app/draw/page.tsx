@@ -4477,7 +4477,7 @@ export default function DrawPage() {
 
       {/* Drawing Canvas - 통합된 카드 */}
       <Card className={DRAWING_CANVAS_CARD_STYLES}>
-        <CardHeader className="text-gray-800 px-4 md:px-8 pb-0 pt-1">
+        <CardHeader className="text-gray-800 px-4 md:px-8 pb-0 pt-0">
           <CardTitle className="flex items-center text-lg">
             <Sparkles className="w-5 h-5 mr-2 text-blue-600" />
             <span className="bg-gradient-to-r from-blue-600 to-pink-600 bg-clip-text text-transparent">그리기 캔버스</span>
