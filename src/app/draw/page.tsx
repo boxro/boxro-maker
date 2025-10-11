@@ -4491,7 +4491,7 @@ export default function DrawPage() {
           className="px-4 md:px-8 pt-0 pb-0 -mt-3"
         >
           {/* 그리기 도구 박스 */}
-          <div className="bg-white rounded-xl p-4 border border-gray-200 mb-4" style={{ touchAction: 'auto' }}>
+          <div className="bg-white rounded-xl p-4 border border-gray-200 mb-2" style={{ touchAction: 'auto' }}>
             {/* 첫 번째 행: 툴과 컬러 */}
             <div className="flex items-center gap-4 sm:gap-6">
               {/* Tool Selection */}
