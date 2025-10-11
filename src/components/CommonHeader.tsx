@@ -16,7 +16,8 @@ import {
   Settings,
   User,
   Home,
-  LogOut
+  LogOut,
+  HelpCircle
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -27,7 +28,7 @@ interface CommonHeaderProps {
 export default function CommonHeader({ className = "" }: CommonHeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const { user, logout } = useAuth();
+  const { user, logout, setShowOnboarding } = useAuth();
 
   // 관리자 권한 체크
   const isAdmin = user?.email === "admin@boxro.com" || 
@@ -167,6 +168,18 @@ export default function CommonHeader({ className = "" }: CommonHeaderProps) {
                         <span>박스로 스토어</span>
                       </div>
                     </Link>
+                    <button 
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        setShowOnboarding(true);
+                      }} 
+                      className="block w-full text-left px-6 py-2 rounded-full transition-colors text-gray-900 hover:bg-blue-100"
+                    >
+                      <div className="flex items-center gap-3">
+                        <HelpCircle className="w-4 h-4" />
+                        <span>도움말</span>
+                      </div>
+                    </button>
                     {isAdmin && (
                       <Link href="/admin" onClick={() => setIsMenuOpen(false)} className="block px-6 py-2 rounded-full transition-colors text-gray-900 hover:bg-red-100">
                         <div className="flex items-center gap-3">

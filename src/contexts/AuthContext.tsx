@@ -13,6 +13,8 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   forceStopLoading: () => void;
+  showOnboarding: boolean;
+  setShowOnboarding: (show: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -32,6 +34,7 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   // 구글 프로필 이미지를 base64로 변환하는 함수
   const copyGoogleProfileImage = async (user: User): Promise<string | null> => {
@@ -166,6 +169,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
         
         await saveUserToFirestore(user);
+        
+        // 온보딩 튜토리얼 표시 여부 확인
+        const onboardingCompleted = localStorage.getItem('onboarding_completed');
+        if (!onboardingCompleted) {
+          setShowOnboarding(true);
+        }
       }
       
       setUser(user);
@@ -293,6 +302,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     signInWithGoogle,
     logout,
     forceStopLoading,
+    showOnboarding,
+    setShowOnboarding,
   };
 
   return (

@@ -1,9 +1,12 @@
+"use client";
+
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { StoryProvider } from "@/contexts/StoryContext";
+import OnboardingTutorial from "@/components/OnboardingTutorial";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -42,6 +45,25 @@ export const metadata: Metadata = {
   },
 };
 
+function OnboardingWrapper({ children }: { children: React.ReactNode }) {
+  const { showOnboarding, setShowOnboarding } = useAuth();
+
+  const handleOnboardingComplete = () => {
+    setShowOnboarding(false);
+  };
+
+  return (
+    <>
+      {children}
+      <OnboardingTutorial
+        isOpen={showOnboarding}
+        onClose={() => setShowOnboarding(false)}
+        onComplete={handleOnboardingComplete}
+      />
+    </>
+  );
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -68,7 +90,9 @@ export default function RootLayout({
         <AuthProvider>
           <LanguageProvider>
             <StoryProvider>
-              {children}
+              <OnboardingWrapper>
+                {children}
+              </OnboardingWrapper>
             </StoryProvider>
           </LanguageProvider>
         </AuthProvider>
