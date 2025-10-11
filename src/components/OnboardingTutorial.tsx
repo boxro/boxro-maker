@@ -176,7 +176,7 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
                 <Button
                   variant="outline"
                   onClick={handlePrev}
-                  className="flex-1 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-full text-gray-900"
+                  className="flex-none w-20 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-full text-gray-900"
                   style={{fontSize: '15px'}}
                 >
                   <ChevronLeft className="w-4 h-4 mr-1" />
