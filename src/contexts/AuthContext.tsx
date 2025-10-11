@@ -170,8 +170,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         await saveUserToFirestore(user);
         
-        // 온보딩 튜토리얼 표시 여부 확인
-        const onboardingCompleted = localStorage.getItem('onboarding_completed');
+        // 사용자별 온보딩 튜토리얼 표시 여부 확인
+        const userId = user.uid;
+        localStorage.setItem('current_user_id', userId);
+        const onboardingCompleted = localStorage.getItem(`onboarding_completed_${userId}`);
         if (!onboardingCompleted) {
           setShowOnboarding(true);
         }

@@ -79,7 +79,11 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
 
   const handleComplete = () => {
     if (dontShowAgain) {
-      localStorage.setItem('onboarding_completed', 'true');
+      // 사용자별로 온보딩 완료 상태 저장
+      const userId = localStorage.getItem('current_user_id');
+      if (userId) {
+        localStorage.setItem(`onboarding_completed_${userId}`, 'true');
+      }
     }
     onComplete();
     onClose();
