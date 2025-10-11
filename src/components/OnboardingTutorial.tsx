@@ -171,7 +171,7 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
             {/* 하단 고정 영역 */}
             <div className="mt-auto">
               {/* 버튼들 */}
-              <div className="flex flex-col sm:flex-row gap-3 mb-3">
+              <div className="flex flex-row gap-3 mb-3">
                 {currentStep > 0 && (
                 <Button
                   variant="outline"
