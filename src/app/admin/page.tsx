@@ -833,12 +833,10 @@ export default function AdminPage() {
       }
       
       if (addedCount > 0) {
-        setErrorMessage(`${addedCount}개의 하드코딩된 홈카드가 성공적으로 추가되었습니다!`);
-        setShowErrorModal(true);
+        alert(`${addedCount}개의 하드코딩된 홈카드가 성공적으로 추가되었습니다!`);
         fetchHomeCardList(); // 목록 새로고침
       } else {
-        setErrorMessage('모든 하드코딩된 홈카드가 이미 존재합니다.');
-        setShowErrorModal(true);
+        alert('모든 하드코딩된 홈카드가 이미 존재합니다.');
       }
     } catch (error: unknown) {
       console.error('하드코딩된 홈카드 추가 실패:', error);
