@@ -26,8 +26,8 @@ const tutorialSteps = [
     id: 2,
     title: "3D 미리보기",
     mainText: "내가 그린 자동차가 3D로 짠!",
-    subText: "AI가 그림을 분석해 멋진 박스카로 변신시켜요.",
-    detailText: "마음에 안 들면 다른 차종으로 쓱 바꿔보세요!",
+    subText: "AI가 그림을 분석해 박스카로 변신시켜요.",
+    detailText: "마음에 안 들면 다른 박스카로 쓱 바꿔보세요!",
     visual: "🔄✨",
     bgColor: "from-purple-500 to-pink-500",
     image: "/onboarding_02.png"
