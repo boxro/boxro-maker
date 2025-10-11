@@ -2390,7 +2390,7 @@ export default function GalleryPage() {
       {/* 모바일 플로팅 메뉴 */}
       <div className="fixed bottom-6 right-6 z-40 md:hidden">
         {showFloatingMenu && (
-          <div className="absolute bottom-16 right-0 flex flex-col gap-3 mb-2">
+          <div className="absolute bottom-16 right-0 flex flex-col gap-3 mb-1">
             <Link href="/draw" onClick={() => setShowFloatingMenu(false)}>
               <Button
                 className="bg-pink-500 hover:bg-pink-600 text-white transition-all duration-200 rounded-full px-6 py-3"
