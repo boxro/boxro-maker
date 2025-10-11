@@ -121,7 +121,7 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
           </div>
 
           {/* 하단 콘텐츠 영역 */}
-          <div className="p-8 flex flex-col flex-1">
+          <div className="px-8 pt-8 pb-6 flex flex-col flex-1">
             {/* 상단 콘텐츠 */}
             <div className="flex-1">
               {/* 진행 표시 */}
