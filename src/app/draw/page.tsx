@@ -4587,7 +4587,7 @@ export default function DrawPage() {
           </div>
           
           {/* Action Buttons - 카드 안에 좌우 배치 */}
-          <div className="flex items-center justify-between pt-4" style={{ touchAction: 'auto' }}>
+          <div className="flex items-center justify-between pt-3" style={{ touchAction: 'auto' }}>
             <div>
               <Button 
                 variant="outline" 
