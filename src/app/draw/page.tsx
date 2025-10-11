@@ -4950,7 +4950,7 @@ export default function DrawPage() {
           </div>
           
           {/* 3D 렌더링 영역 */}
-          <div className={`${THREE_D_RENDERER_CONTAINER} mt-2 mb-4`} style={{ aspectRatio: isClient ? (isMobile ? '4/3' : '2/1') : '2/1' }}>
+          <div className={`${THREE_D_RENDERER_CONTAINER} mt-2 mb-3`} style={{ aspectRatio: isClient ? (isMobile ? '4/3' : '2/1') : '2/1' }}>
             <ThreeDRenderer 
               ref={threeDRendererRef}
               carType={(() => {
