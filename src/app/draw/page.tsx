@@ -4660,7 +4660,7 @@ export default function DrawPage() {
                 <div className="mb-2">
                   
                   {/* 차종 선택 버튼들 */}
-                  <div className="grid grid-cols-4 md:grid-cols-7 gap-3">
+                  <div className="grid grid-cols-4 md:grid-cols-7 gap-2">
                     {[
                       // 차종 타입 정의 (이미지 사용)
                       { type: 'sedan', label: '꼬마세단', image: '/buttons/button-sedan.png' },           // 꼬마세단: sedan (기본 세단)
