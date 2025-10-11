@@ -5779,7 +5779,7 @@ export default function DrawPage() {
 
           {/* 페이징 컨트롤 */}
           {blueprintGenerated && blueprintImages.length > 1 && (
-            <div className="flex items-center justify-center gap-2 mb-4">
+            <div className="flex items-center justify-center gap-2 mb-6">
               <button
                 onClick={goToPreviousPage}
                 disabled={currentPage === 0}
@@ -5817,7 +5817,7 @@ export default function DrawPage() {
           {/* 페이지 정보 */}
 
           {/* 구분선 */}
-          <div className="border-t border-gray-300 my-6"></div>
+          <div className="border-t border-gray-300 mt-6 mb-3"></div>
 
           {/* Action Buttons - 카드 안에 배치 */}
           <div className="flex items-center justify-between">
