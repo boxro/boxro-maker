@@ -680,8 +680,7 @@ export default function AdminPage() {
       );
 
       // 성공 메시지
-      setErrorMessage('인기도 가산점이 성공적으로 저장되었습니다!');
-      setShowErrorModal(true);
+      alert('인기도 가산점이 성공적으로 저장되었습니다!');
       
       console.log('인기도 가산점 업데이트 완료:', { itemId, type, boosts });
     } catch (error: unknown) {
