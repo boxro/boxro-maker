@@ -96,7 +96,7 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
 
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-purple-900/20 via-blue-900/20 to-pink-900/20 backdrop-blur-md z-50 flex items-center justify-center p-4">
-      <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 w-full max-w-lg relative h-[700px] flex flex-col overflow-hidden">
+      <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 w-full max-w-lg relative h-[695px] flex flex-col overflow-hidden">
         {/* 닫기 버튼 */}
         <div className="absolute top-2 right-4 z-10">
           <button
