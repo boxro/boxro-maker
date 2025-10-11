@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
 export default function NotFound() {
@@ -23,13 +22,13 @@ export default function NotFound() {
             >
               이전 페이지
             </Button>
-            <Link href="/" className="flex-1">
-              <Button className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white transition-all duration-200 rounded-full"
-                style={{fontSize: '15px'}}
-              >
-                홈으로 이동
-              </Button>
-            </Link>
+            <Button
+              onClick={() => window.location.href = '/'}
+              className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white transition-all duration-200 rounded-full"
+              style={{fontSize: '15px'}}
+            >
+              홈으로 이동
+            </Button>
           </div>
         </div>
       </div>
