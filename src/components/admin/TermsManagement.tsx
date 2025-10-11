@@ -258,7 +258,7 @@ const TermsManagement: React.FC<TermsManagementProps> = () => {
                             }}
                             className="bg-green-600 hover:bg-green-700 text-white rounded-full"
                           >
-                            활성화
+                            활성화하기
                           </Button>
                         )}
                         <Button
@@ -344,7 +344,7 @@ const TermsManagement: React.FC<TermsManagementProps> = () => {
                             }}
                             className="bg-green-600 hover:bg-green-700 text-white rounded-full"
                           >
-                            활성화
+                            활성화하기
                           </Button>
                         )}
                         <Button
