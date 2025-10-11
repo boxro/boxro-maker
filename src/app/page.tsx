@@ -83,7 +83,7 @@ export default function HomePage() {
         </section>
 
         {/* Cards Section - 통합된 다단 레이아웃 */}
-        <section className="pt-6 pb-[22px] relative">
+        <section className="py-6 relative">
           <div className="max-w-6xl mx-auto px-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
 
