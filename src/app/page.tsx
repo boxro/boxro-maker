@@ -35,7 +35,7 @@ export default function HomePage() {
       <div className="pt-16 flex-1">
         {/* Hero Section */}
         <section className="relative overflow-hidden">
-          <div className="max-w-6xl mx-auto px-4" style={{ paddingTop: '-20px', paddingBottom: '54px' }}>
+          <div className="max-w-6xl mx-auto px-4" style={{ paddingTop: '-20px', paddingBottom: '22px' }}>
             <div className="text-center">
               <div className="mb-1 mt-0">
                 <div className="relative mx-auto w-[280px] h-[210px] md:w-[360px] md:h-[270px]">
