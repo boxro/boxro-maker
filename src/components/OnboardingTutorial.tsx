@@ -35,7 +35,7 @@ const tutorialSteps = [
   {
     id: 3,
     title: "박스카 꾸미기",
-    mainText: "빛나는 휠, 멋진 램프, 나만의 컬러까지 💫",
+    mainText: "빛나는 휠, 멋진 램프, 나만의 컬러까지",
     subText: "360° 돌려보며 나만의 스타일을 완성해요.",
     visual: "🎨⚡",
     bgColor: "from-green-500 to-emerald-500",
@@ -44,7 +44,7 @@ const tutorialSteps = [
   {
     id: 4,
     title: "박스카 도안 완성!",
-    mainText: "내가 그린 자동차가 도안으로 쏙! 🧩",
+    mainText: "내가 그린 자동차가 도안으로 쏙!",
     subText: "인쇄해서 조립하면 진짜 박스카 완성!",
     detailText: "친구들과 공유하고 자랑해보세요.",
     visual: "📄✂️",
@@ -96,7 +96,7 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
 
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-purple-900/20 via-blue-900/20 to-pink-900/20 backdrop-blur-md z-50 flex items-center justify-center p-4">
-      <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 max-w-md sm:max-w-lg w-full mx-2 sm:mx-6 relative h-[700px] flex flex-col overflow-hidden">
+      <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 w-full max-w-lg relative h-[700px] flex flex-col overflow-hidden">
         {/* 닫기 버튼 */}
         <div className="absolute top-2 right-4 z-10">
           <button
@@ -191,7 +191,7 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
                 >
                   {isLastStep ? (
                     <>
-                      지금 나만의 박스카를 만들어볼까요?
+                      지금 시작하기
                       <ChevronRight className="w-4 h-4 ml-1" />
                     </>
                   ) : (
