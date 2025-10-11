@@ -91,7 +91,7 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
 
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-purple-900/20 via-blue-900/20 to-pink-900/20 backdrop-blur-md z-50 flex items-center justify-center p-4">
-      <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 max-w-md w-full mx-6 relative">
+      <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 max-w-md sm:max-w-lg w-full mx-2 sm:mx-6 relative">
         {/* 닫기 버튼 */}
         <button
           onClick={handleSkip}
@@ -100,7 +100,7 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
           <X className="w-6 h-6" />
         </button>
 
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {/* 진행 표시 */}
           <div className="flex justify-center mb-6">
             <div className="flex space-x-2">
@@ -123,23 +123,23 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
             </div>
 
             {/* 제목 */}
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">
               {currentTutorial.title}
             </h2>
 
             {/* 메인 텍스트 */}
-            <p className="text-lg text-gray-800 mb-3" style={{fontSize: '18px'}}>
+            <p className="text-base sm:text-lg text-gray-800 mb-3" style={{fontSize: '16px'}}>
               {currentTutorial.mainText}
             </p>
 
             {/* 서브 텍스트 */}
-            <p className="text-gray-700 mb-2" style={{fontSize: '15px'}}>
+            <p className="text-gray-700 mb-2 text-sm sm:text-base" style={{fontSize: '14px'}}>
               {currentTutorial.subText}
             </p>
 
             {/* 디테일 텍스트 */}
             {currentTutorial.detailText && (
-              <p className="text-gray-600 text-sm">
+              <p className="text-gray-600 text-xs sm:text-sm">
                 {currentTutorial.detailText}
               </p>
             )}
@@ -155,7 +155,7 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
                   onChange={(e) => setDontShowAgain(e.target.checked)}
                   className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
                 />
-                <span style={{fontSize: '14px'}}>다시보지 않기</span>
+                <span className="text-xs sm:text-sm" style={{fontSize: '12px'}}>다시보지 않기</span>
               </label>
             </div>
           )}
@@ -163,21 +163,21 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
           {/* 버튼들 */}
           <div className="flex gap-3">
             {currentStep > 0 && (
-              <Button
-                variant="outline"
-                onClick={handlePrev}
-                className="flex-1 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-full text-gray-900"
-                style={{fontSize: '15px'}}
-              >
-                <ChevronLeft className="w-4 h-4 mr-1" />
-                이전
-              </Button>
+            <Button
+              variant="outline"
+              onClick={handlePrev}
+              className="flex-1 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-full text-gray-900 text-sm sm:text-base"
+              style={{fontSize: '14px'}}
+            >
+              <ChevronLeft className="w-4 h-4 mr-1" />
+              이전
+            </Button>
             )}
 
             <Button
               onClick={handleNext}
-              className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-full"
-              style={{fontSize: '15px'}}
+              className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-full text-sm sm:text-base"
+              style={{fontSize: '14px'}}
             >
               {isLastStep ? (
                 <>
