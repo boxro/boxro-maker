@@ -123,8 +123,8 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
           {/* 하단 콘텐츠 영역 */}
           <div className="p-8">
             {/* 진행 표시 */}
-            <div className="flex justify-center mb-4">
-              <div className="flex space-x-2">
+            <div className="flex justify-center items-center mb-4">
+              <div className="flex space-x-2 items-center">
                 {tutorialSteps.map((_, index) => (
                   <div
                     key={index}
@@ -139,8 +139,8 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
             </div>
 
             {/* 제목 */}
-            <div className="text-center mb-6">
-              <h2 className="text-[22px] font-bold text-gray-800 mb-4" style={{fontFamily: 'CookieRun, sans-serif'}}>
+            <div className="text-center mb-4">
+              <h2 className="text-[22px] font-bold text-gray-800 mb-2" style={{fontFamily: 'CookieRun, sans-serif'}}>
                 {currentTutorial.title}
               </h2>
             </div>
