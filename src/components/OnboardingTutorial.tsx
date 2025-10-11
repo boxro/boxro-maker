@@ -192,7 +192,7 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
                   {isLastStep ? (
                     <>
                       지금 시작하기
-                      <ChevronRight className="w-4 h-4 ml-0.5" />
+                      <ChevronRight className="w-4 h-4 ml-0" />
                     </>
                   ) : (
                     <>
