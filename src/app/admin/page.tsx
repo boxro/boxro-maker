@@ -117,6 +117,8 @@ export default function AdminPage() {
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [userActivities, setUserActivities] = useState<any>({});
   const [showUserModal, setShowUserModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
   const [activeActivityTab, setActiveActivityTab] = useState('작품');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
@@ -860,8 +862,8 @@ export default function AdminPage() {
     try {
       await deleteDoc(doc(db, 'homeCards', cardId));
       setHomeCardList(prev => prev.filter(card => card.id !== cardId));
-      setErrorMessage('홈카드가 삭제되었습니다.');
-      setShowErrorModal(true);
+      setSuccessMessage('홈카드가 삭제되었습니다.');
+      setShowSuccessModal(true);
     } catch (error: unknown) {
       console.error('홈카드 삭제 실패:', error);
       setErrorMessage('홈카드 삭제에 실패했습니다.');
@@ -4798,6 +4800,30 @@ export default function AdminPage() {
         onClose={() => setShowErrorModal(false)}
         message={errorMessage}
       />
+      
+      {/* 성공 모달 */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="text-center">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
+                <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">완료</h3>
+              <p className="text-sm text-gray-500 mb-4">{successMessage}</p>
+              <button
+                onClick={() => setShowSuccessModal(false)}
+                className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-2 px-4 rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200"
+                style={{fontSize: '15px'}}
+              >
+                확인
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </CommonBackground>
   );
 }
