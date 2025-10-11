@@ -141,7 +141,7 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
               </div>
 
               {/* 제목 */}
-              <div className="text-center mb-4">
+              <div className="text-center mb-2">
                 <h2 className="text-[22px] font-bold text-gray-800 mb-0" style={{fontFamily: 'CookieRun, sans-serif'}}>
                   {currentTutorial.title}
                 </h2>
