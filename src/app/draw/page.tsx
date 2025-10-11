@@ -4720,7 +4720,7 @@ export default function DrawPage() {
                   </div>
                   
                   {/* Action Buttons - 카드 안에 좌우 배치 */}
-                  <div className="pt-4">
+                  <div className="pt-3">
                     <div className="flex items-center justify-between">
                       <Button 
                         variant="outline" 
