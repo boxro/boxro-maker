@@ -123,13 +123,15 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
           {/* 하단 콘텐츠 영역 */}
           <div className="p-8">
             {/* 진행 표시 */}
-            <div className="flex justify-center mb-6">
+            <div className="flex justify-center mb-4">
               <div className="flex space-x-2">
                 {tutorialSteps.map((_, index) => (
                   <div
                     key={index}
-                    className={`w-2 h-2 rounded-full transition-colors ${
-                      index === currentStep ? 'bg-purple-500' : 'bg-gray-300'
+                    className={`rounded-full transition-all duration-200 ${
+                      index === currentStep 
+                        ? 'w-3 h-3 bg-purple-500' 
+                        : 'w-2 h-2 bg-gray-300'
                     }`}
                   />
                 ))}
