@@ -20,7 +20,7 @@ const tutorialSteps = [
     detailText: "색깔 펜으로 그리고, 지우개로 수정할 수 있어요.",
     visual: "✏️🎨",
     bgColor: "from-blue-500 to-cyan-500",
-    image: "/onboarding_1.png"
+    image: "/onboarding_01.png"
   },
   {
     id: 2,
@@ -29,7 +29,8 @@ const tutorialSteps = [
     subText: "AI가 그림을 분석해 멋진 박스카로 변신시켜요.",
     detailText: "마음에 안 들면 다른 차종으로 쓱 바꿔보세요!",
     visual: "🔄✨",
-    bgColor: "from-purple-500 to-pink-500"
+    bgColor: "from-purple-500 to-pink-500",
+    image: "/onboarding_02.png"
   },
   {
     id: 3,
@@ -37,7 +38,8 @@ const tutorialSteps = [
     mainText: "빛나는 휠, 멋진 램프, 나만의 컬러까지 💫",
     subText: "360° 돌려보며 나만의 스타일을 완성해요.",
     visual: "🎨⚡",
-    bgColor: "from-green-500 to-emerald-500"
+    bgColor: "from-green-500 to-emerald-500",
+    image: "/onboarding_03.png"
   },
   {
     id: 4,
@@ -46,7 +48,8 @@ const tutorialSteps = [
     subText: "인쇄해서 조립하면 진짜 박스카 완성!",
     detailText: "친구들과 공유하고 자랑해보세요.",
     visual: "📄✂️",
-    bgColor: "from-orange-500 to-red-500"
+    bgColor: "from-orange-500 to-red-500",
+    image: "/onboarding_04.png"
   }
 ];
 
@@ -108,10 +111,11 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
           {/* 상단 이미지 영역 */}
           <div className="relative w-full h-[230px] sm:h-64 md:h-80">
             <Image
-              src={currentTutorial.image || "/onboarding_1.png"}
+              src={currentTutorial.image || "/onboarding_01.png"}
               alt={`온보딩 ${currentStep + 1}단계`}
               fill
               className="object-cover"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               priority
             />
           </div>
