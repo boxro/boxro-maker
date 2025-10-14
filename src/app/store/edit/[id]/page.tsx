@@ -645,7 +645,7 @@ export default function EditStoryPage() {
                       type="file"
                       accept="image/*"
                       onChange={handleImageUpload}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] bg-white"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] bg-white"
                     />
                     {thumbnail && (
                       <button
@@ -751,7 +751,7 @@ export default function EditStoryPage() {
                       type="file"
                       accept="image/*"
                       onChange={handleViewTopImageUpload}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] bg-white"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] bg-white"
                     />
                     {viewTopImage && (
                       <button
@@ -1031,7 +1031,7 @@ export default function EditStoryPage() {
                                 value={homeCardBackgroundColor || '#3b82f6'}
                                 onChange={(e) => setHomeCardBackgroundColor(e.target.value)}
                                 placeholder="#3b82f6"
-                                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] bg-white"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] bg-white"
                               />
                               <button
                                 type="button"
@@ -1057,7 +1057,7 @@ export default function EditStoryPage() {
                               type="file" 
                               accept="image/*"
                               onChange={handleCardThumbnailUpload}
-                              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] bg-white"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] bg-white"
                               required={showOnHome}
                             />
                             {cardThumbnail && (
