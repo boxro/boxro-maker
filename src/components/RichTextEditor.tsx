@@ -382,6 +382,16 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
         return cleaned;
       };
 
+      // TipTap의 내장 붙여넣기 처리 비활성화
+      editor.setOptions({
+        editorProps: {
+          handlePaste: (view, event, slice) => {
+            console.log('🔍 TipTap 내장 붙여넣기 차단');
+            return true; // 내장 붙여넣기 처리 차단
+          }
+        }
+      });
+
       // 복사/붙여넣기 이벤트 핸들러 추가
       const handlePaste = (event: ClipboardEvent) => {
         console.log('🔍 붙여넣기 이벤트 감지:', event);
@@ -389,6 +399,7 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
         // 기본 붙여넣기 동작을 완전히 차단하고 커스텀 처리
         event.preventDefault();
         event.stopPropagation();
+        event.stopImmediatePropagation();
         
         const clipboardData = event.clipboardData;
         if (clipboardData) {
