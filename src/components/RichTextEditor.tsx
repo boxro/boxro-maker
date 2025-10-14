@@ -339,6 +339,49 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
       },
     },
     onCreate: ({ editor }) => {
+      // 붙여넣기된 HTML을 정리하는 함수
+      const cleanPastedHtml = (html: string): string => {
+        // 1. 스크립트 태그 제거
+        let cleaned = html.replace(/<script[^>]*>.*?<\/script>/gi, '');
+        
+        // 2. 줄 간격 관련 스타일 제거 (line-height, margin, padding)
+        cleaned = cleaned.replace(/line-height\s*:\s*[^;]+;?/gi, '');
+        cleaned = cleaned.replace(/margin\s*:\s*[^;]+;?/gi, '');
+        cleaned = cleaned.replace(/padding\s*:\s*[^;]+;?/gi, '');
+        cleaned = cleaned.replace(/margin-top\s*:\s*[^;]+;?/gi, '');
+        cleaned = cleaned.replace(/margin-bottom\s*:\s*[^;]+;?/gi, '');
+        cleaned = cleaned.replace(/padding-top\s*:\s*[^;]+;?/gi, '');
+        cleaned = cleaned.replace(/padding-bottom\s*:\s*[^;]+;?/gi, '');
+        
+        // 3. 불필요한 div 태그 정리
+        cleaned = cleaned.replace(/<div[^>]*>\s*<\/div>/gi, '');
+        cleaned = cleaned.replace(/<div[^>]*>\s*<br\s*\/?>\s*<\/div>/gi, '<br>');
+        
+        // 4. 연속된 br 태그 정리 (최대 2개까지만)
+        cleaned = cleaned.replace(/(<br\s*\/?>){3,}/gi, '<br><br>');
+        
+        // 5. 빈 p 태그 정리
+        cleaned = cleaned.replace(/<p[^>]*>\s*<\/p>/gi, '');
+        cleaned = cleaned.replace(/<p[^>]*>\s*<br\s*\/?>\s*<\/p>/gi, '<br>');
+        
+        // 6. 스타일 속성에서 불필요한 속성 제거
+        cleaned = cleaned.replace(/style\s*=\s*["'][^"']*["']/gi, (match) => {
+          const styleContent = match.replace(/style\s*=\s*["']([^"']*)["']/gi, '$1');
+          const cleanStyle = styleContent
+            .split(';')
+            .filter(style => {
+              const prop = style.split(':')[0]?.trim().toLowerCase();
+              return !['line-height', 'margin', 'padding', 'margin-top', 'margin-bottom', 'padding-top', 'padding-bottom'].includes(prop);
+            })
+            .join(';');
+          
+          return cleanStyle ? `style="${cleanStyle}"` : '';
+        });
+        
+        console.log('🧹 HTML 정리 완료:', { original: html.length, cleaned: cleaned.length });
+        return cleaned;
+      };
+
       // 복사/붙여넣기 이벤트 핸들러 추가
       const handlePaste = (event: ClipboardEvent) => {
         console.log('🔍 붙여넣기 이벤트 감지:', event);
@@ -357,7 +400,7 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
           // HTML이 있는 경우 HTML로 붙여넣기, 그렇지 않으면 텍스트로 붙여넣기
           if (html && html.trim()) {
             // HTML 내용을 정리하여 붙여넣기
-            const cleanHtml = html.replace(/<script[^>]*>.*?<\/script>/gi, '');
+            const cleanHtml = cleanPastedHtml(html);
             editor.commands.insertContent(cleanHtml);
           } else if (text && text.trim()) {
             // 텍스트 내용을 그대로 붙여넣기
