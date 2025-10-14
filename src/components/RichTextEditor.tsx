@@ -12,7 +12,6 @@ import { Link } from '@tiptap/extension-link';
 import { Image as TiptapImage } from '@tiptap/extension-image';
 import { Extension } from '@tiptap/core';
 import { Node } from '@tiptap/core';
-import { UrlPreviewExtension } from './UrlPreviewExtension';
 import { 
   Bold, 
   Italic, 
@@ -218,7 +217,6 @@ export default function RichTextEditor({ content, onChange, placeholder = "ë‚´ìš
         inline: false,
         allowBase64: true,
       }),
-      UrlPreviewExtension,
     ],
     content,
     onUpdate: ({ editor }) => {
