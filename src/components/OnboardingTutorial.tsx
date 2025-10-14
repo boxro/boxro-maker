@@ -81,10 +81,16 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete, showDo
 
   const handleComplete = () => {
     // 온보딩 완료 상태를 항상 저장 (다시보지 않기 체크 여부와 관계없이)
-    const userId = localStorage.getItem('current_user_id');
-    if (userId) {
-      localStorage.setItem(`onboarding_completed_${userId}`, 'true');
-      console.log('✅ 온보딩 완료 상태 저장됨:', userId);
+    try {
+      const userId = localStorage.getItem('current_user_id');
+      if (userId) {
+        localStorage.setItem(`onboarding_completed_${userId}`, 'true');
+        console.log('✅ 온보딩 완료 상태 저장됨:', userId);
+      } else {
+        console.warn('⚠️ current_user_id가 없어서 온보딩 완료 상태를 저장할 수 없음');
+      }
+    } catch (error) {
+      console.error('❌ localStorage 저장 실패:', error);
     }
     
     onComplete();

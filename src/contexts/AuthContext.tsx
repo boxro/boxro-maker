@@ -172,12 +172,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         // 사용자별 온보딩 튜토리얼 표시 여부 확인 (최초 로그인 시에만)
         const userId = user.uid;
-        localStorage.setItem('current_user_id', userId);
-        const onboardingCompleted = localStorage.getItem(`onboarding_completed_${userId}`);
         
-        // 온보딩이 완료되지 않았고, 현재 showOnboarding이 false인 경우에만 true로 설정
-        if (!onboardingCompleted && !showOnboarding) {
-          setShowOnboarding(true);
+        // localStorage 사용 가능 여부 확인
+        try {
+          localStorage.setItem('current_user_id', userId);
+          const onboardingCompleted = localStorage.getItem(`onboarding_completed_${userId}`);
+          
+          console.log('🔍 온보딩 상태 확인:', { 
+            userId, 
+            onboardingCompleted, 
+            showOnboarding,
+            localStorageAvailable: true 
+          });
+          
+          // 온보딩이 완료되지 않았고, 현재 showOnboarding이 false인 경우에만 true로 설정
+          if (!onboardingCompleted && !showOnboarding) {
+            console.log('✅ 온보딩 스플래시 표시 설정');
+            setShowOnboarding(true);
+          } else {
+            console.log('⏭️ 온보딩 스플래시 건너뜀:', { 
+              reason: onboardingCompleted ? '이미 완료됨' : '이미 표시 중' 
+            });
+          }
+        } catch (error) {
+          console.warn('⚠️ localStorage 사용 불가, 온보딩 스플래시 표시:', error);
+          // localStorage를 사용할 수 없는 경우 온보딩 스플래시 표시
+          if (!showOnboarding) {
+            setShowOnboarding(true);
+          }
         }
       }
       
