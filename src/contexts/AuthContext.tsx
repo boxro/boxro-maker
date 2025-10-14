@@ -170,11 +170,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         await saveUserToFirestore(user);
         
-        // 사용자별 온보딩 튜토리얼 표시 여부 확인
+        // 사용자별 온보딩 튜토리얼 표시 여부 확인 (최초 로그인 시에만)
         const userId = user.uid;
         localStorage.setItem('current_user_id', userId);
         const onboardingCompleted = localStorage.getItem(`onboarding_completed_${userId}`);
-        if (!onboardingCompleted) {
+        
+        // 온보딩이 완료되지 않았고, 현재 showOnboarding이 false인 경우에만 true로 설정
+        if (!onboardingCompleted && !showOnboarding) {
           setShowOnboarding(true);
         }
       }
