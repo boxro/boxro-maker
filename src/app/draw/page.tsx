@@ -69,7 +69,7 @@ const PRIMARY_BUTTON_STYLES = "bg-gradient-to-r from-purple-500 to-pink-500 hove
 const PRIMARY_BUTTON_STYLES_SMALL = "bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-6 py-2";
 
 export default function DrawPage() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState<'draw' | 'preview' | 'decorate' | 'export'>('draw');
   const [currentTool, setCurrentTool] = useState<DrawingTool>('pen');
@@ -140,12 +140,19 @@ export default function DrawPage() {
 
   // 스플래시 화면 표시 로직 (로그인하지 않은 사용자에게만)
   useEffect(() => {
-    if (isClient && !user) {
+    // 로딩 중이거나 클라이언트가 아닐 때는 스플래시를 표시하지 않음
+    if (!isClient || loading) {
+      setShowSplashScreen(false);
+      return;
+    }
+    
+    // 로딩이 완료된 후에만 스플래시 표시 여부 결정
+    if (!user) {
       setShowSplashScreen(true);
-    } else if (user) {
+    } else {
       setShowSplashScreen(false);
     }
-  }, [isClient, user]);
+  }, [isClient, user, loading]);
 
   // 로그인 모달 열기
   const openLoginModal = (type: 'share' | 'download') => {
