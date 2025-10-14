@@ -429,7 +429,7 @@ export default function WriteStoryPage() {
                       type="file"
                       accept="image/*"
                       onChange={handleImageUpload}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] bg-white"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] bg-white"
                     />
                     {thumbnail && (
                       <button
@@ -439,7 +439,7 @@ export default function WriteStoryPage() {
                           setThumbnail('');
                           console.log('썸네일 삭제 후:', '');
                         }}
-                        className="px-3 py-2 bg-sky-500 hover:bg-sky-600 text-white text-sm rounded-md transition-colors"
+                        className="px-3 py-2 bg-sky-500 hover:bg-sky-600 text-white text-sm rounded-md transition-colors whitespace-nowrap flex-shrink-0"
                       >
                         삭제
                       </button>
@@ -527,7 +527,7 @@ export default function WriteStoryPage() {
                       type="file"
                       accept="image/*"
                       onChange={handleViewTopImageUpload}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] bg-white"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] bg-white"
                     />
                     {viewTopImage && (
                       <button
@@ -537,7 +537,7 @@ export default function WriteStoryPage() {
                           setViewTopImage('');
                           console.log('뷰 상단 이미지 삭제 후:', '');
                         }}
-                        className="px-3 py-2 bg-sky-500 hover:bg-sky-600 text-white text-sm rounded-md transition-colors"
+                        className="px-3 py-2 bg-sky-500 hover:bg-sky-600 text-white text-sm rounded-md transition-colors whitespace-nowrap flex-shrink-0"
                       >
                         삭제
                       </button>
@@ -807,7 +807,7 @@ export default function WriteStoryPage() {
                                 value={homeCardBackgroundColor || '#3b82f6'}
                                 onChange={(e) => setHomeCardBackgroundColor(e.target.value)}
                                 placeholder="#3b82f6"
-                                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] bg-white"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] bg-white"
                               />
                               <button
                                 type="button"
@@ -833,7 +833,7 @@ export default function WriteStoryPage() {
                               type="file" 
                               accept="image/*"
                               onChange={handleCardThumbnailUpload}
-                              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] bg-white"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] bg-white"
                               required={showOnHome}
                             />
                             {cardThumbnail && (
@@ -844,7 +844,7 @@ export default function WriteStoryPage() {
                                   setCardThumbnail('');
                                   console.log('카드 썸네일 삭제 후:', '');
                                 }}
-                                className="px-3 py-2 bg-sky-500 hover:bg-sky-600 text-white text-sm rounded-md transition-colors"
+                                className="px-3 py-2 bg-sky-500 hover:bg-sky-600 text-white text-sm rounded-md transition-colors whitespace-nowrap flex-shrink-0"
                               >
                                 삭제
                               </button>
