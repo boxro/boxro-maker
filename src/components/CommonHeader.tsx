@@ -20,6 +20,7 @@ import {
   HelpCircle
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import OnboardingTutorial from "@/components/OnboardingTutorial";
 
 interface CommonHeaderProps {
   className?: string;
@@ -28,6 +29,7 @@ interface CommonHeaderProps {
 export default function CommonHeader({ className = "" }: CommonHeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [showHelpOnboarding, setShowHelpOnboarding] = useState(false);
   const { user, logout, setShowOnboarding } = useAuth();
 
   // 관리자 권한 체크
@@ -171,7 +173,7 @@ export default function CommonHeader({ className = "" }: CommonHeaderProps) {
                     <button 
                       onClick={() => {
                         setIsMenuOpen(false);
-                        setShowOnboarding(true);
+                        setShowHelpOnboarding(true);
                       }} 
                       className="block w-full text-left px-6 py-2 rounded-full transition-colors text-gray-900 hover:bg-blue-100"
                     >
@@ -229,6 +231,14 @@ export default function CommonHeader({ className = "" }: CommonHeaderProps) {
           </div>
         </div>
       </div>
+      
+      {/* 도움말용 온보딩 (다시보지 않기 체크박스 없음) */}
+      <OnboardingTutorial
+        isOpen={showHelpOnboarding}
+        onClose={() => setShowHelpOnboarding(false)}
+        onComplete={() => setShowHelpOnboarding(false)}
+        showDontShowAgain={false}
+      />
     </header>
   );
 }

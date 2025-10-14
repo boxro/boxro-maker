@@ -9,6 +9,7 @@ interface OnboardingTutorialProps {
   isOpen: boolean;
   onClose: () => void;
   onComplete: () => void;
+  showDontShowAgain?: boolean;
 }
 
 const tutorialSteps = [
@@ -53,7 +54,7 @@ const tutorialSteps = [
   }
 ];
 
-export default function OnboardingTutorial({ isOpen, onClose, onComplete }: OnboardingTutorialProps) {
+export default function OnboardingTutorial({ isOpen, onClose, onComplete, showDontShowAgain = true }: OnboardingTutorialProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [dontShowAgain, setDontShowAgain] = useState(false);
 
@@ -207,17 +208,19 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete }: Onbo
                 </Button>
               </div>
 
-              {/* 하단 체크박스 (모든 단계에서 표시) */}
-              <div>
-                <label className="flex items-center justify-center space-x-2 text-gray-700">
-                  <input
-                    type="checkbox"
-                    checked={dontShowAgain}
-                    onChange={(e) => setDontShowAgain(e.target.checked)}
-                    className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                  />
+              {/* 하단 체크박스 (조건부 표시, 레이아웃 유지) */}
+              <div className="h-6 flex items-center justify-center">
+                {showDontShowAgain && (
+                  <label className="flex items-center justify-center space-x-2 text-gray-700">
+                    <input
+                      type="checkbox"
+                      checked={dontShowAgain}
+                      onChange={(e) => setDontShowAgain(e.target.checked)}
+                      className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                    />
                     <span style={{fontSize: '13px'}}>다시보지 않기</span>
-                </label>
+                  </label>
+                )}
               </div>
             </div>
           </div>

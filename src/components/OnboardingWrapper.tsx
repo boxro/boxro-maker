@@ -22,6 +22,7 @@ export default function OnboardingWrapper({ children }: OnboardingWrapperProps) 
         isOpen={showOnboarding}
         onClose={() => setShowOnboarding(false)}
         onComplete={handleOnboardingComplete}
+        showDontShowAgain={true}
       />
     </>
   );
