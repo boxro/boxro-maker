@@ -12,6 +12,7 @@ import { Link } from '@tiptap/extension-link';
 import { Image as TiptapImage } from '@tiptap/extension-image';
 import { Extension } from '@tiptap/core';
 import { Node } from '@tiptap/core';
+import { UrlPreviewExtension } from './UrlPreviewExtension';
 import { 
   Bold, 
   Italic, 
@@ -217,6 +218,7 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
         inline: false,
         allowBase64: true,
       }),
+      UrlPreviewExtension,
     ],
     content,
     onUpdate: ({ editor }) => {
@@ -339,6 +341,55 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
       },
     },
     onCreate: ({ editor }) => {
+      // URL 감지 및 미리보기 생성 함수
+      const detectAndCreateUrlPreview = (text: string) => {
+        // URL 패턴 감지 (YouTube, Twitter, Instagram, 일반 URL)
+        const urlPattern = /(https?:\/\/[^\s]+)/g;
+        const urls = text.match(urlPattern);
+        
+        if (urls && urls.length > 0) {
+          const url = urls[0];
+          
+          // YouTube, Twitter, Instagram, 또는 일반 URL인지 확인
+          if (url.includes('youtube.com') || url.includes('youtu.be') || 
+              url.includes('twitter.com') || url.includes('x.com') || 
+              url.includes('instagram.com') || 
+              url.includes('facebook.com') || url.includes('linkedin.com') ||
+              url.includes('github.com') || url.includes('stackoverflow.com')) {
+            
+            // 현재 커서 위치에서 URL 텍스트 제거
+            const { from, to } = editor.state.selection;
+            const textBefore = editor.state.doc.textBetween(0, from);
+            const textAfter = editor.state.doc.textBetween(to, editor.state.doc.content.size);
+            
+            // URL이 포함된 텍스트를 찾아서 제거
+            const fullText = textBefore + textAfter;
+            const urlIndex = fullText.lastIndexOf(url);
+            
+            if (urlIndex !== -1) {
+              // URL 앞의 텍스트와 뒤의 텍스트를 분리
+              const beforeUrl = fullText.substring(0, urlIndex);
+              const afterUrl = fullText.substring(urlIndex + url.length);
+              
+              // 에디터 내용을 URL 앞까지로 설정
+              editor.commands.setContent(beforeUrl);
+              
+              // URL 미리보기 추가
+              editor.commands.setUrlPreview(url);
+              
+              // URL 뒤의 텍스트가 있으면 추가
+              if (afterUrl.trim()) {
+                editor.commands.insertContent(afterUrl);
+              }
+              
+              console.log('🔗 URL 미리보기 생성:', url);
+              return true;
+            }
+          }
+        }
+        return false;
+      };
+
       // 붙여넣기된 HTML을 정리하는 함수
       const cleanPastedHtml = (html: string): string => {
         // 1. 스크립트 태그 제거
@@ -430,17 +481,34 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
         // 기본 잘라내기 동작을 허용
       };
 
+      // 키보드 이벤트 핸들러 (URL 감지용)
+      const handleKeyDown = (event: KeyboardEvent) => {
+        // Enter 키가 눌렸을 때 URL 감지
+        if (event.key === 'Enter') {
+          const { from } = editor.state.selection;
+          const textBefore = editor.state.doc.textBetween(0, from);
+          
+          // URL 감지 및 미리보기 생성
+          if (detectAndCreateUrlPreview(textBefore)) {
+            event.preventDefault();
+            return;
+          }
+        }
+      };
+
       // 에디터 DOM 요소에 이벤트 리스너 추가
       const editorElement = editor.view.dom;
       editorElement.addEventListener('paste', handlePaste);
       editorElement.addEventListener('copy', handleCopy);
       editorElement.addEventListener('cut', handleCut);
+      editorElement.addEventListener('keydown', handleKeyDown);
 
       // 에디터가 파괴될 때 이벤트 리스너 제거
       return () => {
         editorElement.removeEventListener('paste', handlePaste);
         editorElement.removeEventListener('copy', handleCopy);
         editorElement.removeEventListener('cut', handleCut);
+        editorElement.removeEventListener('keydown', handleKeyDown);
       };
     },
     immediatelyRender: false,
