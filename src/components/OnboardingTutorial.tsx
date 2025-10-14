@@ -79,18 +79,45 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete, showDo
     }
   };
 
-  const handleComplete = () => {
-    // 온보딩 완료 상태를 항상 저장 (다시보지 않기 체크 여부와 관계없이)
+  const handleComplete = async () => {
+    // 온보딩 완료 상태를 Firestore에 저장
     try {
+      const { doc, setDoc } = await import('firebase/firestore');
+      const { db } = await import('@/lib/firebase');
+      
       const userId = localStorage.getItem('current_user_id');
       if (userId) {
-        localStorage.setItem(`onboarding_completed_${userId}`, 'true');
-        console.log('✅ 온보딩 완료 상태 저장됨:', userId);
+        // Firestore에 온보딩 완료 상태 저장
+        await setDoc(doc(db, 'users', userId), {
+          onboardingCompleted: true,
+          onboardingCompletedAt: new Date().toISOString()
+        }, { merge: true });
+        
+        console.log('✅ 온보딩 완료 상태 Firestore에 저장됨:', userId);
+        
+        // localStorage에도 백업 저장
+        try {
+          localStorage.setItem(`onboarding_completed_${userId}`, 'true');
+          console.log('✅ localStorage 백업 저장 완료');
+        } catch (localStorageError) {
+          console.warn('⚠️ localStorage 백업 저장 실패:', localStorageError);
+        }
       } else {
         console.warn('⚠️ current_user_id가 없어서 온보딩 완료 상태를 저장할 수 없음');
       }
     } catch (error) {
-      console.error('❌ localStorage 저장 실패:', error);
+      console.error('❌ Firestore 저장 실패, localStorage로 폴백:', error);
+      
+      // Firestore 저장 실패 시 localStorage로 폴백
+      try {
+        const userId = localStorage.getItem('current_user_id');
+        if (userId) {
+          localStorage.setItem(`onboarding_completed_${userId}`, 'true');
+          console.log('✅ localStorage 폴백 저장 완료');
+        }
+      } catch (localStorageError) {
+        console.error('❌ localStorage 폴백 저장도 실패:', localStorageError);
+      }
     }
     
     onComplete();
