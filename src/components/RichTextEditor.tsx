@@ -338,6 +338,56 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
         return false;
       },
     },
+    onCreate: ({ editor }) => {
+      // 복사/붙여넣기 이벤트 핸들러 추가
+      const handlePaste = (event: ClipboardEvent) => {
+        console.log('🔍 붙여넣기 이벤트 감지:', event);
+        
+        // 기본 붙여넣기 동작을 허용하되, 필요시 추가 처리
+        const clipboardData = event.clipboardData;
+        if (clipboardData) {
+          const text = clipboardData.getData('text/plain');
+          const html = clipboardData.getData('text/html');
+          
+          console.log('🔍 붙여넣기 데이터:', { text, html });
+          
+          // HTML이 있는 경우 HTML로 붙여넣기, 그렇지 않으면 텍스트로 붙여넣기
+          if (html && html.trim()) {
+            // HTML 내용을 정리하여 붙여넣기
+            const cleanHtml = html.replace(/<script[^>]*>.*?<\/script>/gi, '');
+            editor.commands.insertContent(cleanHtml);
+            event.preventDefault();
+          } else if (text && text.trim()) {
+            // 텍스트 내용을 그대로 붙여넣기
+            editor.commands.insertContent(text);
+            event.preventDefault();
+          }
+        }
+      };
+
+      const handleCopy = (event: ClipboardEvent) => {
+        console.log('🔍 복사 이벤트 감지:', event);
+        // 기본 복사 동작을 허용
+      };
+
+      const handleCut = (event: ClipboardEvent) => {
+        console.log('🔍 잘라내기 이벤트 감지:', event);
+        // 기본 잘라내기 동작을 허용
+      };
+
+      // 에디터 DOM 요소에 이벤트 리스너 추가
+      const editorElement = editor.view.dom;
+      editorElement.addEventListener('paste', handlePaste);
+      editorElement.addEventListener('copy', handleCopy);
+      editorElement.addEventListener('cut', handleCut);
+
+      // 에디터가 파괴될 때 이벤트 리스너 제거
+      return () => {
+        editorElement.removeEventListener('paste', handlePaste);
+        editorElement.removeEventListener('copy', handleCopy);
+        editorElement.removeEventListener('cut', handleCut);
+      };
+    },
     immediatelyRender: false,
   });
 
