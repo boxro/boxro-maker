@@ -519,7 +519,7 @@ export default function WriteStoryPage() {
                           setThumbnail('');
                           console.log('썸네일 삭제 후:', '');
                         }}
-                        className="px-3 py-2 bg-sky-500 hover:bg-sky-600 text-white text-sm rounded-md transition-colors"
+                        className="px-3 py-2 bg-sky-500 hover:bg-sky-600 text-white text-sm rounded-md transition-colors whitespace-nowrap flex-shrink-0"
                       >
                         삭제
                       </button>
@@ -625,7 +625,7 @@ export default function WriteStoryPage() {
                           setViewTopImage('');
                           console.log('뷰 상단 이미지 삭제 후:', '');
                         }}
-                        className="px-3 py-2 bg-sky-500 hover:bg-sky-600 text-white text-sm rounded-md transition-colors"
+                        className="px-3 py-2 bg-sky-500 hover:bg-sky-600 text-white text-sm rounded-md transition-colors whitespace-nowrap flex-shrink-0"
                       >
                         삭제
                       </button>
