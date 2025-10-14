@@ -10,6 +10,7 @@ interface OnboardingTutorialProps {
   onClose: () => void;
   onComplete: () => void;
   showDontShowAgain?: boolean;
+  redirectTo?: string;
 }
 
 const tutorialSteps = [
@@ -54,7 +55,7 @@ const tutorialSteps = [
   }
 ];
 
-export default function OnboardingTutorial({ isOpen, onClose, onComplete, showDontShowAgain = true }: OnboardingTutorialProps) {
+export default function OnboardingTutorial({ isOpen, onClose, onComplete, showDontShowAgain = true, redirectTo }: OnboardingTutorialProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [dontShowAgain, setDontShowAgain] = useState(false);
 
@@ -88,6 +89,11 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete, showDo
     }
     onComplete();
     onClose();
+    
+    // 리다이렉트가 지정된 경우 해당 페이지로 이동
+    if (redirectTo) {
+      window.location.href = redirectTo;
+    }
   };
 
   const handleSkip = () => {

@@ -238,6 +238,7 @@ export default function CommonHeader({ className = "" }: CommonHeaderProps) {
         onClose={() => setShowHelpOnboarding(false)}
         onComplete={() => setShowHelpOnboarding(false)}
         showDontShowAgain={false}
+        redirectTo="/draw"
       />
     </header>
   );

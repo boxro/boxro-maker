@@ -23,6 +23,7 @@ export default function OnboardingWrapper({ children }: OnboardingWrapperProps) 
         onClose={() => setShowOnboarding(false)}
         onComplete={handleOnboardingComplete}
         showDontShowAgain={true}
+        redirectTo="/"
       />
     </>
   );
