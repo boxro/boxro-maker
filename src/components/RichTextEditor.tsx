@@ -343,7 +343,10 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
       const handlePaste = (event: ClipboardEvent) => {
         console.log('🔍 붙여넣기 이벤트 감지:', event);
         
-        // 기본 붙여넣기 동작을 허용하되, 필요시 추가 처리
+        // 기본 붙여넣기 동작을 완전히 차단하고 커스텀 처리
+        event.preventDefault();
+        event.stopPropagation();
+        
         const clipboardData = event.clipboardData;
         if (clipboardData) {
           const text = clipboardData.getData('text/plain');
@@ -356,11 +359,9 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
             // HTML 내용을 정리하여 붙여넣기
             const cleanHtml = html.replace(/<script[^>]*>.*?<\/script>/gi, '');
             editor.commands.insertContent(cleanHtml);
-            event.preventDefault();
           } else if (text && text.trim()) {
             // 텍스트 내용을 그대로 붙여넣기
             editor.commands.insertContent(text);
-            event.preventDefault();
           }
         }
       };
