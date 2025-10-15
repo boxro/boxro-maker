@@ -18,7 +18,9 @@ export default function CommonBackground({
       className={`min-h-screen py-[52px] md:py-[68px] ${className}`}
       style={{ 
         background: customBackground || defaultBackground,
-        backgroundAttachment: 'fixed'
+        backgroundAttachment: 'fixed',
+        minHeight: '100vh',
+        minHeight: '100dvh'
       }}
     >
       {children}

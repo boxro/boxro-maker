@@ -116,9 +116,27 @@
   * {
     border-color: hsl(var(--border));
   }
-  body {
+  html, body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  
+  /* 모바일 화면 표시 문제 해결 */
+  @media screen and (max-width: 768px) {
+    html, body {
+      min-height: 100vh;
+      min-height: 100dvh;
+      height: auto;
+      overflow-x: hidden;
+    }
+    
+    #__next {
+      min-height: 100vh;
+      min-height: 100dvh;
+      height: auto;
+    }
   }
 }
 
