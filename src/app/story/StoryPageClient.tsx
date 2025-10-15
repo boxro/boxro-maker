@@ -14,6 +14,7 @@ import { Plus, Menu, X, Edit, Trash2, MoreVertical, BookOpen, Share2, MessageCir
 import CommonHeader from "@/components/CommonHeader";
 import PageHeader from "@/components/PageHeader";
 import CommonBackground from "@/components/CommonBackground";
+import BannerDisplay from "@/components/BannerDisplay";
 
 interface StoryArticle {
   id: string;
@@ -848,6 +849,9 @@ export default function StoryPageClient() {
           </Card>
         ) : (
           <div className="columns-1 md:columns-2 lg:columns-3 gap-3 space-y-3">
+            {/* 배너 표시 - 카드들과 섞여서 표시 */}
+            <BannerDisplay currentPage="story" />
+            
             {articles.map((article) => (
               <div 
                 key={article.id} 

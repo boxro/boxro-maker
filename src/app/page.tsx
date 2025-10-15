@@ -85,7 +85,7 @@ export default function HomePage() {
         {/* Cards Section - 통합된 다단 레이아웃 */}
         <section className="py-6 relative">
           <div className="max-w-6xl mx-auto px-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="columns-1 md:columns-2 lg:columns-3 gap-3 space-y-3">
 
               {/* 박스카 이야기 카드들 */}
               <HomeStoryCards />
