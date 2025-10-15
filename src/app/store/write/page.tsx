@@ -225,15 +225,19 @@ export default function WriteStoryPage() {
         const format = hasTransparency ? 'image/png' : 'image/jpeg';
         let startQuality = hasTransparency ? 0.6 : 0.5; // 더 강력한 압축
         
-        // 파일 크기가 500KB 이하가 될 때까지 품질을 낮춤
+        // 파일 크기가 300KB 이하가 될 때까지 품질을 낮춤 (더 안전한 제한)
         const compressImageRecursive = (currentQuality: number): string => {
           const dataUrl = canvas.toDataURL(format, currentQuality);
-          const sizeKB = (dataUrl.length * 0.75) / 1024; // base64 크기를 KB로 변환
+          // base64 크기 계산: base64는 원본보다 약 33% 크므로 0.75로 나눔
+          const sizeKB = (dataUrl.length * 0.75) / 1024;
           
-          if (sizeKB > 500 && currentQuality > 0.1) {
-            return compressImageRecursive(currentQuality - 0.1);
+          console.log(`압축 시도: 품질 ${currentQuality.toFixed(1)}, 크기 ${sizeKB.toFixed(1)}KB`);
+          
+          if (sizeKB > 300 && currentQuality > 0.05) {
+            return compressImageRecursive(currentQuality - 0.05);
           }
           
+          console.log(`최종 압축: 품질 ${currentQuality.toFixed(1)}, 크기 ${sizeKB.toFixed(1)}KB`);
           return dataUrl;
         };
         
