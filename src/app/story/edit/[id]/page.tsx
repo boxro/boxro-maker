@@ -296,12 +296,42 @@ export default function EditStoryPage() {
     const file = event.target.files?.[0];
     if (file) {
       try {
-        // 이미지 압축 (최대 1200px, 품질 85%)
+        console.log('📁 파일 정보:', {
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          lastModified: file.lastModified
+        });
+        
+        // 파일 형식 검증
+        if (!file.type.startsWith('image/')) {
+          throw new Error('이미지 파일만 업로드할 수 있습니다.');
+        }
+        
+        // 지원되는 이미지 형식 확인
+        const supportedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+        if (!supportedTypes.includes(file.type.toLowerCase())) {
+          throw new Error(`지원되지 않는 이미지 형식입니다. 지원 형식: ${supportedTypes.join(', ')}`);
+        }
+        
+        // 이미지 압축 (최대 800px, 품질 60%)
         const compressedImage = await compressImage(file, 800, 0.6);
+        
+        console.log('✅ 압축 완료:', {
+          originalSize: file.size,
+          compressedSize: compressedImage.length,
+          compressionRatio: ((file.size - compressedImage.length) / file.size * 100).toFixed(1) + '%'
+        });
+        
         setViewTopImage(compressedImage);
       } catch (error) {
-        console.error('이미지 압축 실패:', error);
-        setErrorMessage('이미지 업로드 중 오류가 발생했습니다.');
+        console.error('❌ 이미지 압축 실패:', error);
+        console.error('파일 정보:', {
+          name: file.name,
+          size: file.size,
+          type: file.type
+        });
+        setErrorMessage(`이미지 업로드 중 오류가 발생했습니다: ${error.message}`);
         setShowErrorModal(true);
       }
     }
@@ -309,12 +339,18 @@ export default function EditStoryPage() {
 
   // 이미지 압축 함수 (강력한 압축)
   const compressImage = (file: File, maxWidth: number = 600, quality: number = 0.6): Promise<string> => {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       const img = new Image();
       
+      img.onerror = (error) => {
+        console.error('❌ 이미지 로드 실패:', error);
+        reject(new Error('이미지 파일을 읽을 수 없습니다. 지원되지 않는 형식이거나 손상된 파일일 수 있습니다.'));
+      };
+      
       img.onload = () => {
+        try {
         // 비율 유지하면서 크기 조정
         const ratio = Math.min(maxWidth / img.width, maxWidth / img.height);
         canvas.width = img.width * ratio;
@@ -348,6 +384,10 @@ export default function EditStoryPage() {
         };
         
         resolve(compressImageRecursive(startQuality));
+        } catch (error) {
+          console.error('❌ 압축 처리 중 오류:', error);
+          reject(new Error(`이미지 압축 중 오류가 발생했습니다: ${error.message}`));
+        }
       };
       
       img.src = URL.createObjectURL(file);
