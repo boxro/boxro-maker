@@ -80,12 +80,23 @@ export default function WriteStoryPage() {
         const imageData = ctx?.getImageData(0, 0, width, height);
         const hasTransparency = imageData?.data.some((_, index) => index % 4 === 3 && imageData.data[index] < 255);
         
-        // 투명도가 있으면 PNG, 없으면 JPG 사용
-        if (hasTransparency) {
-          resolve(canvas.toDataURL('image/png', 1.0));
-        } else {
-          resolve(canvas.toDataURL('image/jpeg', 0.9));
-        }
+        // 투명도가 있으면 PNG, 없으면 JPG 사용 (강력한 압축)
+        const format = hasTransparency ? 'image/png' : 'image/jpeg';
+        let quality = hasTransparency ? 0.6 : 0.5; // 더 강력한 압축
+        
+        // 파일 크기가 500KB 이하가 될 때까지 품질을 낮춤
+        const compressImage = (currentQuality: number): string => {
+          const dataUrl = canvas.toDataURL(format, currentQuality);
+          const sizeKB = (dataUrl.length * 0.75) / 1024; // base64 크기를 KB로 변환
+          
+          if (sizeKB > 500 && currentQuality > 0.1) {
+            return compressImage(currentQuality - 0.1);
+          }
+          
+          return dataUrl;
+        };
+        
+        resolve(compressImage(quality));
       };
       
       img.src = URL.createObjectURL(file);
