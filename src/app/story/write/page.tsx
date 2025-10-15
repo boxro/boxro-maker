@@ -55,6 +55,64 @@ export default function WriteStoryPage() {
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [infoMessage, setInfoMessage] = useState('');
 
+  // 뷰 상단 이미지 압축 함수 (700px, 500KB)
+  const compressViewTopImage = (file: File, maxWidth: number = 700, quality: number = 0.6): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      img.onerror = (error) => {
+        console.error('❌ 이미지 로드 실패:', error);
+        reject(new Error('이미지 파일을 읽을 수 없습니다. 지원되지 않는 형식이거나 손상된 파일일 수 있습니다.'));
+      };
+      
+      img.onload = () => {
+        try {
+        // 700px로 강제 리사이즈 (가로 기준)
+        const maxWidth = 700;
+        const ratio = maxWidth / img.width;
+        canvas.width = maxWidth;
+        canvas.height = img.height * ratio;
+        
+        // 이미지 그리기
+        ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+        
+        // 투명도가 있는 이미지인지 확인
+        const imageData = ctx?.getImageData(0, 0, canvas.width, canvas.height);
+        const hasTransparency = imageData?.data.some((_, index) => index % 4 === 3 && imageData.data[index] < 255);
+        
+        // 투명도가 있으면 PNG, 없으면 JPG 사용 (강력한 압축)
+        const format = hasTransparency ? 'image/png' : 'image/jpeg';
+        let startQuality = hasTransparency ? 0.6 : 0.5; // 더 강력한 압축
+        
+        // 파일 크기가 500KB 이하가 될 때까지 품질을 낮춤
+        const compressImageRecursive = (currentQuality: number): string => {
+          const dataUrl = canvas.toDataURL(format, currentQuality);
+          const sizeKB = dataUrl.length / 1024;
+          
+          console.log(`뷰상단 압축 시도: 품질 ${currentQuality.toFixed(1)}, 크기 ${sizeKB.toFixed(1)}KB`);
+          
+          // 크기가 여전히 500KB보다 크고 품질을 더 낮출 수 있다면 재귀 호출
+          if (sizeKB > 500 && currentQuality > 0.05) {
+            return compressImageRecursive(currentQuality - 0.05);
+          }
+          
+          console.log(`뷰상단 최종 압축: 품질 ${currentQuality.toFixed(1)}, 크기 ${sizeKB.toFixed(1)}KB`);
+          return dataUrl;
+        };
+        
+        resolve(compressImageRecursive(startQuality));
+        } catch (error) {
+          console.error('❌ 압축 처리 중 오류:', error);
+          reject(new Error(`이미지 압축 중 오류가 발생했습니다: ${error.message}`));
+        }
+      };
+      
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
   // 이미지 리사이즈 함수 (투명도 감지)
   const resizeImage = (file: File, maxWidth: number = 800): Promise<string> => {
     return new Promise((resolve) => {
@@ -103,6 +161,64 @@ export default function WriteStoryPage() {
     });
   };
 
+  // 에디터용 이미지 압축 함수 (400px, 300KB)
+  const compressEditorImage = (file: File, maxWidth: number = 400, quality: number = 0.6): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      img.onerror = (error) => {
+        console.error('❌ 이미지 로드 실패:', error);
+        reject(new Error('이미지 파일을 읽을 수 없습니다. 지원되지 않는 형식이거나 손상된 파일일 수 있습니다.'));
+      };
+      
+      img.onload = () => {
+        try {
+        // 400px로 강제 리사이즈 (가로 기준)
+        const maxWidth = 400;
+        const ratio = maxWidth / img.width;
+        canvas.width = maxWidth;
+        canvas.height = img.height * ratio;
+        
+        // 이미지 그리기
+        ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+        
+        // 투명도가 있는 이미지인지 확인
+        const imageData = ctx?.getImageData(0, 0, canvas.width, canvas.height);
+        const hasTransparency = imageData?.data.some((_, index) => index % 4 === 3 && imageData.data[index] < 255);
+        
+        // 투명도가 있으면 PNG, 없으면 JPG 사용 (강력한 압축)
+        const format = hasTransparency ? 'image/png' : 'image/jpeg';
+        let startQuality = hasTransparency ? 0.6 : 0.5; // 더 강력한 압축
+        
+        // 파일 크기가 300KB 이하가 될 때까지 품질을 낮춤
+        const compressImageRecursive = (currentQuality: number): string => {
+          const dataUrl = canvas.toDataURL(format, currentQuality);
+          const sizeKB = dataUrl.length / 1024;
+          
+          console.log(`에디터 압축 시도: 품질 ${currentQuality.toFixed(1)}, 크기 ${sizeKB.toFixed(1)}KB`);
+          
+          // 크기가 여전히 300KB보다 크고 품질을 더 낮출 수 있다면 재귀 호출
+          if (sizeKB > 300 && currentQuality > 0.05) {
+            return compressImageRecursive(currentQuality - 0.05);
+          }
+          
+          console.log(`에디터 최종 압축: 품질 ${currentQuality.toFixed(1)}, 크기 ${sizeKB.toFixed(1)}KB`);
+          return dataUrl;
+        };
+        
+        resolve(compressImageRecursive(startQuality));
+        } catch (error) {
+          console.error('❌ 압축 처리 중 오류:', error);
+          reject(new Error(`이미지 압축 중 오류가 발생했습니다: ${error.message}`));
+        }
+      };
+      
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
   // 에디터용 이미지 업로드 함수
   const handleEditorImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -120,10 +236,10 @@ export default function WriteStoryPage() {
       }
 
       try {
-        const resizedImage = await resizeImage(file, 800);
-        setUploadedImages(prev => [...prev, resizedImage]);
+        const compressedImage = await compressEditorImage(file, 400, 0.6);
+        setUploadedImages(prev => [...prev, compressedImage]);
       } catch (error) {
-        console.error('이미지 처리 실패:', error);
+        console.error('이미지 압축 실패:', error);
         setErrorMessage('이미지 처리 중 오류가 발생했습니다.');
         setShowErrorModal(true);
       }
@@ -186,8 +302,8 @@ export default function WriteStoryPage() {
     const file = event.target.files?.[0];
     if (file) {
       try {
-        // 이미지 압축 (최대 1200px, 품질 85%)
-        const compressedImage = await compressImage(file, 800, 0.6);
+        // 이미지 압축 (700px, 500KB 제한)
+        const compressedImage = await compressViewTopImage(file, 700, 0.6);
         setViewTopImage(compressedImage);
       } catch (error) {
         console.error('이미지 압축 실패:', error);
@@ -205,10 +321,10 @@ export default function WriteStoryPage() {
       const img = new Image();
       
       img.onload = () => {
-        // 더 작은 크기로 강제 리사이즈 (최대 400px)
-        const maxSize = 400;
-        const ratio = Math.min(maxSize / img.width, maxSize / img.height);
-        canvas.width = img.width * ratio;
+        // 450px로 강제 리사이즈 (가로 기준)
+        const maxWidth = 450;
+        const ratio = maxWidth / img.width;
+        canvas.width = maxWidth;
         canvas.height = img.height * ratio;
         
         // 이미지 그리기
@@ -222,15 +338,14 @@ export default function WriteStoryPage() {
         const format = hasTransparency ? 'image/png' : 'image/jpeg';
         let startQuality = hasTransparency ? 0.6 : 0.5; // 더 강력한 압축
         
-        // 파일 크기가 300KB 이하가 될 때까지 품질을 낮춤 (더 안전한 제한)
+        // 파일 크기가 500KB 이하가 될 때까지 품질을 낮춤
         const compressImageRecursive = (currentQuality: number): string => {
           const dataUrl = canvas.toDataURL(format, currentQuality);
-          // base64 크기 계산: base64는 원본보다 약 33% 크므로 0.75로 나눔
           const sizeKB = dataUrl.length / 1024;
           
           console.log(`압축 시도: 품질 ${currentQuality.toFixed(1)}, 크기 ${sizeKB.toFixed(1)}KB`);
           
-          if (sizeKB > 300 && currentQuality > 0.05) {
+          if (sizeKB > 500 && currentQuality > 0.05) {
             return compressImageRecursive(currentQuality - 0.05);
           }
           
@@ -733,7 +848,7 @@ export default function WriteStoryPage() {
                       <div className="space-y-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-800 mb-2">
-                            카드 제목 *
+                            홈카드 제목
                           </label>
                           <div className="bg-transparent p-4 rounded-lg border border-gray-300">
                             <input 
@@ -763,7 +878,7 @@ export default function WriteStoryPage() {
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-800 mb-2">
-                            카드 설명 *
+                            홈카드 설명
                           </label>
                           <div className="bg-transparent p-4 rounded-lg border border-gray-300">
                             <textarea 
@@ -853,7 +968,7 @@ export default function WriteStoryPage() {
                         
                         <div>
                           <label className="block text-sm font-medium text-gray-800 mb-2">
-                            카드 썸네일 (홈 카드 배경 이미지) *
+                            홈카드 썸네일 (홈카드 배경 이미지)
                           </label>
                           <div className="flex gap-2">
                             <input 

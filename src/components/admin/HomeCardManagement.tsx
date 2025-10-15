@@ -104,6 +104,63 @@ const HomeCardManagement: React.FC<HomeCardManagementProps> = ({
   setHomeCardFilterSearch,
   resetHomeCardFilters,
 }) => {
+  // 홈카드 썸네일 압축 함수 (450px, 800KB)
+  const compressHomeCardThumbnail = (file: File, maxWidth: number = 450, quality: number = 0.8): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      img.onerror = (error) => {
+        console.error('❌ 이미지 로드 실패:', error);
+        reject(new Error('이미지 파일을 읽을 수 없습니다. 지원되지 않는 형식이거나 손상된 파일일 수 있습니다.'));
+      };
+      
+      img.onload = () => {
+        try {
+        // 450px로 강제 리사이즈 (가로 기준)
+        const maxWidth = 450;
+        const ratio = maxWidth / img.width;
+        canvas.width = maxWidth;
+        canvas.height = img.height * ratio;
+        
+        // 이미지 그리기
+        ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+        
+        // 투명도가 있는 이미지인지 확인
+        const imageData = ctx?.getImageData(0, 0, canvas.width, canvas.height);
+        const hasTransparency = imageData?.data.some((_, index) => index % 4 === 3 && imageData.data[index] < 255);
+        
+        // 투명도가 있으면 PNG, 없으면 JPG 사용
+        const format = hasTransparency ? 'image/png' : 'image/jpeg';
+        let startQuality = hasTransparency ? 0.7 : 0.6;
+        
+        // 파일 크기가 800KB 이하가 될 때까지 품질을 낮춤
+        const compressImageRecursive = (currentQuality: number): string => {
+          const dataUrl = canvas.toDataURL(format, currentQuality);
+          const sizeKB = dataUrl.length / 1024;
+          
+          console.log(`홈카드 압축 시도: 품질 ${currentQuality.toFixed(1)}, 크기 ${sizeKB.toFixed(1)}KB`);
+          
+          // 크기가 여전히 800KB보다 크고 품질을 더 낮출 수 있다면 재귀 호출
+          if (sizeKB > 800 && currentQuality > 0.05) {
+            return compressImageRecursive(currentQuality - 0.05);
+          }
+          
+          console.log(`홈카드 최종 압축: 품질 ${currentQuality.toFixed(1)}, 크기 ${sizeKB.toFixed(1)}KB`);
+          return dataUrl;
+        };
+        
+        resolve(compressImageRecursive(startQuality));
+        } catch (error) {
+          console.error('❌ 압축 처리 중 오류:', error);
+          reject(new Error(`이미지 압축 중 오류가 발생했습니다: ${error.message}`));
+        }
+      };
+      
+      img.src = URL.createObjectURL(file);
+    });
+  };
   return (
     <>
       <div className="space-y-4">
@@ -233,14 +290,17 @@ const HomeCardManagement: React.FC<HomeCardManagementProps> = ({
                   <input 
                     type="file" 
                     accept="image/*"
-                    onChange={(e) => {
+                    onChange={async (e) => {
                       const file = e.target.files?.[0];
                       if (file) {
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                          setHomeCardThumbnail(e.target?.result as string);
-                        };
-                        reader.readAsDataURL(file);
+                        try {
+                          // 이미지 압축 적용
+                          const compressedImage = await compressHomeCardThumbnail(file, 450, 0.8);
+                          setHomeCardThumbnail(compressedImage);
+                        } catch (error) {
+                          console.error('홈카드 썸네일 압축 실패:', error);
+                          alert('이미지 압축 중 오류가 발생했습니다.');
+                        }
                       }
                     }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] bg-white"

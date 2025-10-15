@@ -1252,8 +1252,66 @@ export default function GalleryPage() {
 
   // ===== 파일 업로드 관련 함수들 =====
   
+  // 이미지 압축 함수 (450px 리사이즈, 800KB 제한)
+  const compressImage = (file: File, maxWidth: number = 450, quality: number = 0.8): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      img.onerror = (error) => {
+        console.error('❌ 이미지 로드 실패:', error);
+        reject(new Error('이미지 파일을 읽을 수 없습니다. 지원되지 않는 형식이거나 손상된 파일일 수 있습니다.'));
+      };
+      
+      img.onload = () => {
+        try {
+          // 450px로 강제 리사이즈 (가로 기준)
+          const maxWidth = 450;
+          const ratio = maxWidth / img.width;
+          canvas.width = maxWidth;
+          canvas.height = img.height * ratio;
+          
+          // 이미지 그리기
+          ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+          
+          // 투명도가 있는 이미지인지 확인
+          const imageData = ctx?.getImageData(0, 0, canvas.width, canvas.height);
+          const hasTransparency = imageData?.data.some((_, index) => index % 4 === 3 && imageData.data[index] < 255);
+          
+          // 투명도가 있으면 PNG, 없으면 JPG 사용
+          const format = hasTransparency ? 'image/png' : 'image/jpeg';
+          let startQuality = hasTransparency ? 0.7 : 0.6;
+          
+          // 파일 크기가 800KB 이하가 될 때까지 품질을 낮춤
+          const compressImageRecursive = (currentQuality: number): string => {
+            const dataUrl = canvas.toDataURL(format, currentQuality);
+            const sizeKB = dataUrl.length / 1024;
+            
+            console.log(`갤러리 압축 시도: 품질 ${currentQuality.toFixed(1)}, 크기 ${sizeKB.toFixed(1)}KB`);
+            
+            // 크기가 여전히 800KB보다 크고 품질을 더 낮출 수 있다면 재귀 호출
+            if (sizeKB > 800 && currentQuality > 0.05) {
+              return compressImageRecursive(currentQuality - 0.05);
+            }
+            
+            console.log(`갤러리 최종 압축: 품질 ${currentQuality.toFixed(1)}, 크기 ${sizeKB.toFixed(1)}KB`);
+            return dataUrl;
+          };
+          
+          resolve(compressImageRecursive(startQuality));
+        } catch (error) {
+          console.error('❌ 압축 처리 중 오류:', error);
+          reject(new Error(`이미지 압축 중 오류가 발생했습니다: ${error.message}`));
+        }
+      };
+      
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
   // 파일 선택 핸들러
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       // 이미지 파일만 허용
@@ -1270,70 +1328,20 @@ export default function GalleryPage() {
         return;
       }
       
-      setUploadFile(file);
-      
-      // 미리보기 생성
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setUploadPreview(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+      try {
+        // 이미지 압축 적용
+        const compressedImage = await compressImage(file, 450, 0.8);
+        setUploadFile(file); // 원본 파일은 유지 (업로드 시 사용)
+        setUploadPreview(compressedImage); // 압축된 이미지로 미리보기
+      } catch (error) {
+        console.error('이미지 압축 실패:', error);
+        setErrorMessage('이미지 압축 중 오류가 발생했습니다.');
+        setShowErrorModal(true);
+        return;
+      }
     }
   };
 
-  // 이미지 크롭 및 압축 함수
-  const cropAndCompressImage = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        
-        if (!ctx) {
-          reject(new Error('Canvas context를 가져올 수 없습니다.'));
-          return;
-        }
-
-        // 4:3 비율로 크롭
-        const targetRatio = 4 / 3;
-        const imgRatio = img.width / img.height;
-        
-        let cropWidth, cropHeight, cropX, cropY;
-        
-        if (imgRatio > targetRatio) {
-          // 이미지가 더 넓음 - 높이 기준으로 크롭
-          cropHeight = img.height;
-          cropWidth = img.height * targetRatio;
-          cropX = (img.width - cropWidth) / 2;
-          cropY = 0;
-        } else {
-          // 이미지가 더 높음 - 너비 기준으로 크롭
-          cropWidth = img.width;
-          cropHeight = img.width / targetRatio;
-          cropX = 0;
-          cropY = (img.height - cropHeight) / 2;
-        }
-        
-        canvas.width = 400; // 최종 크기
-        canvas.height = 300; // 4:3 비율 (400:300)
-        
-        ctx.drawImage(img, cropX, cropY, cropWidth, cropHeight, 0, 0, 400, 300);
-        
-        // 투명도가 있는 이미지인지 확인
-        const imageData = ctx.getImageData(0, 0, 400, 300);
-        const hasTransparency = imageData.data.some((_, index) => index % 4 === 3 && imageData.data[index] < 255);
-        
-        // 투명도가 있으면 PNG, 없으면 JPG 사용
-        const compressedDataUrl = hasTransparency 
-          ? canvas.toDataURL('image/png', 1.0)
-          : canvas.toDataURL('image/jpeg', 0.8);
-        resolve(compressedDataUrl);
-      };
-      
-      img.onerror = () => reject(new Error('이미지 로드에 실패했습니다.'));
-      img.src = URL.createObjectURL(file);
-    });
-  };
 
   // 파일 업로드 실행
   const handleFileUpload = async () => {
@@ -1363,8 +1371,8 @@ export default function GalleryPage() {
 
 
     try {
-      // 이미지 크롭 및 압축
-      const compressedImage = await cropAndCompressImage(uploadFile);
+      // 이미지 압축 (450px, 800KB 제한)
+      const compressedImage = await compressImage(uploadFile, 450, 0.8);
       
       // 사용자의 최신 닉네임 가져오기
       let userNickname = user.displayName || '익명';
@@ -1463,7 +1471,7 @@ export default function GalleryPage() {
       
       // 새 이미지가 업로드된 경우에만 처리
       if (editFile) {
-        const compressedImage = await cropAndCompressImage(editFile);
+        const compressedImage = await compressImage(editFile, 450, 0.8);
         thumbnailUrl = compressedImage;
       }
 
@@ -2237,15 +2245,19 @@ export default function GalleryPage() {
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={(e) => {
+                    onChange={async (e) => {
                       const file = e.target.files?.[0];
                       if (file) {
-                        setEditFile(file);
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                          setEditPreview(e.target?.result as string);
-                        };
-                        reader.readAsDataURL(file);
+                        try {
+                          // 이미지 압축 적용
+                          const compressedImage = await compressImage(file, 450, 0.8);
+                          setEditFile(file); // 원본 파일은 유지
+                          setEditPreview(compressedImage); // 압축된 이미지로 미리보기
+                        } catch (error) {
+                          console.error('이미지 압축 실패:', error);
+                          setErrorMessage('이미지 압축 중 오류가 발생했습니다.');
+                          setShowErrorModal(true);
+                        }
                       }
                     }}
                     className="hidden"

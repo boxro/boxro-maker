@@ -108,6 +108,64 @@ export default function EditProfilePage() {
     }
   }, [user]);
 
+  // 프로필 이미지 압축 함수 (100px, 100KB)
+  const compressProfileImage = (file: File, maxWidth: number = 100, quality: number = 0.8): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      img.onerror = (error) => {
+        console.error('❌ 이미지 로드 실패:', error);
+        reject(new Error('이미지 파일을 읽을 수 없습니다. 지원되지 않는 형식이거나 손상된 파일일 수 있습니다.'));
+      };
+      
+      img.onload = () => {
+        try {
+        // 100px로 강제 리사이즈 (가로 기준)
+        const maxWidth = 100;
+        const ratio = maxWidth / img.width;
+        canvas.width = maxWidth;
+        canvas.height = img.height * ratio;
+        
+        // 이미지 그리기
+        ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+        
+        // 투명도가 있는 이미지인지 확인
+        const imageData = ctx?.getImageData(0, 0, canvas.width, canvas.height);
+        const hasTransparency = imageData?.data.some((_, index) => index % 4 === 3 && imageData.data[index] < 255);
+        
+        // 투명도가 있으면 PNG, 없으면 JPG 사용
+        const format = hasTransparency ? 'image/png' : 'image/jpeg';
+        let startQuality = hasTransparency ? 0.8 : 0.7;
+        
+        // 파일 크기가 100KB 이하가 될 때까지 품질을 낮춤
+        const compressImageRecursive = (currentQuality: number): string => {
+          const dataUrl = canvas.toDataURL(format, currentQuality);
+          const sizeKB = dataUrl.length / 1024;
+          
+          console.log(`프로필 압축 시도: 품질 ${currentQuality.toFixed(1)}, 크기 ${sizeKB.toFixed(1)}KB`);
+          
+          // 크기가 여전히 100KB보다 크고 품질을 더 낮출 수 있다면 재귀 호출
+          if (sizeKB > 100 && currentQuality > 0.05) {
+            return compressImageRecursive(currentQuality - 0.05);
+          }
+          
+          console.log(`프로필 최종 압축: 품질 ${currentQuality.toFixed(1)}, 크기 ${sizeKB.toFixed(1)}KB`);
+          return dataUrl;
+        };
+        
+        resolve(compressImageRecursive(startQuality));
+        } catch (error) {
+          console.error('❌ 압축 처리 중 오류:', error);
+          reject(new Error(`이미지 압축 중 오류가 발생했습니다: ${error.message}`));
+        }
+      };
+      
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
   const handleImageUpload = async (file: File) => {
     if (!user) return;
 
@@ -125,27 +183,18 @@ export default function EditProfilePage() {
         return;
       }
 
-      // 임시로 Base64로 변환하여 임시 상태에만 저장
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const base64String = e.target?.result as string;
-          
-          // 임시 상태에만 저장 (DB에는 저장하지 않음)
-          setTempImage(base64String);
-          setMessage('이미지가 선택되었습니다. 저장 버튼을 눌러 변경사항을 적용하세요.');
-        } catch (error) {
-          console.error('이미지 변환 실패:', error);
-          setMessage('이미지 변환에 실패했습니다. 다시 시도해주세요.');
-        } finally {
-          setIsUploadingImage(false);
-        }
-      };
-      reader.readAsDataURL(file);
+      // 이미지 압축 적용
+      const compressedImage = await compressProfileImage(file, 100, 0.8);
+      
+      // 임시 상태에만 저장 (DB에는 저장하지 않음)
+      setTempImage(compressedImage);
+      setMessage('이미지가 선택되었습니다. 저장 버튼을 눌러 변경사항을 적용하세요.');
     } catch (error: any) {
       console.error('이미지 업로드 오류:', error);
       
-      if (error.code === 'storage/retry-limit-exceeded') {
+      if (error.message?.includes('이미지 압축')) {
+        setMessage('이미지 압축 중 오류가 발생했습니다. 다시 시도해주세요.');
+      } else if (error.code === 'storage/retry-limit-exceeded') {
         setMessage('서버가 일시적으로 불안정합니다. 잠시 후 다시 시도해주세요.');
       } else if (error.code === 'storage/network-request-failed' || error.message?.includes('network')) {
         setMessage('네트워크 연결을 확인해주세요');
