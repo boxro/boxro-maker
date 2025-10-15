@@ -307,7 +307,7 @@ export default function EditStoryPage() {
     }
   };
 
-  // 이미지 압축 함수 (투명도 감지)
+  // 이미지 압축 함수 (강력한 압축)
   const compressImage = (file: File, maxWidth: number = 600, quality: number = 0.6): Promise<string> => {
     return new Promise((resolve) => {
       const canvas = document.createElement('canvas');
@@ -327,12 +327,23 @@ export default function EditStoryPage() {
         const imageData = ctx?.getImageData(0, 0, canvas.width, canvas.height);
         const hasTransparency = imageData?.data.some((_, index) => index % 4 === 3 && imageData.data[index] < 255);
         
-        // 투명도가 있으면 PNG, 없으면 JPG 사용
-        if (hasTransparency) {
-          resolve(canvas.toDataURL('image/png', 1.0));
-        } else {
-          resolve(canvas.toDataURL('image/jpeg', quality));
-        }
+        // 투명도가 있으면 PNG, 없으면 JPG 사용 (강력한 압축)
+        const format = hasTransparency ? 'image/png' : 'image/jpeg';
+        let startQuality = hasTransparency ? 0.6 : 0.5; // 더 강력한 압축
+        
+        // 파일 크기가 500KB 이하가 될 때까지 품질을 낮춤
+        const compressImageRecursive = (currentQuality: number): string => {
+          const dataUrl = canvas.toDataURL(format, currentQuality);
+          const sizeKB = (dataUrl.length * 0.75) / 1024; // base64 크기를 KB로 변환
+          
+          if (sizeKB > 500 && currentQuality > 0.1) {
+            return compressImageRecursive(currentQuality - 0.1);
+          }
+          
+          return dataUrl;
+        };
+        
+        resolve(compressImageRecursive(startQuality));
       };
       
       img.src = URL.createObjectURL(file);
