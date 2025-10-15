@@ -161,6 +161,9 @@ interface StoryArticle {
   isShared?: boolean;
   isBoxroTalked?: boolean;
   viewTopImage?: string;
+  price?: string;
+  priceColor?: string;
+  isFullDonation?: boolean;
 }
 
 export default function StoryArticlePage() {
@@ -774,9 +777,32 @@ export default function StoryArticlePage() {
                 ))}
               </div>
               
-              <CardTitle className="text-[20px] md:text-[22px] font-bold mb-2" style={{ fontFamily: 'CookieRun', color: 'var(--foreground)' }}>{article.title}</CardTitle>
+              <CardTitle className="text-[20px] md:text-[22px] font-bold mb-3" style={{ fontFamily: 'CookieRun', color: 'var(--foreground)' }}>{article.title}</CardTitle>
               
-              <p className="text-[15px] md:text-[15px] text-gray-800 leading-relaxed whitespace-pre-wrap">{article.summary}</p>
+              <p className="text-[15px] md:text-[15px] text-gray-800 leading-relaxed whitespace-pre-wrap mb-3">{article.summary}</p>
+              
+              {/* 가격 정보 */}
+              {article.price && (
+                <div className="mb-10">
+                  <p 
+                    className="text-lg font-semibold"
+                    style={{ color: article.priceColor || '#1f2937' }}
+                  >
+                    {article.price}
+                  </p>
+                  {article.isFullDonation && (
+                    <div 
+                      className="inline-block px-3 py-1 rounded-full text-white text-sm font-medium mt-2"
+                      style={{ backgroundColor: article.priceColor || '#1f2937' }}
+                    >
+                      수익금 전액 기부
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {/* 구분선 */}
+              <div className="border-t border-gray-200"></div>
             </div>
           </CardHeader>
           
@@ -792,29 +818,20 @@ export default function StoryArticlePage() {
               />
               </div>
             </div>
-            
+
             {/* 스토어 바로가기 버튼 */}
-            {article.storeUrl && article.storeUrl.trim() && (
-              <div className="mt-8 mb-6 w-full md:w-1/3 mx-auto">
-                <Button
-                  onClick={async () => {
-                    // 스토어 바로가기 카운트 증가
-                    try {
-                      await updateDoc(doc(db, 'storeItems', article.id), {
-                        storeRedirects: increment(1),
-                        storeRedirectedBy: arrayUnion(user?.uid || 'anonymous')
-                      });
-                    } catch (error) {
-                      console.log('스토어 바로가기 카운트 업데이트 실패:', error);
-                    }
-                    window.open(article.storeUrl, '_blank');
-                  }}
-                  className="w-full bg-gradient-to-r from-sky-400 to-sky-500 hover:from-sky-500 hover:to-sky-600 text-white transition-all duration-200 rounded-full py-4 flex items-center justify-center gap-3 font-medium"
-                  style={{ fontSize: '15px' }}
+            {article.storeUrl && (
+              <div className="mt-10 flex justify-center">
+                <a
+                  href={article.storeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-full transition-all duration-200"
+                  style={{ paddingLeft: '68px', paddingRight: '68px' }}
                 >
                   <Store className="w-5 h-5" />
-                  <span>스토어 바로가기</span>
-                </Button>
+                  <span className="font-medium">스토어 바로가기</span>
+                </a>
               </div>
             )}
 

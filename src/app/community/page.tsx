@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
 import { useScrollLock } from '@/hooks/useScrollLock';
+import BannerDisplay from '@/components/BannerDisplay';
 
 // 프로필 이미지와 이니셜 생성 유틸리티 함수
 const getInitials = (name: string): string => {
@@ -1603,13 +1604,23 @@ export default function GalleryPage() {
         {loading && (
           <Card className="bg-white border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden py-5 w-full rounded-2xl">
             <CardContent className="text-center py-12">
-              <div className="w-16 h-16 mx-auto relative mb-4">
-                <div className="absolute inset-0 rounded-full border-3 border-purple-200"></div>
-                <div className="absolute inset-0 rounded-full border-3 border-transparent border-t-purple-500 border-r-pink-500 animate-spin"></div>
-                <div className="absolute inset-1.5 rounded-full border-2 border-transparent border-t-blue-400 border-r-purple-400 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
+              {/* 로고 점프 애니메이션 */}
+              <div className="w-24 h-24 mx-auto mb-6 flex items-center justify-center">
+                <img 
+                  src="/logo_remoteonly.png" 
+                  alt="박스로 로고" 
+                  className="w-20 h-20 animate-bounce"
+                  style={{ 
+                    animationDuration: '0.6s',
+                    animationIterationCount: 'infinite',
+                    animationTimingFunction: 'cubic-bezier(0.68, -0.55, 0.265, 1.55)'
+                  }}
+                />
               </div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">작품을 불러오는 중...</h3>
-              <p className="text-sm text-gray-800">잠시만 기다려주세요.</p>
+              <h3 className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-pink-600 bg-clip-text text-transparent mb-2">
+                박스카 갤러리를 불러오는 중...
+              </h3>
+              <p className="text-sm text-gray-800">멋진 박스카 작품들을 준비하고 있어요!</p>
             </CardContent>
           </Card>
         )}
@@ -1827,8 +1838,17 @@ export default function GalleryPage() {
             {/* 무한 스크롤 로딩 상태 */}
             {loadingMore && (
               <div className="col-span-full flex justify-center py-8">
-                <div className="flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+                <div className="flex items-center gap-3">
+                  <img 
+                    src="/logo_remoteonly.png" 
+                    alt="박스로 로고" 
+                    className="w-8 h-8 animate-bounce"
+                    style={{ 
+                      animationDuration: '0.8s',
+                      animationIterationCount: 'infinite',
+                      animationTimingFunction: 'cubic-bezier(0.68, -0.55, 0.265, 1.55)'
+                    }}
+                  />
                   <span className="text-white text-sm">더 많은 박스카 작품을 불러오는 중이에요…</span>
                 </div>
               </div>

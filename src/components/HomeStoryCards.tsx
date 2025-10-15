@@ -61,71 +61,37 @@ export default function HomeStoryCards() {
       setHomeCards([]);
       setHasMore(true);
       
-      // storyArticles, storeItems, homeCards 세 컬렉션에서 모두 가져오기
-      const [storyQuery, storeQuery, homeCardsQuery] = await Promise.all([
-        getDocs(query(collection(db, 'storyArticles'), orderBy('createdAt', 'desc'), limit(50))),
-        getDocs(query(collection(db, 'storeItems'), orderBy('createdAt', 'desc'), limit(50))),
-        getDocs(query(collection(db, 'homeCards'), orderBy('createdAt', 'desc'), limit(50)))
-      ]);
+      // homeCards 컬렉션에서 모든 데이터 가져오기 (클라이언트 필터링)
+      const homeCardsQuery = await getDocs(
+        query(
+          collection(db, 'homeCards'), 
+          orderBy('createdAt', 'desc'),
+          limit(50)
+        )
+      );
       
-      // storyArticles 데이터 변환
-      const storyArticles = storyQuery.docs.map(doc => ({
+      // homeCards 데이터 변환 및 클라이언트 필터링/정렬
+      const allHomeCards = homeCardsQuery.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
-        source: 'storyArticles'
+        source: doc.data().source || 'homeCards'
       })) as (StoryArticle & { source: string })[];
       
-      // storeItems 데이터 변환
-      const storeItems = storeQuery.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        source: 'storeItems'
-      })) as (StoryArticle & { source: string })[];
-      
-      // homeCards 데이터 변환
-      const homeCards = homeCardsQuery.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        source: doc.data().source || 'homeCards' // 저장된 source 필드 사용, 없으면 'homeCards'
-      })) as (StoryArticle & { source: string })[];
-      
-      // 세 컬렉션 데이터 합치기
-      const allArticles = [...storyArticles, ...storeItems, ...homeCards];
-      
-      // 클라이언트에서 홈 표시 조건 필터링 및 정렬
-      const filteredHomeCards = allArticles
-        .filter(article => {
-          // 기본 조건: showOnHome이 true이고 isPublished가 true
-          if (article.showOnHome !== true || article.isPublished !== true) {
-            return false;
-          }
-          
-          // 홈카드 정보가 모두 있어야 홈에 표시 (cardThumbnail은 필수가 아님)
-          const hasCompleteCardInfo = article.cardTitle && article.cardTitle.trim() && 
-                                     article.cardDescription && article.cardDescription.trim();
-          
-          console.log(`홈카드 표시 조건 확인 - "${article.title}":`, {
-            showOnHome: article.showOnHome,
-            hasCompleteCardInfo,
-            cardTitle: article.cardTitle,
-            cardDescription: article.cardDescription,
-            cardThumbnail: article.cardThumbnail
-          });
-          
-          return hasCompleteCardInfo;
-        })
+      // 클라이언트에서 홈 표시 조건 필터링
+      const filteredHomeCards = allHomeCards
+        .filter(article => 
+          article.showOnHome === true && 
+          article.isPublished === true &&
+          article.cardTitle && 
+          article.cardTitle.trim() && 
+          article.cardDescription && 
+          article.cardDescription.trim()
+        )
         .sort((a, b) => {
-          // homeOrder가 있는 카드들을 먼저 정렬
-          const aOrder = a.homeOrder || 999999; // homeOrder가 없으면 맨 뒤로
+          // homeOrder로 정렬
+          const aOrder = a.homeOrder || 999999;
           const bOrder = b.homeOrder || 999999;
-          
-          if (aOrder !== bOrder) {
-            return aOrder - bOrder;
-          }
-          
-          // homeOrder가 같거나 둘 다 없는 경우 createdAt으로 정렬
-          return new Date(b.createdAt?.toDate?.() || b.createdAt).getTime() - 
-                 new Date(a.createdAt?.toDate?.() || a.createdAt).getTime();
+          return aOrder - bOrder;
         })
         .slice(0, 15); // 처음 15개만
       
@@ -137,7 +103,7 @@ export default function HomeStoryCards() {
       }
       
       // 더 이상 데이터가 없으면 hasMore를 false로 설정
-      if (homeCardsQuery.docs.length < 50) {
+      if (homeCardsQuery.docs.length < 15) {
         setHasMore(false);
       }
     } catch (error) {
@@ -159,7 +125,7 @@ export default function HomeStoryCards() {
         collection(db, 'homeCards'),
         orderBy('createdAt', 'desc'),
         startAfter(lastDoc),
-        limit(50) // 더 많은 데이터를 가져와서 클라이언트에서 필터링
+        limit(50)
       );
       
       const articlesSnapshot = await getDocs(articlesQuery);
@@ -171,20 +137,17 @@ export default function HomeStoryCards() {
       // 클라이언트에서 홈 표시 조건 필터링 및 정렬
       const newHomeCards = newArticles
         .filter(article => 
-          article.showOnHome === true && article.isPublished === true
+          article.showOnHome === true && 
+          article.isPublished === true &&
+          article.cardTitle && 
+          article.cardTitle.trim() && 
+          article.cardDescription && 
+          article.cardDescription.trim()
         )
         .sort((a, b) => {
-          // homeOrder가 있는 카드들을 먼저 정렬
-          const aOrder = a.homeOrder || 999999; // homeOrder가 없으면 맨 뒤로
+          const aOrder = a.homeOrder || 999999;
           const bOrder = b.homeOrder || 999999;
-          
-          if (aOrder !== bOrder) {
-            return aOrder - bOrder;
-          }
-          
-          // homeOrder가 같거나 둘 다 없는 경우 createdAt으로 정렬
-          return new Date(b.createdAt?.toDate?.() || b.createdAt).getTime() - 
-                 new Date(a.createdAt?.toDate?.() || a.createdAt).getTime();
+          return aOrder - bOrder;
         });
       
       setHomeCards(prev => [...prev, ...newHomeCards]);

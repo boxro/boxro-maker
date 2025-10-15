@@ -14,6 +14,7 @@ import { Plus, Menu, X, Edit, Trash2, MoreVertical, ShoppingBag, Share2, Message
 import CommonHeader from "@/components/CommonHeader";
 import PageHeader from "@/components/PageHeader";
 import CommonBackground from "@/components/CommonBackground";
+import BannerDisplay from "@/components/BannerDisplay";
 
 interface StoryArticle {
   id: string;
@@ -763,13 +764,23 @@ export default function StorePageClient() {
           </div>
           <Card className="bg-white border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden py-5 w-full rounded-2xl">
             <CardContent className="text-center py-12">
-              <div className="w-16 h-16 mx-auto relative mb-4">
-                <div className="absolute inset-0 rounded-full border-3 border-purple-200"></div>
-                <div className="absolute inset-0 rounded-full border-3 border-transparent border-t-purple-500 border-r-pink-500 animate-spin"></div>
-                <div className="absolute inset-1.5 rounded-full border-2 border-transparent border-t-blue-400 border-r-purple-400 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
+              {/* 점프 애니메이션 (더 역동적인 뛰는 효과) */}
+              <div className="w-24 h-24 mx-auto mb-6 flex items-center justify-center">
+                <img 
+                  src="/logo_remoteonly.png" 
+                  alt="박스로 로고" 
+                  className="w-20 h-20 animate-bounce"
+                  style={{ 
+                    animationDuration: '0.6s',
+                    animationIterationCount: 'infinite',
+                    animationTimingFunction: 'cubic-bezier(0.68, -0.55, 0.265, 1.55)'
+                  }}
+                />
               </div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">박스로 스토어를 불러오는 중...</h3>
-              <p className="text-sm text-gray-800">잠시만 기다려주세요.</p>
+              <h3 className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-pink-600 bg-clip-text text-transparent mb-2">
+                박스로 스토어를 불러오는 중...
+              </h3>
+              <p className="text-sm text-gray-800">멋진 박스카 도안들을 준비하고 있어요!</p>
             </CardContent>
           </Card>
         </div>
@@ -816,6 +827,9 @@ export default function StorePageClient() {
           </Card>
         ) : (
           <div className="columns-1 md:columns-2 lg:columns-3 gap-3 space-y-3">
+            {/* 배너 표시 - 카드들과 섞여서 표시 */}
+            <BannerDisplay currentPage="store" />
+            
             {articles.map((article) => (
               <div 
                 key={article.id} 
@@ -879,38 +893,24 @@ export default function StorePageClient() {
                   )}
                   
                   {article.price && (
-                    <p 
-                      className="text-lg font-semibold mb-3"
-                      style={{ color: article.priceColor || '#1f2937' }}
-                    >
-                      {article.price}
-                    </p>
-                  )}
-                  
-                  {/* 스토어 바로가기 버튼 */}
-                  {article.storeUrl && article.storeUrl.trim() && (
-                    <div className="mt-4 mb-4">
-                      <Button
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          // 스토어 바로가기 카운트 증가
-                          try {
-                            await updateDoc(doc(db, 'storeItems', article.id), {
-                              storeRedirects: increment(1),
-                              storeRedirectedBy: arrayUnion(user?.uid || 'anonymous')
-                            });
-                          } catch (error) {
-                            console.log('스토어 바로가기 카운트 업데이트 실패:', error);
-                          }
-                          window.open(article.storeUrl, '_blank');
-                        }}
-                        className="w-full bg-gradient-to-r from-sky-400 to-sky-500 hover:from-sky-500 hover:to-sky-600 text-white transition-all duration-200 rounded-full py-3 flex items-center justify-center gap-2"
+                    <div className="mb-3">
+                      <p 
+                        className="text-lg font-semibold"
+                        style={{ color: article.priceColor || '#1f2937' }}
                       >
-                        <Store className="w-4 h-4" />
-                        <span className="font-medium" style={{ fontSize: '15px' }}>스토어 바로가기</span>
-                      </Button>
+                        {article.price}
+                      </p>
+                      {article.isFullDonation && (
+                        <div 
+                          className="inline-block px-3 py-1 rounded-full text-white text-sm font-medium mt-2"
+                          style={{ backgroundColor: article.priceColor || '#1f2937' }}
+                        >
+                          수익금 전액 기부
+                        </div>
+                      )}
                     </div>
                   )}
+                  
                   
                   {/* 좋아요, 공유, 박스로 톡, 보기 버튼 */}
                   <div className="flex items-center justify-center gap-2 pt-1 pb-0">
@@ -1226,9 +1226,18 @@ export default function StorePageClient() {
       {/* 더 많은 데이터 로딩 중 */}
       {loadingMore && (
         <div className="flex justify-center py-8">
-          <div className="flex items-center gap-2">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
-                <span className="text-white text-sm">더 많은 도안을 불러오는 중이에요…</span>
+          <div className="flex items-center gap-3">
+            <img 
+              src="/logo_remoteonly.png" 
+              alt="박스로 로고" 
+              className="w-8 h-8 animate-bounce"
+              style={{ 
+                animationDuration: '0.8s',
+                animationIterationCount: 'infinite',
+                animationTimingFunction: 'cubic-bezier(0.68, -0.55, 0.265, 1.55)'
+              }}
+            />
+            <span className="text-white text-sm">더 많은 도안을 불러오는 중이에요…</span>
           </div>
         </div>
       )}

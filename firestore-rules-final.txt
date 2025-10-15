@@ -118,5 +118,11 @@ service cloud.firestore {
       allow create, update, delete: if request.auth != null && 
         request.auth.token.email in ["beagle3651@gmail.com", "boxro.crafts@gmail.com"]; // 관리자만 생성/수정/삭제 가능
     }
+    
+    // 배너 관리 (임시로 모든 로그인 사용자 접근 가능)
+    match /banners/{document} {
+      allow read: if true; // 모든 사용자가 읽기 가능 (배너 표시용)
+      allow create, update, delete: if request.auth != null; // 임시로 모든 로그인 사용자 접근 가능
+    }
   }
 }

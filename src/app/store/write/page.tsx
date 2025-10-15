@@ -26,6 +26,7 @@ export default function WriteStoryPage() {
   const [content, setContent] = useState("");
   const [summary, setSummary] = useState("");
   const [price, setPrice] = useState("");
+  const [isFullDonation, setIsFullDonation] = useState(false);
   const [storeUrl, setStoreUrl] = useState("");
   const [thumbnail, setThumbnail] = useState("");
   const [isPublished, setIsPublished] = useState(false);
@@ -443,6 +444,7 @@ export default function WriteStoryPage() {
         titleColor: titleColor,
         summaryColor: summaryColor,
         priceColor: priceColor,
+        isFullDonation: isFullDonation,
         cardBackgroundColor: cardBackgroundColor,
         homeCardBackgroundColor: homeCardBackgroundColor,
         textPosition: cardTextPosition,
@@ -622,6 +624,19 @@ export default function WriteStoryPage() {
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] bg-white"
                       />
                     </div>
+                    
+                    {/* 수익금 전액 기부 체크박스 */}
+                    <div className="mt-3">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={isFullDonation}
+                          onChange={(e) => setIsFullDonation(e.target.checked)}
+                          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        />
+                        <span className="text-sm text-gray-700">수익금 전액 기부</span>
+                      </label>
+                    </div>
                   </div>
                 </div>
 
@@ -729,12 +744,22 @@ export default function WriteStoryPage() {
                         </p>
                       )}
                       {price && (
-                        <p 
-                          className="text-lg font-semibold mb-3"
-                          style={{ color: priceColor }}
-                        >
-                          {price}
-                        </p>
+                        <div className="mb-3">
+                          <p 
+                            className="text-lg font-semibold"
+                            style={{ color: priceColor }}
+                          >
+                            {price}
+                          </p>
+                          {isFullDonation && (
+                            <div 
+                              className="inline-block px-3 py-1 rounded-full text-white text-sm font-medium mt-2"
+                              style={{ backgroundColor: priceColor || '#1f2937' }}
+                            >
+                              수익금 전액 기부
+                            </div>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>

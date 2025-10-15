@@ -15,6 +15,7 @@ import AdminDashboard from '@/components/admin/AdminDashboard';
 import PopularityManagement from '@/components/admin/PopularityManagement';
 import HomeCardManagement from '@/components/admin/HomeCardManagement';
 import HomeCardOrder from '@/components/admin/HomeCardOrder';
+import BannerManagement from '@/components/admin/BannerManagement';
 import TermsManagement from '@/components/admin/TermsManagement';
 import { Users, Calendar, MessageCircle, Heart, Download, Share2, Eye, Trash2, ChevronUp, ChevronDown, ArrowUp, ArrowDown, EyeOff, Save, RotateCcw, GripVertical, ArrowLeft, ArrowRight, ShoppingBag } from 'lucide-react';
 import { DragEndEvent } from '@dnd-kit/core';
@@ -256,6 +257,30 @@ export default function AdminPage() {
   const [popularityItems, setPopularityItems] = useState<any[]>([]);
   const [popularityLoading, setPopularityLoading] = useState(false);
   const [popularityBoosts, setPopularityBoosts] = useState<{[key: string]: {likes: number, shares: number, views: number, downloads: number}}>({});
+
+  // 배너 관리 관련 state
+  const [bannerList, setBannerList] = useState<any[]>([]);
+  const [bannerTitle, setBannerTitle] = useState("");
+  const [bannerDescription, setBannerDescription] = useState("");
+  const [bannerThumbnail, setBannerThumbnail] = useState("");
+  const [bannerUrl, setBannerUrl] = useState("");
+  const [bannerOpenInNewTab, setBannerOpenInNewTab] = useState(false);
+  const [bannerTitleColor, setBannerTitleColor] = useState("#ffffff");
+  const [bannerDescriptionColor, setBannerDescriptionColor] = useState("#ffffff");
+  const [bannerTextPosition, setBannerTextPosition] = useState(0);
+  const [bannerBackgroundColor, setBannerBackgroundColor] = useState("#3b82f6");
+  const [bannerTargetPages, setBannerTargetPages] = useState<string[]>([]);
+  const [addingBanner, setAddingBanner] = useState(false);
+  const [deletingBanner, setDeletingBanner] = useState<string | null>(null);
+  const [editingBanner, setEditingBanner] = useState<string | null>(null);
+  const [isBannerEditMode, setIsBannerEditMode] = useState(false);
+  
+  // 배너 관리 섹션 필터링 관련 state
+  const [bannerFilterDateFrom, setBannerFilterDateFrom] = useState('');
+  const [bannerFilterDateTo, setBannerFilterDateTo] = useState('');
+  const [bannerFilterSearch, setBannerFilterSearch] = useState('');
+  const [bannerSortBy, setBannerSortBy] = useState('createdAt'); // createdAt, title, targetPages
+  const [bannerSortOrder, setBannerSortOrder] = useState('desc'); // asc, desc
   
   // 오류 모달 상태
   const [showErrorModal, setShowErrorModal] = useState(false);
@@ -509,6 +534,311 @@ export default function AdminPage() {
     setHomeCardFilterDateFrom('');
     setHomeCardFilterDateTo('');
     setHomeCardFilterSearch('');
+  };
+
+  // 배너 관리 함수들
+  const addBanner = async () => {
+    if (!bannerTitle.trim()) {
+      alert('배너 제목을 입력해주세요.');
+      return;
+    }
+
+    setAddingBanner(true);
+    try {
+      // Firebase에 배너 저장
+      const bannerData = {
+        title: bannerTitle,
+        description: bannerDescription,
+        thumbnail: bannerThumbnail,
+        url: bannerUrl,
+        openInNewTab: bannerOpenInNewTab,
+        height: 200,
+        targetPages: bannerTargetPages,
+        backgroundColor: bannerBackgroundColor,
+        titleColor: bannerTitleColor,
+        descriptionColor: bannerDescriptionColor,
+        textPosition: bannerTextPosition,
+        isActive: true,
+        order: 0,
+        isPublished: true,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      };
+
+      await addDoc(collection(db, 'banners'), bannerData);
+      
+      // 폼 초기화
+      setBannerTitle('');
+      setBannerDescription('');
+      setBannerThumbnail('');
+      setBannerUrl('');
+      setBannerOpenInNewTab(false);
+      setBannerTargetPages([]);
+      
+      // 배너 목록 새로고침
+      fetchBanners();
+      
+      alert('배너가 성공적으로 추가되었습니다.');
+    } catch (error) {
+      console.error('배너 추가 실패:', error);
+      alert('배너 추가에 실패했습니다.');
+    } finally {
+      setAddingBanner(false);
+    }
+  };
+
+  const saveEditBanner = async () => {
+    if (!bannerTitle.trim()) {
+      alert('배너 제목을 입력해주세요.');
+      return;
+    }
+
+    setAddingBanner(true);
+    try {
+      const bannerRef = doc(db, 'banners', editingBanner!);
+      await updateDoc(bannerRef, {
+        title: bannerTitle,
+        description: bannerDescription,
+        thumbnail: bannerThumbnail,
+        url: bannerUrl,
+        openInNewTab: bannerOpenInNewTab,
+        height: 200,
+        targetPages: bannerTargetPages,
+        backgroundColor: bannerBackgroundColor,
+        titleColor: bannerTitleColor,
+        descriptionColor: bannerDescriptionColor,
+        textPosition: bannerTextPosition,
+        updatedAt: serverTimestamp()
+      });
+      
+      // 폼 초기화
+      setBannerTitle('');
+      setBannerDescription('');
+      setBannerThumbnail('');
+      setBannerUrl('');
+      setBannerOpenInNewTab(false);
+      setBannerTargetPages([]);
+      setIsBannerEditMode(false);
+      setEditingBanner(null);
+      
+      // 배너 목록 새로고침
+      fetchBanners();
+      
+      alert('배너가 성공적으로 수정되었습니다.');
+    } catch (error) {
+      console.error('배너 수정 실패:', error);
+      alert('배너 수정에 실패했습니다.');
+    } finally {
+      setAddingBanner(false);
+    }
+  };
+
+  const startEditBanner = (banner: any) => {
+    setBannerTitle(banner.title);
+    setBannerDescription(banner.description);
+    setBannerThumbnail(banner.thumbnail);
+    setBannerUrl(banner.url || '');
+    setBannerOpenInNewTab(banner.openInNewTab || false);
+    setBannerTargetPages(banner.targetPages || []);
+    setBannerBackgroundColor(banner.backgroundColor || '#3b82f6');
+    setBannerTitleColor(banner.titleColor || '#ffffff');
+    setBannerDescriptionColor(banner.descriptionColor || '#ffffff');
+    setBannerTextPosition(banner.textPosition || 0);
+    setIsBannerEditMode(true);
+    setEditingBanner(banner.id);
+  };
+
+  const deleteBanner = async (id: string) => {
+    if (!confirm('정말로 이 배너를 삭제하시겠습니까?')) {
+      return;
+    }
+
+    setDeletingBanner(id);
+    try {
+      await deleteDoc(doc(db, 'banners', id));
+      setBannerList(bannerList.filter(banner => banner.id !== id));
+      alert('배너가 성공적으로 삭제되었습니다.');
+    } catch (error) {
+      console.error('배너 삭제 실패:', error);
+      alert('배너 삭제에 실패했습니다.');
+    } finally {
+      setDeletingBanner(null);
+    }
+  };
+
+  const toggleBannerActive = async (id: string, isActive: boolean) => {
+    try {
+      await updateDoc(doc(db, 'banners', id), {
+        isActive: isActive
+      });
+      
+      setBannerList(bannerList.map(banner => 
+        banner.id === id ? { ...banner, isActive } : banner
+      ));
+      
+      alert(`배너가 ${isActive ? '활성화' : '비활성화'}되었습니다.`);
+    } catch (error) {
+      console.error('배너 상태 변경 실패:', error);
+      alert('배너 상태 변경에 실패했습니다.');
+    }
+  };
+
+  const moveBannerOrder = async (id: string, direction: 'up' | 'down') => {
+    try {
+      const currentBanner = bannerList.find(banner => banner.id === id);
+      if (!currentBanner) return;
+
+      const currentOrder = currentBanner.order || 0;
+      const newOrder = direction === 'up' ? currentOrder - 1 : currentOrder + 1;
+
+      // 같은 순서를 가진 배너가 있는지 확인
+      const conflictingBanner = bannerList.find(banner => 
+        banner.id !== id && (banner.order || 0) === newOrder
+      );
+
+      if (conflictingBanner) {
+        // 충돌하는 배너의 순서를 조정
+        await updateDoc(doc(db, 'banners', conflictingBanner.id), {
+          order: direction === 'up' ? newOrder + 1 : newOrder - 1
+        });
+      }
+
+      // 현재 배너의 순서 업데이트
+      await updateDoc(doc(db, 'banners', id), {
+        order: newOrder
+      });
+
+      // 로컬 상태 업데이트
+      setBannerList(bannerList.map(banner => {
+        if (banner.id === id) {
+          return { ...banner, order: newOrder };
+        }
+        if (conflictingBanner && banner.id === conflictingBanner.id) {
+          return { ...banner, order: direction === 'up' ? newOrder + 1 : newOrder - 1 };
+        }
+        return banner;
+      }));
+
+      alert(`배너 순서가 ${direction === 'up' ? '위로' : '아래로'} 이동되었습니다.`);
+    } catch (error) {
+      console.error('배너 순서 변경 실패:', error);
+      alert('배너 순서 변경에 실패했습니다.');
+    }
+  };
+
+  const cancelBannerEdit = () => {
+    console.log('배너 수정 취소');
+    setBannerTitle('');
+    setBannerDescription('');
+    setBannerThumbnail('');
+    setBannerUrl('');
+    setBannerOpenInNewTab(false);
+    setBannerTargetPages([]);
+    setBannerBackgroundColor('#3b82f6');
+    setBannerTitleColor('#ffffff');
+    setBannerDescriptionColor('#ffffff');
+    setBannerTextPosition(0);
+    setIsBannerEditMode(false);
+    setEditingBanner(null);
+    console.log('배너 수정 취소 완료');
+  };
+
+  const resetBannerForm = () => {
+    console.log('배너 폼 초기화');
+    setBannerTitle('');
+    setBannerDescription('');
+    setBannerThumbnail('');
+    setBannerUrl('');
+    setBannerOpenInNewTab(false);
+    setBannerTargetPages([]);
+    setBannerBackgroundColor('#3b82f6');
+    setBannerTitleColor('#ffffff');
+    setBannerDescriptionColor('#ffffff');
+    setBannerTextPosition(0);
+    console.log('배너 폼 초기화 완료');
+  };
+
+  const fetchBanners = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, 'banners'));
+      const banners = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setBannerList(banners);
+    } catch (error) {
+      console.error('배너 목록 불러오기 실패:', error);
+    }
+  };
+
+  const getFilteredBannerList = () => {
+    const filtered = bannerList.filter(banner => {
+      // 날짜 필터
+      if (bannerFilterDateFrom || bannerFilterDateTo) {
+        const bannerDate = banner.createdAt;
+        if (bannerDate) {
+          const date = bannerDate.toDate ? bannerDate.toDate() : new Date(bannerDate);
+          const fromDate = bannerFilterDateFrom ? new Date(bannerFilterDateFrom) : null;
+          const toDate = bannerFilterDateTo ? new Date(bannerFilterDateTo) : null;
+          
+          if (fromDate && date < fromDate) return false;
+          if (toDate && date > toDate) return false;
+        }
+      }
+      
+      // 검색 필터
+      if (bannerFilterSearch) {
+        const searchTerm = bannerFilterSearch.toLowerCase();
+        return banner.title.toLowerCase().includes(searchTerm) ||
+               banner.description.toLowerCase().includes(searchTerm);
+      }
+      
+      return true;
+    });
+
+    // 정렬 적용
+    return filtered.sort((a, b) => {
+      // 먼저 노출 순서로 정렬 (order가 낮을수록 먼저)
+      const aOrder = a.order || 0;
+      const bOrder = b.order || 0;
+      
+      if (aOrder !== bOrder) {
+        return aOrder - bOrder;
+      }
+      
+      // 순서가 같으면 선택된 정렬 기준으로 정렬
+      let aValue, bValue;
+      
+      switch (bannerSortBy) {
+        case 'title':
+          aValue = a.title || '';
+          bValue = b.title || '';
+          break;
+        case 'targetPages':
+          aValue = (a.targetPages || []).join(', ');
+          bValue = (b.targetPages || []).join(', ');
+          break;
+        case 'createdAt':
+        default:
+          aValue = a.createdAt;
+          bValue = b.createdAt;
+          break;
+      }
+      
+      if (bannerSortOrder === 'asc') {
+        return aValue > bValue ? 1 : -1;
+      } else {
+        return aValue < bValue ? 1 : -1;
+      }
+    });
+  };
+
+  const resetBannerFilters = () => {
+    setBannerFilterDateFrom('');
+    setBannerFilterDateTo('');
+    setBannerFilterSearch('');
+    setBannerSortBy('createdAt');
+    setBannerSortOrder('desc');
   };
 
   // 인기도 관리 데이터 가져오기 (페이징)
@@ -947,6 +1277,9 @@ export default function AdminPage() {
                   user?.email === "dongwoo.kang@boxro.com" || 
                   user?.email === "beagle3651@gmail.com" || 
                   user?.email === "boxro.crafts@gmail.com";
+
+  // 디버깅용: 현재 사용자 정보 로그
+  console.log('현재 사용자:', user?.email, '관리자 여부:', isAdmin);
 
   // 홈카드 관리 함수들
   const fetchHomeCards = async () => {
@@ -1445,6 +1778,12 @@ export default function AdminPage() {
   useEffect(() => {
     if (activeTab === 'home-card-management' && isAdmin) {
       fetchHomeCardList();
+    }
+  }, [activeTab, isAdmin]);
+
+  useEffect(() => {
+    if (activeTab === 'banner-management' && isAdmin) {
+      fetchBanners();
     }
   }, [activeTab, isAdmin]);
 
@@ -3319,6 +3658,19 @@ export default function AdminPage() {
               )}
             </button>
             <button
+              onClick={() => setActiveTab('banner-management')}
+              className={`relative px-0 py-2 text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
+                activeTab === 'banner-management' 
+                  ? 'text-white' 
+                  : 'text-white/50 hover:text-white/80'
+              }`}
+            >
+              배너 관리
+              {activeTab === 'banner-management' && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white rounded-full"></div>
+              )}
+            </button>
+            <button
               onClick={() => setActiveTab('terms-management')}
               className={`relative px-0 py-2 text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
                 activeTab === 'terms-management' 
@@ -4781,6 +5133,55 @@ export default function AdminPage() {
             popularityTotalPages={popularityTotalPages}
             popularityCurrentPage={popularityCurrentPage}
             popularityAllItems={popularityAllItems}
+          />
+        )}
+
+        {activeTab === 'banner-management' && (
+          <BannerManagement
+            bannerTitle={bannerTitle}
+            setBannerTitle={setBannerTitle}
+            bannerDescription={bannerDescription}
+            setBannerDescription={setBannerDescription}
+            bannerThumbnail={bannerThumbnail}
+            setBannerThumbnail={setBannerThumbnail}
+            bannerUrl={bannerUrl}
+            setBannerUrl={setBannerUrl}
+            bannerOpenInNewTab={bannerOpenInNewTab}
+            setBannerOpenInNewTab={setBannerOpenInNewTab}
+            bannerTitleColor={bannerTitleColor}
+            setBannerTitleColor={setBannerTitleColor}
+            bannerDescriptionColor={bannerDescriptionColor}
+            setBannerDescriptionColor={setBannerDescriptionColor}
+            bannerTextPosition={bannerTextPosition}
+            setBannerTextPosition={setBannerTextPosition}
+            bannerBackgroundColor={bannerBackgroundColor}
+            setBannerBackgroundColor={setBannerBackgroundColor}
+            bannerTargetPages={bannerTargetPages}
+            setBannerTargetPages={setBannerTargetPages}
+            isEditMode={isBannerEditMode}
+            addingBanner={addingBanner}
+            deletingBanner={deletingBanner}
+            addBanner={addBanner}
+            saveEditBanner={saveEditBanner}
+            startEditBanner={startEditBanner}
+            deleteBanner={deleteBanner}
+            toggleBannerActive={toggleBannerActive}
+            moveBannerOrder={moveBannerOrder}
+            cancelEdit={cancelBannerEdit}
+            resetForm={resetBannerForm}
+            bannerList={bannerList}
+            getFilteredBannerList={getFilteredBannerList}
+            bannerFilterDateFrom={bannerFilterDateFrom}
+            setBannerFilterDateFrom={setBannerFilterDateFrom}
+            bannerFilterDateTo={bannerFilterDateTo}
+            setBannerFilterDateTo={setBannerFilterDateTo}
+            bannerFilterSearch={bannerFilterSearch}
+            setBannerFilterSearch={setBannerFilterSearch}
+            resetBannerFilters={resetBannerFilters}
+            bannerSortBy={bannerSortBy}
+            setBannerSortBy={setBannerSortBy}
+            bannerSortOrder={bannerSortOrder}
+            setBannerSortOrder={setBannerSortOrder}
           />
         )}
 

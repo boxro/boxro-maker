@@ -5724,17 +5724,18 @@ export default function DrawPage() {
         <div className="fixed inset-0 bg-gradient-to-br from-purple-900/20 via-blue-900/20 to-pink-900/20 backdrop-blur-md z-50 flex items-center justify-center">
           <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 px-6 py-8 max-w-md w-full mx-6">
             <div className="text-center">
-              {/* 모던한 로딩 애니메이션 */}
-              <div className="relative mb-6">
-                <div className="w-16 h-16 mx-auto relative">
-                  <div className="absolute inset-0 rounded-full border-3 border-purple-200"></div>
-                  <div className="absolute inset-0 rounded-full border-3 border-transparent border-t-purple-500 border-r-pink-500 animate-spin"></div>
-                  <div className="absolute inset-1.5 rounded-full border-2 border-transparent border-t-blue-400 border-r-purple-400 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
-                </div>
-                {/* 중앙 아이콘 */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Printer className="w-6 h-6 text-purple-600 animate-pulse" />
-                </div>
+              {/* 로고 점프 애니메이션 */}
+              <div className="w-20 h-20 mx-auto mb-6 flex items-end justify-center">
+                <img 
+                  src="/logo_remoteonly.png" 
+                  alt="박스로 로고" 
+                  className="w-16 h-16 animate-bounce"
+                  style={{ 
+                    animationDuration: '0.6s',
+                    animationIterationCount: 'infinite',
+                    animationTimingFunction: 'cubic-bezier(0.68, -0.55, 0.265, 1.55)'
+                  }}
+                />
               </div>
               
               <h3 className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-pink-600 bg-clip-text text-transparent mb-2">
