@@ -351,8 +351,9 @@ export default function EditStoryPage() {
       
       img.onload = () => {
         try {
-        // 비율 유지하면서 크기 조정
-        const ratio = Math.min(maxWidth / img.width, maxWidth / img.height);
+        // 더 작은 크기로 강제 리사이즈 (최대 400px)
+        const maxSize = 400;
+        const ratio = Math.min(maxSize / img.width, maxSize / img.height);
         canvas.width = img.width * ratio;
         canvas.height = img.height * ratio;
         
@@ -371,10 +372,11 @@ export default function EditStoryPage() {
         const compressImageRecursive = (currentQuality: number): string => {
           const dataUrl = canvas.toDataURL(format, currentQuality);
           // base64 크기 계산: base64는 원본보다 약 33% 크므로 0.75로 나눔
-          const sizeKB = (dataUrl.length * 0.75) / 1024;
+          const sizeKB = dataUrl.length / 1024;
           
           console.log(`압축 시도: 품질 ${currentQuality.toFixed(1)}, 크기 ${sizeKB.toFixed(1)}KB`);
           
+          // 크기가 여전히 300KB보다 크고 품질을 더 낮출 수 있다면 재귀 호출
           if (sizeKB > 300 && currentQuality > 0.05) {
             return compressImageRecursive(currentQuality - 0.05);
           }
