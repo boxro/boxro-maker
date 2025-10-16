@@ -1,8 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 
-// favicon.png를 읽어서 다양한 크기로 복사
-const sourcePath = path.join(__dirname, '../public/favicon.png');
+// icon-512x512.png를 읽어서 다양한 크기로 복사
+const sourcePath = path.join(__dirname, '../public/icons/icon-512x512.png');
 const targetSizes = [72, 96, 128, 144, 152, 192, 384, 512];
 
 targetSizes.forEach(size => {
