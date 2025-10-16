@@ -5,6 +5,8 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { StoryProvider } from "@/contexts/StoryContext";
 import OnboardingWrapper from "@/components/OnboardingWrapper";
+import PWAInstallPrompt from "@/components/PWAInstallPrompt";
+import PWAServiceWorker from "@/components/PWAServiceWorker";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -64,6 +66,12 @@ export default function RootLayout({
           rel="stylesheet" 
         />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#3b82f6" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="박스로" />
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
       </head>
       <body className={inter.className}>
         <AuthProvider>
@@ -71,6 +79,8 @@ export default function RootLayout({
             <StoryProvider>
               <OnboardingWrapper>
                 {children}
+                <PWAInstallPrompt />
+                <PWAServiceWorker />
               </OnboardingWrapper>
             </StoryProvider>
           </LanguageProvider>
