@@ -1,6 +1,6 @@
 {
-  "name": "박스로 메이커",
-  "short_name": "박스로",
+  "name": "BOXRO",
+  "short_name": "BOXRO",
   "description": "상상한 자동차를 그려서 3D 박스카로 만들어보세요!",
   "start_url": "/",
   "display": "standalone",

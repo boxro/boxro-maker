@@ -4431,20 +4431,32 @@ export default function DrawPage() {
       }
     };
 
-    // 터치 이벤트 핸들러 (preventDefault 없음)
+    // 터치 이벤트 핸들러 (카카오톡 인앱 브라우저 대응)
     const touchStartHandler = (e: TouchEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
       const touch = e.touches[0];
-      startDrawing(touch.clientX, touch.clientY);
+      const rect = canvas.getBoundingClientRect();
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
+      startDrawing(x, y);
     };
 
     const touchMoveHandler = (e: TouchEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
       if (isDrawing) {
         const touch = e.touches[0];
-        draw(touch.clientX, touch.clientY);
+        const rect = canvas.getBoundingClientRect();
+        const x = touch.clientX - rect.left;
+        const y = touch.clientY - rect.top;
+        draw(x, y);
       }
     };
 
     const touchEndHandler = (e: TouchEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
       if (isDrawing) {
         stopDrawing();
       }
@@ -4456,10 +4468,16 @@ export default function DrawPage() {
     canvas.addEventListener('mouseup', mouseUpHandler);
     canvas.addEventListener('mouseleave', mouseLeaveHandler);
     
-    // 터치 이벤트는 passive: true로 설정하여 스크롤 충돌 방지
-    canvas.addEventListener('touchstart', touchStartHandler, { passive: true });
-    canvas.addEventListener('touchmove', touchMoveHandler, { passive: true });
-    canvas.addEventListener('touchend', touchEndHandler, { passive: true });
+    // 터치 이벤트는 passive: false로 설정하여 preventDefault 사용 가능
+    canvas.addEventListener('touchstart', touchStartHandler, { passive: false });
+    canvas.addEventListener('touchmove', touchMoveHandler, { passive: false });
+    canvas.addEventListener('touchend', touchEndHandler, { passive: false });
+    
+    // 카카오톡 인앱 브라우저 대응: 추가 터치 이벤트 방지
+    canvas.addEventListener('touchcancel', touchEndHandler, { passive: false });
+    canvas.addEventListener('gesturestart', (e) => e.preventDefault(), { passive: false });
+    canvas.addEventListener('gesturechange', (e) => e.preventDefault(), { passive: false });
+    canvas.addEventListener('gestureend', (e) => e.preventDefault(), { passive: false });
 
     return () => {
       canvas.removeEventListener('mousedown', mouseDownHandler);
@@ -4470,6 +4488,10 @@ export default function DrawPage() {
       canvas.removeEventListener('touchstart', touchStartHandler);
       canvas.removeEventListener('touchmove', touchMoveHandler);
       canvas.removeEventListener('touchend', touchEndHandler);
+      canvas.removeEventListener('touchcancel', touchEndHandler);
+      canvas.removeEventListener('gesturestart', (e) => e.preventDefault());
+      canvas.removeEventListener('gesturechange', (e) => e.preventDefault());
+      canvas.removeEventListener('gestureend', (e) => e.preventDefault());
     };
   }, [isDrawing, color, lineWidth, currentTool, currentStep]);
 
