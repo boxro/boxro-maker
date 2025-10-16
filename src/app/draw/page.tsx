@@ -4099,11 +4099,13 @@ export default function DrawPage() {
     const canvasWidth = Math.floor(containerWidth);
     const canvasHeight = Math.floor(containerHeight);
     
-    
-    
     // 캔버스 크기 설정 (점선 div 크기에 맞춤)
     canvas.width = canvasWidth;
     canvas.height = canvasHeight;
+    
+    // CSS 크기도 명시적으로 설정하여 일치시킴
+    canvas.style.width = `${canvasWidth}px`;
+    canvas.style.height = `${canvasHeight}px`;
     
     // 캔버스는 점선 div 안에서 100% 크기로 설정됨
     
@@ -4221,7 +4223,7 @@ export default function DrawPage() {
     }
   }, [currentStep, hasBeenToPreview, savedDrawingData, isMobile]);
 
-  // 좌표 변환 (이미 변환된 좌표를 받아서 캔버스 비율 적용)
+  // 좌표 변환 (정확한 캔버스 좌표 계산)
   const getCanvasCoordinates = (canvasX: number, canvasY: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
@@ -4232,9 +4234,14 @@ export default function DrawPage() {
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
     
-    // 이미 캔버스 기준 좌표로 변환된 값을 받아서 스케일만 적용
+    // 캔버스 기준 좌표를 실제 캔버스 좌표로 변환
     const x = canvasX * scaleX;
     const y = canvasY * scaleY;
+    
+    // 디버깅을 위한 로그 (개발 시에만)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Canvas coords:', { canvasX, canvasY, x, y, scaleX, scaleY, rectWidth: rect.width, rectHeight: rect.height, canvasWidth: canvas.width, canvasHeight: canvas.height });
+    }
     
     return { x, y };
   };
