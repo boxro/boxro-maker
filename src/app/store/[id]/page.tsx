@@ -281,16 +281,7 @@ export default function StoryArticlePage() {
     try {
       setLoading(true);
       
-      // Firebase 연결 상태 확인
-      const { checkFirebaseConnection } = await import("@/lib/firebase");
-      if (!checkFirebaseConnection()) {
-        setError('Firebase 연결에 실패했습니다. 페이지를 새로고침해주세요.');
-        return;
-      }
-      
-      // Firebase에서 박스카 이야기 글 데이터 가져오기
-      const { doc, getDoc, updateDoc } = await import("firebase/firestore");
-      const { db } = await import("@/lib/firebase");
+      // Firebase에서 스토어 아이템 데이터 가져오기
       
       const articleRef = doc(db, 'storeItems', id as string);
       const articleSnap = await getDoc(articleRef);

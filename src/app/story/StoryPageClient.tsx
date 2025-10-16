@@ -219,6 +219,20 @@ const ProfileImage = ({ authorId, authorName, authorEmail, size = "w-8 h-8" }: {
 };
 
 
+// 이모지를 고려한 안전한 문자열 자르기 함수
+const truncateText = (text: string, maxLength: number) => {
+  if (text.length <= maxLength) return text;
+  
+  // 이모지와 멀티바이트 문자를 고려하여 자르기
+  const truncated = text.slice(0, maxLength);
+  // 마지막 문자가 잘린 이모지인지 확인하고 조정
+  const lastChar = truncated[truncated.length - 1];
+  if (lastChar && /[\uD800-\uDFFF]/.test(lastChar)) {
+    return truncated.slice(0, -1) + '...';
+  }
+  return truncated + '...';
+};
+
 export default function StoryPageClient() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -278,7 +292,7 @@ export default function StoryPageClient() {
       setHasMore(true);
       
       const articlesRef = collection(db, 'storyArticles');
-      const q = query(articlesRef, orderBy('createdAt', 'desc'), limit(15));
+      const q = query(articlesRef, orderBy('createdAt', 'desc'), limit(10)); // 15 -> 10으로 감소
       const querySnapshot = await getDocs(q);
       
       const articlesData: StoryArticle[] = [];
@@ -302,7 +316,7 @@ export default function StoryPageClient() {
       }
       
       // 더 이상 데이터가 없으면 hasMore를 false로 설정
-      if (querySnapshot.docs.length < 15) {
+      if (querySnapshot.docs.length < 10) {
         setHasMore(false);
       }
     } catch (error) {
@@ -349,7 +363,7 @@ export default function StoryPageClient() {
       }
       
       // 더 이상 데이터가 없으면 hasMore를 false로 설정
-      if (querySnapshot.docs.length < 15) {
+      if (querySnapshot.docs.length < 10) {
         setHasMore(false);
       }
     } catch (error) {
@@ -852,7 +866,9 @@ export default function StoryPageClient() {
             {/* 배너 표시 - 카드들과 섞여서 표시 */}
             <BannerDisplay currentPage="story" />
             
-            {articles.map((article) => (
+            {articles.filter((article, index, self) => 
+              index === self.findIndex(a => a.id === article.id)
+            ).map((article) => (
               <div 
                 key={article.id} 
                 className="group shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden w-full rounded-2xl relative cursor-pointer flex flex-col break-inside-avoid mb-3"
@@ -903,7 +919,7 @@ export default function StoryPageClient() {
                   <h3 
                         className="text-lg font-semibold mb-2 mt-1 text-gray-900"
                   >
-                    {article.title.length > 20 ? `${article.title.substring(0, 20)}...` : article.title}
+                    {truncateText(article.title, 20)}
                   </h3>
                   
                   {article.summary && (

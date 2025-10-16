@@ -269,7 +269,7 @@ export default function StorePageClient() {
       setHasMore(true);
       
       const articlesRef = collection(db, 'storeItems');
-      const q = query(articlesRef, orderBy('createdAt', 'desc'), limit(15));
+      const q = query(articlesRef, orderBy('createdAt', 'desc'), limit(10)); // 15 -> 10으로 감소
       const querySnapshot = await getDocs(q);
       
       const articlesData: StoryArticle[] = [];
@@ -293,7 +293,7 @@ export default function StorePageClient() {
       }
       
       // 더 이상 데이터가 없으면 hasMore를 false로 설정
-      if (querySnapshot.docs.length < 15) {
+      if (querySnapshot.docs.length < 10) {
         setHasMore(false);
       }
     } catch (error) {
@@ -340,7 +340,7 @@ export default function StorePageClient() {
       }
       
       // 더 이상 데이터가 없으면 hasMore를 false로 설정
-      if (querySnapshot.docs.length < 15) {
+      if (querySnapshot.docs.length < 10) {
         setHasMore(false);
       }
     } catch (error) {
@@ -830,7 +830,9 @@ export default function StorePageClient() {
             {/* 배너 표시 - 카드들과 섞여서 표시 */}
             <BannerDisplay currentPage="store" />
             
-            {articles.map((article) => (
+            {articles.filter((article, index, self) => 
+              index === self.findIndex(a => a.id === article.id)
+            ).map((article) => (
               <div 
                 key={article.id} 
                 className="group shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden w-full rounded-2xl relative cursor-pointer flex flex-col break-inside-avoid mb-3"

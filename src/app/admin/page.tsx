@@ -567,13 +567,14 @@ export default function AdminPage() {
 
       await addDoc(collection(db, 'banners'), bannerData);
       
+      // 배너 캐시 무효화 (모든 배너 관련 캐시 삭제)
+      sessionStorage.removeItem('banners');
+      sessionStorage.removeItem('lastBannerUpdate');
+      // 강제로 캐시 무효화를 위한 타임스탬프 추가
+      sessionStorage.setItem('bannerCacheInvalidated', Date.now().toString());
+      
       // 폼 초기화
-      setBannerTitle('');
-      setBannerDescription('');
-      setBannerThumbnail('');
-      setBannerUrl('');
-      setBannerOpenInNewTab(false);
-      setBannerTargetPages([]);
+      resetBannerForm();
       
       // 배너 목록 새로고침
       fetchBanners();
@@ -611,15 +612,14 @@ export default function AdminPage() {
         updatedAt: serverTimestamp()
       });
       
+      // 배너 캐시 무효화 (모든 배너 관련 캐시 삭제)
+      sessionStorage.removeItem('banners');
+      sessionStorage.removeItem('lastBannerUpdate');
+      // 강제로 캐시 무효화를 위한 타임스탬프 추가
+      sessionStorage.setItem('bannerCacheInvalidated', Date.now().toString());
+      
       // 폼 초기화
-      setBannerTitle('');
-      setBannerDescription('');
-      setBannerThumbnail('');
-      setBannerUrl('');
-      setBannerOpenInNewTab(false);
-      setBannerTargetPages([]);
-      setIsBannerEditMode(false);
-      setEditingBanner(null);
+      resetBannerForm();
       
       // 배너 목록 새로고침
       fetchBanners();
@@ -656,6 +656,13 @@ export default function AdminPage() {
     setDeletingBanner(id);
     try {
       await deleteDoc(doc(db, 'banners', id));
+      
+      // 배너 캐시 무효화 (모든 배너 관련 캐시 삭제)
+      sessionStorage.removeItem('banners');
+      sessionStorage.removeItem('lastBannerUpdate');
+      // 강제로 캐시 무효화를 위한 타임스탬프 추가
+      sessionStorage.setItem('bannerCacheInvalidated', Date.now().toString());
+      
       setBannerList(bannerList.filter(banner => banner.id !== id));
       alert('배너가 성공적으로 삭제되었습니다.');
     } catch (error) {
@@ -755,6 +762,8 @@ export default function AdminPage() {
     setBannerTitleColor('#ffffff');
     setBannerDescriptionColor('#ffffff');
     setBannerTextPosition(0);
+    setIsBannerEditMode(false);
+    setEditingBanner(null);
     console.log('배너 폼 초기화 완료');
   };
 
@@ -3584,7 +3593,7 @@ export default function AdminPage() {
       <div className="max-w-7xl mx-auto px-0 md:px-8">
         <div className="mb-6 mt-10 px-4 md:px-0">
         <PageHeader 
-          title="관리자 대시보드"
+          title="관리자 대시보드" 
           description="시스템 통계 및 사용자 관리"
          />
         </div>
@@ -3734,7 +3743,7 @@ export default function AdminPage() {
             >
               순서 불러오기 (현재 홈 카드)
             </Button>
-          </div>
+        </div>
         )}
 
 
@@ -4926,7 +4935,7 @@ export default function AdminPage() {
                             >
                               다음
                             </button>
-                          </div>
+      </div>
                         </div>
                       )}
                     </div>

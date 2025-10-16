@@ -4157,7 +4157,7 @@ export default function DrawPage() {
       // DOM과 CSS가 완전히 준비된 후 캔버스 초기화
       const timer = setTimeout(() => {
     initializeCanvas();
-      }, 200); // 200ms로 증가하여 CSS 로딩 완료 대기
+      }, 100); // 200ms -> 100ms로 감소
       
       // 페이지 포커스 이벤트 비활성화 (캔버스 크기 안정화를 위해)
     
@@ -4166,8 +4166,8 @@ export default function DrawPage() {
     let lastResizeTime = 0;
     const handleResize = () => {
       const now = Date.now();
-      // 500ms 이내의 연속 리사이즈는 무시 (성능 최적화)
-      if (now - lastResizeTime < 500) {
+      // 300ms 이내의 연속 리사이즈는 무시 (성능 최적화)
+      if (now - lastResizeTime < 300) {
         return;
       }
       lastResizeTime = now;
@@ -4175,7 +4175,7 @@ export default function DrawPage() {
       clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(() => {
         requestAnimationFrame(initializeCanvas);
-      }, 300); // 300ms 디바운싱
+      }, 200); // 300ms -> 200ms 디바운싱
     };
 
     // 모바일 방향 전환 이벤트 비활성화 (캔버스 크기 안정화를 위해)

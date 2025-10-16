@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
@@ -121,6 +121,14 @@ const BannerManagement: React.FC<BannerManagementProps> = ({
   bannerSortOrder,
   setBannerSortOrder,
 }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // 썸네일이 초기화될 때 파일 입력 필드도 초기화
+  useEffect(() => {
+    if (!bannerThumbnail && fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  }, [bannerThumbnail]);
   // 배너 썸네일 압축 함수 (450px, 800KB)
   const compressBannerThumbnail = (file: File, maxWidth: number = 450, quality: number = 0.8): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -315,6 +323,7 @@ const BannerManagement: React.FC<BannerManagementProps> = ({
                 <label className="block text-sm font-medium text-gray-800 mb-2">배너 썸네일</label>
                 <div className="flex gap-2">
                   <input 
+                    ref={fileInputRef}
                     type="file" 
                     accept="image/*"
                     onChange={async (e) => {
@@ -335,7 +344,12 @@ const BannerManagement: React.FC<BannerManagementProps> = ({
                   {bannerThumbnail && (
                     <button
                       type="button"
-                      onClick={() => setBannerThumbnail('')}
+                      onClick={() => {
+                        setBannerThumbnail('');
+                        if (fileInputRef.current) {
+                          fileInputRef.current.value = '';
+                        }
+                      }}
                       className="px-3 py-2 bg-sky-500 hover:bg-sky-600 text-white text-sm rounded-md transition-colors whitespace-nowrap"
                     >
                       삭제
@@ -555,7 +569,7 @@ const BannerManagement: React.FC<BannerManagementProps> = ({
                       </p>
                     )}
                     <p className="text-xs text-gray-500 mt-1">
-                      순서: {banner.order || 0} | 배포: {banner.targetPages.join(', ')} | {(() => {
+                      배포: {banner.targetPages.join(', ')} | {(() => {
                         try {
                           if (banner.createdAt) {
                             const date = banner.createdAt.toDate ? banner.createdAt.toDate() : new Date(banner.createdAt);

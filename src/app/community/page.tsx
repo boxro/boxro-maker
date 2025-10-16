@@ -244,6 +244,20 @@ interface BoxroTalk {
   updatedAt?: any; // Firestore Timestamp
 }
 
+// 이모지를 고려한 안전한 문자열 자르기 함수
+const truncateText = (text: string, maxLength: number) => {
+  if (text.length <= maxLength) return text;
+  
+  // 이모지와 멀티바이트 문자를 고려하여 자르기
+  const truncated = text.slice(0, maxLength);
+  // 마지막 문자가 잘린 이모지인지 확인하고 조정
+  const lastChar = truncated[truncated.length - 1];
+  if (lastChar && /[\uD800-\uDFFF]/.test(lastChar)) {
+    return truncated.slice(0, -1) + '...';
+  }
+  return truncated + '...';
+};
+
 export default function GalleryPage() {
   const { user } = useAuth();
   
@@ -363,7 +377,7 @@ export default function GalleryPage() {
       setHasMore(true);
       
       const designsRef = collection(db, 'communityDesigns');
-      const q = query(designsRef, orderBy('createdAt', 'desc'), limit(15));
+      const q = query(designsRef, orderBy('createdAt', 'desc'), limit(10)); // 15 -> 10으로 감소
       const querySnapshot = await getDocs(q);
       
       const designsData: GalleryDesign[] = [];
@@ -420,7 +434,7 @@ export default function GalleryPage() {
       
       setDesigns(designsData);
       setLastDoc(querySnapshot.docs[querySnapshot.docs.length - 1] || null);
-      setHasMore(querySnapshot.docs.length === 15);
+      setHasMore(querySnapshot.docs.length === 10);
       setError(null);
     } catch (err) {
       console.error('작품 데이터 로드 실패:', err);
@@ -489,7 +503,7 @@ export default function GalleryPage() {
       
       setDesigns(prev => [...prev, ...newDesigns]);
       setLastDoc(querySnapshot.docs[querySnapshot.docs.length - 1] || null);
-      setHasMore(querySnapshot.docs.length === 15);
+      setHasMore(querySnapshot.docs.length === 10);
     } catch (err) {
       console.error('추가 작품 로드 실패:', err);
     } finally {
@@ -1660,7 +1674,9 @@ export default function GalleryPage() {
             {/* 배너 표시 - 카드들과 섞여서 표시 */}
             <BannerDisplay currentPage="gallery" />
             
-            {filteredAndSortedDesigns.map((design, index) => (
+            {filteredAndSortedDesigns.filter((design, index, self) => 
+              index === self.findIndex(d => d.id === design.id)
+            ).map((design, index) => (
               <Card 
                 key={design.id} 
                 className="group bg-white/97 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden w-full rounded-2xl gap-2 flex flex-col [&>*:not(:first-child)]:mt-2 p-0 break-inside-avoid mb-3"
@@ -1764,7 +1780,7 @@ export default function GalleryPage() {
                   
                   <div className="flex justify-between items-start">
                     <CardTitle className="text-lg font-semibold flex-1 text-gray-900" title={design.name}>
-                      {design.name.length > 20 ? `${design.name.substring(0, 20)}...` : design.name}
+                      {truncateText(design.name, 20)}
                     </CardTitle>
                   </div>
                 </CardHeader>

@@ -39,9 +39,36 @@ const BannerDisplay: React.FC<BannerDisplayProps> = ({ currentPage }) => {
   useEffect(() => {
     const fetchBanners = async () => {
       try {
+        // 배너 데이터 캐싱 확인 (관리자 페이지에서 수정된 경우 캐시 무시)
+        const cachedBanners = sessionStorage.getItem('banners');
+        const lastBannerUpdate = sessionStorage.getItem('lastBannerUpdate');
+        const bannerCacheInvalidated = sessionStorage.getItem('bannerCacheInvalidated');
+        const now = Date.now();
+        
+        // 캐시 무효화 플래그가 있거나 캐시가 없으면 서버에서 새로 가져오기
+        if (bannerCacheInvalidated || !cachedBanners || !lastBannerUpdate) {
+          console.log('캐시 무효화됨 또는 캐시 없음, 서버에서 새로 가져오기');
+        } else if (cachedBanners && lastBannerUpdate && (now - parseInt(lastBannerUpdate)) < 30000) {
+          const bannersData = JSON.parse(cachedBanners);
+          console.log('캐시된 배너 데이터 사용');
+          
+          // 클라이언트 사이드에서 필터링 및 정렬
+          const validPages = pageMapping[currentPage] || [currentPage];
+          const filteredBanners = bannersData.filter((banner: Banner) => {
+            const isActive = banner.isActive === true;
+            const hasTargetPages = banner.targetPages && Array.isArray(banner.targetPages);
+            const includesCurrentPage = hasTargetPages && banner.targetPages.some(page => validPages.includes(page));
+            return isActive && hasTargetPages && includesCurrentPage;
+          });
+          
+          const sortedBanners = filteredBanners.sort((a, b) => (a.order || 0) - (b.order || 0));
+          setBanners(sortedBanners);
+          setLoading(false);
+          return;
+        }
+        
         console.log('배너 불러오기 시작:', currentPage);
         const bannersRef = collection(db, 'banners');
-        // 인덱스 문제를 피하기 위해 단순한 쿼리 사용
         const q = query(bannersRef);
         
         const querySnapshot = await getDocs(q);
@@ -79,6 +106,13 @@ const BannerDisplay: React.FC<BannerDisplayProps> = ({ currentPage }) => {
         
         const sortedBanners = filteredBanners.sort((a, b) => (a.order || 0) - (b.order || 0));
         console.log('최종 배너 데이터:', { currentPage, bannersData, filteredBanners, sortedBanners });
+        
+        // 배너 데이터를 세션 스토리지에 캐싱
+        sessionStorage.setItem('banners', JSON.stringify(bannersData));
+        sessionStorage.setItem('lastBannerUpdate', now.toString());
+        // 캐시 무효화 플래그 삭제
+        sessionStorage.removeItem('bannerCacheInvalidated');
+        
         setBanners(sortedBanners);
       } catch (error) {
         console.error('배너 불러오기 실패:', error);
@@ -112,11 +146,13 @@ const BannerDisplay: React.FC<BannerDisplayProps> = ({ currentPage }) => {
         >
           {/* 배경 이미지 또는 색상 */}
           {banner.thumbnail && (
-            <img
-              src={banner.thumbnail}
-              alt={banner.title}
-              className="w-full h-auto object-contain"
-            />
+            <div className="w-full overflow-hidden">
+              <img
+                src={banner.thumbnail}
+                alt={banner.title}
+                className="w-full h-auto object-contain transition-transform duration-300 group-hover:scale-[1.03]"
+              />
+            </div>
           )}
           
           {/* 배너 내용 */}

@@ -61,12 +61,40 @@ export default function HomeStoryCards() {
       setHomeCards([]);
       setHasMore(true);
       
+      // 홈카드 데이터 캐싱 확인
+      const cachedHomeCards = sessionStorage.getItem('homeCards');
+      if (cachedHomeCards) {
+        const allHomeCards = JSON.parse(cachedHomeCards);
+        console.log('캐시된 홈카드 데이터 사용');
+        
+        // 클라이언트에서 홈 표시 조건 필터링
+        const filteredHomeCards = allHomeCards
+          .filter(article => 
+            article.showOnHome === true && 
+            article.isPublished === true &&
+            article.cardTitle && 
+            article.cardTitle.trim() && 
+            article.cardDescription && 
+            article.cardDescription.trim()
+          )
+          .sort((a, b) => {
+            const aOrder = a.homeOrder || 999999;
+            const bOrder = b.homeOrder || 999999;
+            return aOrder - bOrder;
+          })
+          .slice(0, 15);
+        
+        setHomeCards(filteredHomeCards);
+        setLoading(false);
+        return;
+      }
+      
       // homeCards 컬렉션에서 모든 데이터 가져오기 (클라이언트 필터링)
       const homeCardsQuery = await getDocs(
         query(
           collection(db, 'homeCards'), 
           orderBy('createdAt', 'desc'),
-          limit(50)
+          limit(30) // 50 -> 30으로 감소
         )
       );
       
@@ -94,6 +122,9 @@ export default function HomeStoryCards() {
           return aOrder - bOrder;
         })
         .slice(0, 15); // 처음 15개만
+      
+      // 홈카드 데이터를 세션 스토리지에 캐싱
+      sessionStorage.setItem('homeCards', JSON.stringify(allHomeCards));
       
       setHomeCards(filteredHomeCards);
       
