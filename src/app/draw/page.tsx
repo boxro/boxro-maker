@@ -4221,8 +4221,8 @@ export default function DrawPage() {
     }
   }, [currentStep, hasBeenToPreview, savedDrawingData, isMobile]);
 
-  // 좌표 변환 (정확한 비율 계산)
-  const getCanvasCoordinates = (clientX: number, clientY: number) => {
+  // 좌표 변환 (이미 변환된 좌표를 받아서 캔버스 비율 적용)
+  const getCanvasCoordinates = (canvasX: number, canvasY: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
 
@@ -4232,9 +4232,9 @@ export default function DrawPage() {
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
     
-    // 마우스/터치 위치를 캔버스 좌표로 변환
-    const x = (clientX - rect.left) * scaleX;
-    const y = (clientY - rect.top) * scaleY;
+    // 이미 캔버스 기준 좌표로 변환된 값을 받아서 스케일만 적용
+    const x = canvasX * scaleX;
+    const y = canvasY * scaleY;
     
     return { x, y };
   };
@@ -4437,10 +4437,9 @@ export default function DrawPage() {
       }
     };
 
-    // 터치 이벤트 핸들러 (카카오톡 인앱 브라우저 대응)
+    // 터치 이벤트 핸들러 (좌표 변환 적용)
     const touchStartHandler = (e: TouchEvent) => {
       e.preventDefault();
-      e.stopPropagation();
       const touch = e.touches[0];
       const rect = canvas.getBoundingClientRect();
       const x = touch.clientX - rect.left;
@@ -4450,7 +4449,6 @@ export default function DrawPage() {
 
     const touchMoveHandler = (e: TouchEvent) => {
       e.preventDefault();
-      e.stopPropagation();
       if (isDrawing) {
         const touch = e.touches[0];
         const rect = canvas.getBoundingClientRect();
@@ -4462,7 +4460,6 @@ export default function DrawPage() {
 
     const touchEndHandler = (e: TouchEvent) => {
       e.preventDefault();
-      e.stopPropagation();
       if (isDrawing) {
         stopDrawing();
       }
@@ -4474,16 +4471,10 @@ export default function DrawPage() {
     canvas.addEventListener('mouseup', mouseUpHandler);
     canvas.addEventListener('mouseleave', mouseLeaveHandler);
     
-    // 터치 이벤트는 passive: false로 설정하여 preventDefault 사용 가능
-    canvas.addEventListener('touchstart', touchStartHandler, { passive: false });
-    canvas.addEventListener('touchmove', touchMoveHandler, { passive: false });
-    canvas.addEventListener('touchend', touchEndHandler, { passive: false });
-    
-    // 카카오톡 인앱 브라우저 대응: 추가 터치 이벤트 방지
-    canvas.addEventListener('touchcancel', touchEndHandler, { passive: false });
-    canvas.addEventListener('gesturestart', (e) => e.preventDefault(), { passive: false });
-    canvas.addEventListener('gesturechange', (e) => e.preventDefault(), { passive: false });
-    canvas.addEventListener('gestureend', (e) => e.preventDefault(), { passive: false });
+    // 터치 이벤트는 passive: true로 설정하여 스크롤 충돌 방지
+    canvas.addEventListener('touchstart', touchStartHandler, { passive: true });
+    canvas.addEventListener('touchmove', touchMoveHandler, { passive: true });
+    canvas.addEventListener('touchend', touchEndHandler, { passive: true });
 
     return () => {
       canvas.removeEventListener('mousedown', mouseDownHandler);
@@ -4494,10 +4485,6 @@ export default function DrawPage() {
       canvas.removeEventListener('touchstart', touchStartHandler);
       canvas.removeEventListener('touchmove', touchMoveHandler);
       canvas.removeEventListener('touchend', touchEndHandler);
-      canvas.removeEventListener('touchcancel', touchEndHandler);
-      canvas.removeEventListener('gesturestart', (e) => e.preventDefault());
-      canvas.removeEventListener('gesturechange', (e) => e.preventDefault());
-      canvas.removeEventListener('gestureend', (e) => e.preventDefault());
     };
   }, [isDrawing, color, lineWidth, currentTool, currentStep]);
 
