@@ -4407,13 +4407,19 @@ export default function DrawPage() {
 
     const mouseDownHandler = (e: MouseEvent) => {
       e.preventDefault();
-      startDrawing(e.clientX, e.clientY);
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      startDrawing(x, y);
     };
 
     const mouseMoveHandler = (e: MouseEvent) => {
       e.preventDefault();
       if (isDrawing) {
-        draw(e.clientX, e.clientY);
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        draw(x, y);
       }
     };
 
