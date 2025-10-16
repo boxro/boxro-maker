@@ -6,8 +6,6 @@ const urlsToCache = [
   '/community',
   '/story',
   '/store',
-  '/static/js/bundle.js',
-  '/static/css/main.css',
   '/manifest.json'
 ];
 
