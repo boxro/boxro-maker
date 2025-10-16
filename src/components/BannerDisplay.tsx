@@ -140,8 +140,7 @@ const BannerDisplay: React.FC<BannerDisplayProps> = ({ currentPage }) => {
           className="group shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden w-full rounded-2xl relative cursor-pointer flex flex-col break-inside-avoid mb-3"
           style={{ 
             backgroundColor: banner.backgroundColor || '#3b82f6',
-            minHeight: '200px',
-            height: 'auto'
+            minHeight: '100%'
           }}
         >
           {/* 배경 이미지 또는 색상 */}
@@ -157,7 +156,7 @@ const BannerDisplay: React.FC<BannerDisplayProps> = ({ currentPage }) => {
           
           {/* 배너 내용 */}
           <div
-            className="p-6 flex flex-col justify-center items-start text-left"
+            className="px-7 py-4 flex-1 flex flex-col justify-center items-start text-left"
             style={{
               marginTop: `${banner.textPosition}%`
             }}

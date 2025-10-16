@@ -862,7 +862,7 @@ export default function StoryPageClient() {
             </CardContent>
           </Card>
         ) : (
-          <div className="columns-1 md:columns-2 lg:columns-3 gap-3 space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {/* 배너 표시 - 카드들과 섞여서 표시 */}
             <BannerDisplay currentPage="story" />
             
@@ -871,7 +871,7 @@ export default function StoryPageClient() {
             ).map((article) => (
               <div 
                 key={article.id} 
-                className="group shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden w-full rounded-2xl relative cursor-pointer flex flex-col break-inside-avoid mb-3"
+                className="group shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden w-full rounded-2xl relative cursor-pointer flex flex-col"
                 style={{ backgroundColor: article.cardBackgroundColor || 'rgba(255, 255, 255, 0.97)' }}
                 onClick={() => router.push(`/story/${article.id}`)}
               >
@@ -1273,12 +1273,12 @@ export default function StoryPageClient() {
         </div>
       )}
       
-      {/* 더 이상 데이터가 없을 때 */}
-      {!hasMore && articles.length > 0 && (
-        <div className="flex justify-center py-8">
-          <span className="text-white text-sm">준비된 박스카 이야기를 모두 보여드렸어요!</span>
-        </div>
-      )}
+            {/* 더 이상 데이터가 없을 때 */}
+            {!hasMore && articles.length > 0 && (
+              <div className="col-span-full flex justify-center py-8">
+                <span className="text-white text-sm">준비된 박스카 이야기를 모두 보여드렸어요!</span>
+              </div>
+            )}
 
       {/* 박스로 톡 목록 모달 */}
       {showBoxroTalksModal && selectedArticle && (

@@ -1670,7 +1670,7 @@ export default function GalleryPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="columns-1 md:columns-2 lg:columns-3 gap-3 space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {/* 배너 표시 - 카드들과 섞여서 표시 */}
             <BannerDisplay currentPage="gallery" />
             
@@ -1679,7 +1679,7 @@ export default function GalleryPage() {
             ).map((design, index) => (
               <Card 
                 key={design.id} 
-                className="group bg-white/97 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden w-full rounded-2xl gap-2 flex flex-col [&>*:not(:first-child)]:mt-2 p-0 break-inside-avoid mb-3"
+                className="group bg-white/97 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden w-full rounded-2xl gap-2 flex flex-col [&>*:not(:first-child)]:mt-2 p-0"
               >
                 {/* 썸네일 */}
                 {design.thumbnail && design.thumbnail !== '/api/placeholder/300/200' && design.thumbnail !== '' ? (
