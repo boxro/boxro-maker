@@ -595,12 +595,34 @@ export default function EditStoryPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">글을 불러오는 중...</p>
+      <CommonBackground>
+        <CommonHeader />
+        <div className="max-w-7xl mx-auto px-4 md:px-8 flex-1">
+          <div className="mt-10">
+            <Card className="bg-white border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden py-5 w-full rounded-2xl">
+              <CardContent className="text-center py-12">
+                {/* 점프 애니메이션 (더 역동적인 뛰는 효과) */}
+                <div className="w-24 h-24 mx-auto mb-6 flex items-center justify-center">
+                  <img 
+                    src="/logo_remoteonly.png" 
+                    alt="박스로 로고" 
+                    className="w-20 h-20 animate-bounce"
+                    style={{ 
+                      animationDuration: '0.6s',
+                      animationIterationCount: 'infinite',
+                      animationTimingFunction: 'cubic-bezier(0.68, -0.55, 0.265, 1.55)'
+                    }}
+                  />
+                </div>
+                <h3 className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-pink-600 bg-clip-text text-transparent mb-2">
+                  박스카 이야기를 불러오는 중...
+                </h3>
+                <p className="text-sm text-gray-800">멋진 박스카 이야기를 준비하고 있어요!</p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
-      </div>
+      </CommonBackground>
     );
   }
 

@@ -5,8 +5,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { StoryProvider } from "@/contexts/StoryContext";
 import OnboardingWrapper from "@/components/OnboardingWrapper";
-import PWAInstallPrompt from "@/components/PWAInstallPrompt";
-import PWAServiceWorker from "@/components/PWAServiceWorker";
+import ConditionalPWA from "@/components/ConditionalPWA";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -80,8 +79,7 @@ export default function RootLayout({
             <StoryProvider>
               <OnboardingWrapper>
                 {children}
-                <PWAInstallPrompt />
-                <PWAServiceWorker />
+                <ConditionalPWA />
               </OnboardingWrapper>
             </StoryProvider>
           </LanguageProvider>
