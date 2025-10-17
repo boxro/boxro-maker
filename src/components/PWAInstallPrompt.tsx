@@ -117,7 +117,7 @@ export default function PWAInstallPrompt() {
 
   return (
     <div className="fixed bottom-4 left-4 right-4 z-50 md:left-auto md:right-4 md:max-w-xs md:w-64">
-      <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200 px-4 py-3 relative">
+      <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200 px-4 py-4 relative">
         {/* X 버튼 - 오른쪽 위 */}
         <div className="absolute top-2 right-4 z-10">
           <button

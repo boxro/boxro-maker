@@ -372,8 +372,8 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
               // 에디터 내용을 URL 앞까지로 설정
               editor.commands.setContent(beforeUrl);
               
-              // URL 미리보기 추가
-              editor.commands.setUrlPreview(url);
+              // URL을 링크로 삽입
+              editor.commands.insertContent(`<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`);
               
               // URL 뒤의 텍스트가 있으면 추가
               if (afterUrl.trim()) {
