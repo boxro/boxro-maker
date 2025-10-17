@@ -4,8 +4,8 @@
   "description": "버려진 박스로 자동차를 만들고, 상상력을 움직이는 친환경 놀이 플랫폼",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#10b981",
+  "background_color": "#2563eb",
+  "theme_color": "#2563eb",
   "orientation": "portrait",
   "icons": [
     {
