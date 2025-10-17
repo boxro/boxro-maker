@@ -291,29 +291,6 @@ export default function StoryPageClient() {
       setArticles([]);
       setHasMore(true);
       
-      // 스토리 데이터 캐싱 확인 (캐시 무효화)
-      const cachedStories = sessionStorage.getItem('stories');
-      const lastStoriesUpdate = sessionStorage.getItem('lastStoriesUpdate');
-      const now = Date.now();
-      
-      // 캐시 무효화 - 임시로 캐시 사용 안함
-      if (false && cachedStories && lastStoriesUpdate && (now - parseInt(lastStoriesUpdate)) < 300000) { // 5분 캐시
-        const storiesData = JSON.parse(cachedStories);
-        console.log('캐시된 스토리 데이터 사용');
-        
-        const articlesData: StoryArticle[] = storiesData.map((data: any) => ({
-          id: data.id,
-          ...data,
-          isLiked: user ? (data.likedBy?.includes(user.uid) || false) : false,
-          isShared: user ? (data.sharedBy?.includes(user.uid) || false) : false,
-          isBoxroTalked: user ? (data.boxroTalkedBy?.includes(user.uid) || false) : false,
-          isViewed: user ? (data.viewedBy?.includes(user.uid) || false) : false
-        } as StoryArticle));
-        
-        setArticles(articlesData);
-        setLoading(false);
-        return;
-      }
       
       const articlesRef = collection(db, 'storyArticles');
       const q = query(articlesRef, orderBy('createdAt', 'desc'), limit(15)); // 원래대로 복구
@@ -334,13 +311,6 @@ export default function StoryPageClient() {
       
       setArticles(articlesData);
       
-      // 스토리 데이터를 세션 스토리지에 캐싱
-      const storiesData = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      sessionStorage.setItem('stories', JSON.stringify(storiesData));
-      sessionStorage.setItem('lastStoriesUpdate', Date.now().toString());
       
       // 마지막 문서 저장
       if (querySnapshot.docs.length > 0) {

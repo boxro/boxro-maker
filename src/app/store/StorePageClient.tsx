@@ -268,29 +268,6 @@ export default function StorePageClient() {
       setArticles([]);
       setHasMore(true);
       
-      // 스토어 데이터 캐싱 확인 (캐시 무효화)
-      const cachedStoreItems = sessionStorage.getItem('storeItems');
-      const lastStoreItemsUpdate = sessionStorage.getItem('lastStoreItemsUpdate');
-      const now = Date.now();
-      
-      // 캐시 무효화 - 임시로 캐시 사용 안함
-      if (false && cachedStoreItems && lastStoreItemsUpdate && (now - parseInt(lastStoreItemsUpdate)) < 300000) { // 5분 캐시
-        const storeItemsData = JSON.parse(cachedStoreItems);
-        console.log('캐시된 스토어 데이터 사용');
-        
-        const articlesData: StoryArticle[] = storeItemsData.map((data: any) => ({
-          id: data.id,
-          ...data,
-          isLiked: user ? (data.likedBy?.includes(user.uid) || false) : false,
-          isShared: user ? (data.sharedBy?.includes(user.uid) || false) : false,
-          isBoxroTalked: user ? (data.boxroTalkedBy?.includes(user.uid) || false) : false,
-          isViewed: user ? (data.viewedBy?.includes(user.uid) || false) : false
-        } as StoryArticle));
-        
-        setArticles(articlesData);
-        setLoading(false);
-        return;
-      }
       
       const articlesRef = collection(db, 'storeItems');
       const q = query(articlesRef, orderBy('createdAt', 'desc'), limit(15)); // 원래대로 복구
@@ -311,13 +288,6 @@ export default function StorePageClient() {
       
       setArticles(articlesData);
       
-      // 스토어 데이터를 세션 스토리지에 캐싱
-      const storeItemsData = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      sessionStorage.setItem('storeItems', JSON.stringify(storeItemsData));
-      sessionStorage.setItem('lastStoreItemsUpdate', Date.now().toString());
       
       // 마지막 문서 저장
       if (querySnapshot.docs.length > 0) {
