@@ -636,9 +636,26 @@ export default function WriteStoryPage() {
                     <div className="px-7 py-4">
                       <h4 
                         className="text-lg font-semibold mb-4 mt-2"
-                        style={{ color: titleColor }}
+                        style={{ 
+                          color: titleColor,
+                          display: '-webkit-box',
+                          WebkitLineClamp: 1,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          lineHeight: '1.4',
+                          maxHeight: '1.4em'
+                        }}
                       >
-                        {(title || "제목을 입력하세요").length > 20 ? `${(title || "제목을 입력하세요").substring(0, 20)}...` : (title || "제목을 입력하세요")}
+                        {(() => {
+                          const text = title || "제목을 입력하세요";
+                          if (text.length > 20) {
+                            // UTF-8 안전한 문자열 자르기
+                            const truncated = Array.from(text).slice(0, 20).join('');
+                            return `${truncated}...`;
+                          }
+                          return text;
+                        })()}
                       </h4>
                       {summary && (
                         <p 
