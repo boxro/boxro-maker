@@ -1222,7 +1222,7 @@ export default function EditStoryPage() {
                         <CardTitle className="text-[24px] font-bold mb-1 font-cookie-run" style={{ color: cardTitleColor }}>
                           {cardTitle || "카드 제목"}
                         </CardTitle>
-                        <p className="leading-relaxed" style={{ fontSize: '15px', whiteSpace: 'pre-line', color: cardDescriptionColor }}>
+                        <p className="leading-relaxed" style={{ fontSize: '14px', whiteSpace: 'pre-line', color: cardDescriptionColor }}>
                           {cardDescription || "카드 설명이 여기에 표시됩니다.\n최대 2줄까지 권장됩니다."}
                         </p>
                       </CardHeader>
@@ -1247,7 +1247,7 @@ export default function EditStoryPage() {
                 className="bg-pink-500 hover:bg-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-full w-[74px] h-[74px] md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1"
               >
                 <ArrowLeft className="w-4 h-4 md:w-5 md:h-5" />
-                <span className="font-medium" style={{fontSize: '15px'}}>목록으로</span>
+                <span className="font-medium" style={{fontSize: '14px'}}>목록으로</span>
               </Button>
             </Link>
             <div className="flex gap-3">
@@ -1257,7 +1257,7 @@ export default function EditStoryPage() {
                 className="bg-sky-500 hover:bg-sky-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-full w-[74px] h-[74px] md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1"
               >
                 <BookOpen className="w-4 h-4 md:w-5 md:h-5" />
-                <span className="font-medium" style={{fontSize: '15px'}}>발행하기</span>
+                <span className="font-medium" style={{fontSize: '14px'}}>발행하기</span>
               </Button>
             </div>
           </div>
@@ -1279,7 +1279,7 @@ export default function EditStoryPage() {
               <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
                 발행 완료
               </h3>
-              <p className="text-gray-900 mb-4" style={{fontSize: '15px'}}>
+              <p className="text-gray-900 mb-4" style={{fontSize: '14px'}}>
                 {successMessage}
               </p>
               <Button
@@ -1288,7 +1288,7 @@ export default function EditStoryPage() {
                   router.push('/story');
                 }}
                 className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white transition-all duration-200 rounded-full"
-                style={{fontSize: '15px'}}
+                style={{fontSize: '14px'}}
               >
                 확인
               </Button>
@@ -1305,13 +1305,13 @@ export default function EditStoryPage() {
               <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
                 입력 안내
               </h3>
-              <p className="text-gray-900 mb-4" style={{fontSize: '15px'}}>
+              <p className="text-gray-900 mb-4" style={{fontSize: '14px'}}>
                 {infoMessage}
               </p>
               <Button
                 onClick={() => setShowInfoModal(false)}
                 className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white transition-all duration-200 rounded-full"
-                style={{fontSize: '15px'}}
+                style={{fontSize: '14px'}}
               >
                 확인
               </Button>

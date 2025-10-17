@@ -782,7 +782,7 @@ export default function StoryArticlePage() {
               
               <CardTitle className="text-[20px] md:text-[22px] font-bold mb-2" style={{ fontFamily: 'CookieRun', color: 'var(--foreground)' }}>{article.title}</CardTitle>
               
-              <p className="text-[15px] md:text-[15px] text-gray-800 leading-relaxed whitespace-pre-wrap">{article.summary}</p>
+              <p className="text-[14px] md:text-[14px] text-gray-800 leading-relaxed whitespace-pre-wrap">{article.summary}</p>
             </div>
           </CardHeader>
           
@@ -859,7 +859,7 @@ export default function StoryArticlePage() {
                 className="bg-pink-500 hover:bg-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-full w-[74px] h-[74px] md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1"
               >
                 <ArrowLeft className="w-4 h-4 md:w-5 md:h-5" />
-                <span className="font-medium" style={{fontSize: '15px'}}>목록으로</span>
+                <span className="font-medium" style={{fontSize: '14px'}}>목록으로</span>
               </Button>
             </Link>
             {isAdmin && (
@@ -869,7 +869,7 @@ export default function StoryArticlePage() {
                     className="bg-sky-500 hover:bg-sky-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-full w-[74px] h-[74px] md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1"
                   >
                     <Edit className="w-4 h-4 md:w-5 md:h-5" />
-                    <span className="font-medium" style={{fontSize: '15px'}}>수정</span>
+                    <span className="font-medium" style={{fontSize: '14px'}}>수정</span>
                   </Button>
                 </Link>
                 <Button 
@@ -877,7 +877,7 @@ export default function StoryArticlePage() {
                   className="bg-orange-500 hover:bg-orange-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-full w-[74px] h-[74px] md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1"
                 >
                   <Trash2 className="w-4 h-4 md:w-5 md:h-5" />
-                  <span className="font-medium" style={{fontSize: '15px'}}>삭제</span>
+                  <span className="font-medium" style={{fontSize: '14px'}}>삭제</span>
                 </Button>
               </div>
             )}
@@ -896,7 +896,7 @@ export default function StoryArticlePage() {
               <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
                 박스카 이야기 공유하기
               </h3>
-              <p className="text-gray-900 mb-6" style={{fontSize: '15px'}}>
+              <p className="text-gray-900 mb-6" style={{fontSize: '14px'}}>
                 박스카 이야기를 다른 사람들과 나눠보세요!
               </p>
               
@@ -904,7 +904,7 @@ export default function StoryArticlePage() {
                 <Button
                   onClick={() => setShowShareModal(false)}
                   className="flex-1 bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 rounded-full"
-                  style={{fontSize: '15px'}}
+                  style={{fontSize: '14px'}}
                 >
                   취소
                 </Button>
@@ -927,7 +927,7 @@ export default function StoryArticlePage() {
                     }
                   }}
                   className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-full"
-                  style={{fontSize: '15px'}}
+                  style={{fontSize: '14px'}}
                 >
                   링크 복사
                 </Button>
@@ -1137,7 +1137,7 @@ export default function StoryArticlePage() {
                   {loginModalType === 'share' && '공유하기'}
                   {loginModalType === 'boxroTalk' && '이 이야기에 참여해보세요!'}
                 </h3>
-                <p className="text-gray-900 mb-6" style={{fontSize: '15px'}}>
+                <p className="text-gray-900 mb-6" style={{fontSize: '14px'}}>
                   {loginModalType === 'like' && '로그인하면 👍 공감을 남길 수 있어요!'}
                   {loginModalType === 'share' && '멋진 작품, 로그인하면 바로 공유할 수 있어요'}
                   {loginModalType === 'boxroTalk' && '로그인하면 톡을 남길 수 있어요!'}
@@ -1148,14 +1148,14 @@ export default function StoryArticlePage() {
                     variant="outline"
                     onClick={closeLoginModal}
                     className="flex-1 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-full text-gray-900"
-                    style={{fontSize: '15px'}}
+                    style={{fontSize: '14px'}}
                   >
                     나중에 할래
                   </Button>
                   <Button
                     onClick={handleLoginAndAction}
                     className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-full"
-                    style={{fontSize: '15px'}}
+                    style={{fontSize: '14px'}}
                   >
                     지금 로그인하기
                   </Button>

@@ -14,6 +14,26 @@ export default function PWAInstallPrompt() {
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
 
+  // PWA 설치 프롬프트 표시 제어
+  const shouldShowPrompt = () => {
+    if (typeof window === 'undefined') return false;
+    
+    // 거부한 경우 1시간간 다시 보지 않음
+    const dismissedAt = localStorage.getItem('pwa-prompt-dismissed');
+    if (dismissedAt) {
+      const dismissedTime = parseInt(dismissedAt);
+      const now = Date.now();
+      const hoursSinceDismissed = (now - dismissedTime) / (1000 * 60 * 60);
+      
+      if (hoursSinceDismissed < 1) {
+        console.log('🚫 PWA 프롬프트 숨김: 사용자가 최근에 거부함');
+        return false;
+      }
+    }
+    
+    return true;
+  };
+
   useEffect(() => {
     // Check if we're on the client side
     if (typeof window === 'undefined') return;
@@ -28,6 +48,11 @@ export default function PWAInstallPrompt() {
     // Check if app is already installed
     if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
       setIsInstalled(true);
+      return;
+    }
+
+    // 이미 거부한 경우 프롬프트 표시하지 않음
+    if (!shouldShowPrompt()) {
       return;
     }
 
@@ -75,6 +100,9 @@ export default function PWAInstallPrompt() {
   };
 
   const handleDismiss = () => {
+    // 거부 시간을 로컬 스토리지에 저장 (1시간간 다시 보지 않음)
+    localStorage.setItem('pwa-prompt-dismissed', Date.now().toString());
+    
     setShowInstallPrompt(false);
     setDeferredPrompt(null);
   };

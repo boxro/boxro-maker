@@ -450,7 +450,7 @@ const BannerManagement: React.FC<BannerManagementProps> = ({
                   <h3 className="text-lg font-bold mb-2" style={{ color: bannerTitleColor }}>
                     {bannerTitle || '배너 제목'}
                   </h3>
-                  <p className="opacity-90" style={{ color: bannerDescriptionColor, whiteSpace: 'pre-line', fontSize: '15px' }}>
+                  <p className="opacity-90" style={{ color: bannerDescriptionColor, whiteSpace: 'pre-line', fontSize: '14px' }}>
                     {bannerDescription || '배너 설명을 입력하세요'}
                   </p>
                 </div>

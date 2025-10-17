@@ -790,7 +790,7 @@ export default function StoryPageClient() {
               <div className="hidden sm:flex gap-3">
                 <Button
                   className="bg-indigo-600 hover:bg-indigo-700 text-white transition-all duration-200 rounded-full px-6 py-3"
-                  style={{fontSize: '15px'}}
+                  style={{fontSize: '14px'}}
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   새 글 작성하기
@@ -841,7 +841,7 @@ export default function StoryPageClient() {
                 <Button
                   onClick={() => router.push('/story/write')}
                   className="bg-indigo-600 hover:bg-indigo-700 text-white transition-all duration-200 rounded-full px-6 py-3"
-                  style={{fontSize: '15px'}}
+                  style={{fontSize: '14px'}}
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   새 글 작성하기
@@ -933,7 +933,7 @@ export default function StoryPageClient() {
                   
                   {article.summary && (
                     <p 
-                      className="text-[15px] mb-0 whitespace-pre-wrap flex-1 text-gray-900"
+                      className="text-[14px] mb-0 whitespace-pre-wrap flex-1 text-gray-900"
                     >
                       {article.summary}
                     </p>
@@ -1022,7 +1022,7 @@ export default function StoryPageClient() {
                     setShowFloatingMenu(false);
                   }}
                   className="bg-indigo-600 hover:bg-indigo-700 text-white transition-all duration-200 rounded-full px-6 py-3"
-                  style={{fontSize: '15px'}}
+                  style={{fontSize: '14px'}}
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   새 글 작성하기
@@ -1051,7 +1051,7 @@ export default function StoryPageClient() {
               <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
                 박스카 이야기 공유하기
               </h3>
-              <p className="text-gray-900 mb-6" style={{fontSize: '15px'}}>
+              <p className="text-gray-900 mb-6" style={{fontSize: '14px'}}>
                 박스카 이야기를 다른 사람들과 나눠보세요!
               </p>
               
@@ -1059,7 +1059,7 @@ export default function StoryPageClient() {
                 <Button
                   onClick={() => setShowShareModal(false)}
                   className="flex-1 bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 rounded-full"
-                  style={{fontSize: '15px'}}
+                  style={{fontSize: '14px'}}
                 >
                   취소
                 </Button>
@@ -1082,7 +1082,7 @@ export default function StoryPageClient() {
                     }
                   }}
                   className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-full"
-                  style={{fontSize: '15px'}}
+                  style={{fontSize: '14px'}}
                 >
                   링크 복사
                 </Button>
@@ -1139,7 +1139,7 @@ export default function StoryPageClient() {
                 </div>
               ) : boxroTalksForDesign.length === 0 ? (
                 <div className="text-center py-8">
-                  <div className="text-gray-900" style={{fontSize: '15px'}}>아직 톡이 없어요. ✨ 첫 톡을 남겨보세요!</div>
+                  <div className="text-gray-900" style={{fontSize: '14px'}}>아직 톡이 없어요. ✨ 첫 톡을 남겨보세요!</div>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -1168,7 +1168,7 @@ export default function StoryPageClient() {
                         {/* 박스로 톡 박스 */}
                         <div className="bg-gray-100 rounded-lg p-4">
                           <div className="flex justify-between items-start">
-                            <div className="text-gray-900 whitespace-pre-wrap break-words flex-1" style={{fontSize: '15px'}}>
+                            <div className="text-gray-900 whitespace-pre-wrap break-words flex-1" style={{fontSize: '14px'}}>
                               {comment.text}
                             </div>
                             {/* 박스로 톡 삭제 버튼 (작성자 또는 관리자) */}
@@ -1252,7 +1252,7 @@ export default function StoryPageClient() {
                     onClick={addBoxroTalk}
                     disabled={!boxroTalkText.trim()}
                     className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white disabled:opacity-50 disabled:cursor-not-allowed rounded-full px-12"
-                    style={{fontSize: '15px'}}
+                    style={{fontSize: '14px'}}
                   >
                     톡 남기기
                   </Button>
@@ -1336,7 +1336,7 @@ export default function StoryPageClient() {
                 </div>
               ) : boxroTalksForDesign.length === 0 ? (
                 <div className="text-center py-8">
-                  <div className="text-gray-900" style={{fontSize: '15px'}}>아직 톡이 없어요. ✨ 첫 톡을 남겨보세요!</div>
+                  <div className="text-gray-900" style={{fontSize: '14px'}}>아직 톡이 없어요. ✨ 첫 톡을 남겨보세요!</div>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -1365,7 +1365,7 @@ export default function StoryPageClient() {
                         {/* 박스로 톡 박스 */}
                         <div className="bg-gray-100 rounded-lg p-4">
                           <div className="flex justify-between items-start">
-                            <div className="text-gray-900 whitespace-pre-wrap break-words flex-1" style={{fontSize: '15px'}}>
+                            <div className="text-gray-900 whitespace-pre-wrap break-words flex-1" style={{fontSize: '14px'}}>
                               {comment.text}
                             </div>
                             {/* 박스로 톡 삭제 버튼 (작성자 또는 관리자) */}
@@ -1449,7 +1449,7 @@ export default function StoryPageClient() {
                     onClick={addBoxroTalk}
                     disabled={!boxroTalkText.trim()}
                     className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white disabled:opacity-50 disabled:cursor-not-allowed rounded-full px-12"
-                    style={{fontSize: '15px'}}
+                    style={{fontSize: '14px'}}
                   >
                     톡 남기기
                   </Button>
@@ -1504,7 +1504,7 @@ export default function StoryPageClient() {
                   {loginModalType === 'share' && '공유하기'}
                   {loginModalType === 'boxroTalk' && '이 이야기에 참여해보세요!'}
                 </h3>
-                <p className="text-gray-900 mb-6" style={{fontSize: '15px'}}>
+                <p className="text-gray-900 mb-6" style={{fontSize: '14px'}}>
                   {loginModalType === 'like' && '로그인하면 👍 공감을 남길 수 있어요!'}
                   {loginModalType === 'share' && '멋진 작품, 로그인하면 바로 공유할 수 있어요'}
                   {loginModalType === 'boxroTalk' && '로그인하면 톡을 남길 수 있어요!'}
@@ -1515,14 +1515,14 @@ export default function StoryPageClient() {
                     variant="outline"
                     onClick={closeLoginModal}
                     className="flex-1 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-full text-gray-900"
-                    style={{fontSize: '15px'}}
+                    style={{fontSize: '14px'}}
                   >
                     나중에 할래
                   </Button>
                   <Button
                     onClick={handleLoginAndAction}
                     className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-full"
-                    style={{fontSize: '15px'}}
+                    style={{fontSize: '14px'}}
                   >
                     지금 로그인하기
                   </Button>
@@ -1548,21 +1548,21 @@ export default function StoryPageClient() {
               <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
                 삭제 확인
               </h3>
-              <p className="text-gray-900 mb-4" style={{fontSize: '15px'}}>
+              <p className="text-gray-900 mb-4" style={{fontSize: '14px'}}>
                 정말로 이 글을 삭제하시겠습니까?
               </p>
               <div className="flex gap-3">
                 <Button
                   onClick={closeDeleteModal}
                   className="flex-1 bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 rounded-full"
-                  style={{fontSize: '15px'}}
+                  style={{fontSize: '14px'}}
                 >
                   취소
                 </Button>
                 <Button
                   onClick={deleteArticle}
                   className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-full"
-                  style={{fontSize: '15px'}}
+                  style={{fontSize: '14px'}}
                 >
                   삭제
                 </Button>

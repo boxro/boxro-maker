@@ -258,7 +258,7 @@ export default function HomeStoryCards() {
               </CardTitle>
               <div 
                 className="leading-relaxed whitespace-pre-line break-words" 
-                style={{ fontSize: '15px', color: article.cardDescriptionColor || article.summaryColor || '#ffffff' }}
+                style={{ fontSize: '14px', color: article.cardDescriptionColor || article.summaryColor || '#ffffff' }}
                 dangerouslySetInnerHTML={{ 
                   __html: (article.cardDescription || article.summary).replace(/\n/g, '<br>') 
                 }}

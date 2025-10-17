@@ -179,7 +179,7 @@ const BannerDisplay: React.FC<BannerDisplayProps> = ({ currentPage }) => {
             {banner.description && (
               <p 
                 className="opacity-90"
-                style={{ color: banner.descriptionColor || '#6b7280', whiteSpace: 'pre-line', fontSize: '15px' }}
+                style={{ color: banner.descriptionColor || '#6b7280', whiteSpace: 'pre-line', fontSize: '14px' }}
               >
                 {banner.description}
               </p>
