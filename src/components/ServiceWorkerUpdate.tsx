@@ -6,6 +6,15 @@ export default function ServiceWorkerUpdate() {
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null);
 
+  // 테스트용: 3초 후 모달 강제 표시
+  useEffect(() => {
+    const testTimer = setTimeout(() => {
+      setUpdateAvailable(true);
+    }, 3000);
+    
+    return () => clearTimeout(testTimer);
+  }, []);
+
   useEffect(() => {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.ready.then((reg) => {
@@ -42,14 +51,14 @@ export default function ServiceWorkerUpdate() {
   if (!updateAvailable) return null;
 
   return (
-    <div className="fixed top-4 left-4 right-4 z-50 md:left-1/2 md:right-auto md:transform md:-translate-x-1/2 md:max-w-md">
-      <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200 p-6">
+    <div className="fixed top-4 left-4 right-4 z-50 md:left-1/2 md:right-auto md:transform md:-translate-x-1/2 md:max-w-lg max-w-xs">
+      <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200 px-6 py-4">
         <div className="text-center">
-          <h3 className="text-base font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-1">
+          <h3 className="text-base font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-0">
             새로운 박스로가 도착했어요!
           </h3>
           <p className="text-gray-600 text-sm">
-            잠시 후 자동으로 새로고침됩니다….
+            잠시 후 자동으로 새로고침됩니다.
           </p>
         </div>
       </div>
