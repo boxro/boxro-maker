@@ -116,8 +116,8 @@ export default function PWAInstallPrompt() {
   }
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-50 md:left-auto md:right-4 md:max-w-xs">
-      <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200 p-4 relative">
+    <div className="fixed bottom-4 left-4 right-4 z-50 md:left-auto md:right-4 md:max-w-xs md:w-64">
+      <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200 px-4 py-3 relative">
         {/* X 버튼 - 오른쪽 위 */}
         <div className="absolute top-2 right-4 z-10">
           <button
@@ -129,7 +129,7 @@ export default function PWAInstallPrompt() {
         </div>
         
         <div className="text-center">
-          <div className="flex justify-center mb-3">
+          <div className="flex justify-center mb-2">
             <div className="w-12 h-12 rounded-xl overflow-hidden">
               <Image
                 src="/icons/icon-192x192.png"
@@ -141,10 +141,10 @@ export default function PWAInstallPrompt() {
             </div>
           </div>
           
-          <h3 className="text-base font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-1">
+          <h3 className="text-base font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-0">
             앱으로 설치하기
           </h3>
-          <p className="text-gray-600 text-sm mb-4">
+          <p className="text-gray-600 text-sm mb-2">
             홈 화면에 추가하고 바로 실행하세요!
           </p>
           

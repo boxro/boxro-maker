@@ -51,11 +51,11 @@ export default function ServiceWorkerUpdate() {
   if (!updateAvailable) return null;
 
   return (
-    <div className="fixed top-4 left-4 right-4 z-50 md:left-1/2 md:right-auto md:transform md:-translate-x-1/2 md:max-w-lg max-w-xs">
-      <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200 px-6 py-4">
+    <div className="fixed top-4 left-1/2 right-auto z-50 transform -translate-x-1/2 w-64 max-w-64">
+      <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200 px-6 py-3">
         <div className="text-center">
           <h3 className="text-base font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-0">
-            새로운 박스로가 도착했어요!
+            새로운 업데이트가 있어요!
           </h3>
           <p className="text-gray-600 text-sm">
             잠시 후 자동으로 새로고침됩니다.
