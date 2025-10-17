@@ -348,39 +348,9 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
         if (urls && urls.length > 0) {
           const url = urls[0];
           
-          // YouTube, Twitter, Instagram, 또는 일반 URL인지 확인
-          if (url.includes('youtube.com') || url.includes('youtu.be') || 
-              url.includes('twitter.com') || url.includes('x.com') || 
-              url.includes('instagram.com') || 
-              url.includes('facebook.com') || url.includes('linkedin.com') ||
-              url.includes('github.com') || url.includes('stackoverflow.com')) {
-            
-            // 현재 커서 위치에서 URL 텍스트 제거
-            const { from, to } = editor.state.selection;
-            const textBefore = editor.state.doc.textBetween(0, from);
-            const textAfter = editor.state.doc.textBetween(to, editor.state.doc.content.size);
-            
-            // URL이 포함된 텍스트를 찾아서 제거
-            const fullText = textBefore + textAfter;
-            const urlIndex = fullText.lastIndexOf(url);
-            
-            if (urlIndex !== -1) {
-              // URL 앞의 텍스트와 뒤의 텍스트를 분리
-              const beforeUrl = fullText.substring(0, urlIndex);
-              const afterUrl = fullText.substring(urlIndex + url.length);
-              
-              // 전체 텍스트를 다시 구성하여 삽입
-              const fullContent = beforeUrl + 
-                `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>` + 
-                afterUrl;
-              
-              // 에디터 내용을 전체로 설정
-              editor.commands.setContent(fullContent);
-              
-              console.log('🔗 URL 미리보기 생성:', url);
-              return true;
-            }
-          }
+          // URL 자동 링크 변환 기능 임시 비활성화
+          // 문제 해결을 위해 URL 감지 로직을 비활성화
+          console.log('🔗 URL 감지됨 (자동 변환 비활성화):', url);
         }
         return false;
       };
