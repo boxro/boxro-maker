@@ -8,6 +8,7 @@ import OnboardingWrapper from "@/components/OnboardingWrapper";
 import ConditionalPWA from "@/components/ConditionalPWA";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import ServiceWorkerUpdate from "@/components/ServiceWorkerUpdate";
+import KakaoInAppRedirect from "@/components/KakaoInAppRedirect";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -76,6 +77,7 @@ export default function RootLayout({
                 <ConditionalPWA />
                 <PWAInstallPrompt />
                 <ServiceWorkerUpdate />
+                <KakaoInAppRedirect />
               </OnboardingWrapper>
             </StoryProvider>
           </LanguageProvider>
