@@ -63,7 +63,10 @@ export default function HomeStoryCards() {
       
       // 홈카드 데이터 캐싱 확인
       const cachedHomeCards = sessionStorage.getItem('homeCards');
-      if (cachedHomeCards) {
+      const lastHomeCardsUpdate = sessionStorage.getItem('lastHomeCardsUpdate');
+      const now = Date.now();
+      
+      if (cachedHomeCards && lastHomeCardsUpdate && (now - parseInt(lastHomeCardsUpdate)) < 300000) { // 5분 캐시
         const allHomeCards = JSON.parse(cachedHomeCards);
         console.log('캐시된 홈카드 데이터 사용');
         
@@ -125,6 +128,7 @@ export default function HomeStoryCards() {
       
       // 홈카드 데이터를 세션 스토리지에 캐싱
       sessionStorage.setItem('homeCards', JSON.stringify(allHomeCards));
+      sessionStorage.setItem('lastHomeCardsUpdate', Date.now().toString());
       
       setHomeCards(filteredHomeCards);
       

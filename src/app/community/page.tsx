@@ -377,7 +377,7 @@ export default function GalleryPage() {
       setHasMore(true);
       
       const designsRef = collection(db, 'communityDesigns');
-      const q = query(designsRef, orderBy('createdAt', 'desc'), limit(10)); // 15 -> 10으로 감소
+      const q = query(designsRef, orderBy('createdAt', 'desc'), limit(15)); // 원래대로 복구
       const querySnapshot = await getDocs(q);
       
       const designsData: GalleryDesign[] = [];
@@ -1678,7 +1678,7 @@ export default function GalleryPage() {
               index === self.findIndex(d => d.id === design.id)
             ).map((design, index) => (
               <Card 
-                key={design.id} 
+                key={`${design.id}-${index}`} 
                 className="group bg-white/97 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden w-full rounded-2xl gap-2 flex flex-col [&>*:not(:first-child)]:mt-2 p-0"
               >
                 {/* 썸네일 */}

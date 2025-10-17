@@ -291,8 +291,31 @@ export default function StoryPageClient() {
       setArticles([]);
       setHasMore(true);
       
+      // 스토리 데이터 캐싱 확인
+      const cachedStories = sessionStorage.getItem('stories');
+      const lastStoriesUpdate = sessionStorage.getItem('lastStoriesUpdate');
+      const now = Date.now();
+      
+      if (cachedStories && lastStoriesUpdate && (now - parseInt(lastStoriesUpdate)) < 300000) { // 5분 캐시
+        const storiesData = JSON.parse(cachedStories);
+        console.log('캐시된 스토리 데이터 사용');
+        
+        const articlesData: StoryArticle[] = storiesData.map((data: any) => ({
+          id: data.id,
+          ...data,
+          isLiked: user ? (data.likedBy?.includes(user.uid) || false) : false,
+          isShared: user ? (data.sharedBy?.includes(user.uid) || false) : false,
+          isBoxroTalked: user ? (data.boxroTalkedBy?.includes(user.uid) || false) : false,
+          isViewed: user ? (data.viewedBy?.includes(user.uid) || false) : false
+        } as StoryArticle));
+        
+        setArticles(articlesData);
+        setLoading(false);
+        return;
+      }
+      
       const articlesRef = collection(db, 'storyArticles');
-      const q = query(articlesRef, orderBy('createdAt', 'desc'), limit(10)); // 15 -> 10으로 감소
+      const q = query(articlesRef, orderBy('createdAt', 'desc'), limit(15)); // 원래대로 복구
       const querySnapshot = await getDocs(q);
       
       const articlesData: StoryArticle[] = [];
@@ -310,13 +333,18 @@ export default function StoryPageClient() {
       
       setArticles(articlesData);
       
+      // 스토리 데이터를 세션 스토리지에 캐싱
+      const storiesData = querySnapshot.docs.map(doc => doc.data());
+      sessionStorage.setItem('stories', JSON.stringify(storiesData));
+      sessionStorage.setItem('lastStoriesUpdate', Date.now().toString());
+      
       // 마지막 문서 저장
       if (querySnapshot.docs.length > 0) {
         setLastDoc(querySnapshot.docs[querySnapshot.docs.length - 1]);
       }
       
       // 더 이상 데이터가 없으면 hasMore를 false로 설정
-      if (querySnapshot.docs.length < 10) {
+      if (querySnapshot.docs.length < 15) {
         setHasMore(false);
       }
     } catch (error) {
@@ -868,9 +896,9 @@ export default function StoryPageClient() {
             
             {articles.filter((article, index, self) => 
               index === self.findIndex(a => a.id === article.id)
-            ).map((article) => (
+            ).map((article, index) => (
               <div 
-                key={article.id} 
+                key={`${article.id}-${index}`} 
                 className="group shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden w-full rounded-2xl relative cursor-pointer flex flex-col"
                 style={{ backgroundColor: article.cardBackgroundColor || 'rgba(255, 255, 255, 0.97)' }}
                 onClick={() => router.push(`/story/${article.id}`)}
