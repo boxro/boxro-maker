@@ -369,16 +369,13 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
               const beforeUrl = fullText.substring(0, urlIndex);
               const afterUrl = fullText.substring(urlIndex + url.length);
               
-              // 에디터 내용을 URL 앞까지로 설정
-              editor.commands.setContent(beforeUrl);
+              // 전체 텍스트를 다시 구성하여 삽입
+              const fullContent = beforeUrl + 
+                `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>` + 
+                afterUrl;
               
-              // URL을 링크로 삽입
-              editor.commands.insertContent(`<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`);
-              
-              // URL 뒤의 텍스트가 있으면 추가
-              if (afterUrl.trim()) {
-                editor.commands.insertContent(afterUrl);
-              }
+              // 에디터 내용을 전체로 설정
+              editor.commands.setContent(fullContent);
               
               console.log('🔗 URL 미리보기 생성:', url);
               return true;
