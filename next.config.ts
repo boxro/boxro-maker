@@ -10,6 +10,8 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [],
   },
+  // 폰트 최적화 비활성화 (구글폰트 자동 추가 방지)
+  optimizeFonts: false,
   // 캐시 비활성화
   experimental: {
     staleTimes: {

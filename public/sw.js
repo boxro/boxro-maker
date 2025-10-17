@@ -1,5 +1,6 @@
 // PWA Service Worker - 자동 버전 관리 + 업데이트 알림 + 강제 새로고침
 const CACHE_NAME = 'boxro-maker-v' + Date.now(); // 자동 버전 관리
+const OLD_CACHE_NAMES = ['boxro-maker-v', 'boxro-maker', 'boxro-cache']; // 이전 캐시 이름들
 const urlsToCache = [
   '/',
   '/draw',
@@ -33,8 +34,11 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          console.log('🗑️ 이전 캐시 삭제:', cacheName);
-          return caches.delete(cacheName);
+          // 이전 캐시 이름들과 현재 캐시가 아닌 모든 캐시 삭제
+          if (OLD_CACHE_NAMES.includes(cacheName) || cacheName !== CACHE_NAME) {
+            console.log('🗑️ 이전 캐시 삭제:', cacheName);
+            return caches.delete(cacheName);
+          }
         })
       );
     }).then(() => {
