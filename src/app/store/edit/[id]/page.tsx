@@ -617,7 +617,7 @@ export default function EditStoryPage() {
         <CommonHeader />
         <div className="max-w-7xl mx-auto px-4 md:px-8 flex-1">
           <div className="mt-10">
-            <Card className="bg-white border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden py-5 w-full rounded-2xl">
+            <Card className="bg-transparent border-0 shadow-none transition-all duration-300 overflow-hidden py-5 w-full rounded-2xl">
               <CardContent className="text-center py-12">
                 {/* 점프 애니메이션 (더 역동적인 뛰는 효과) */}
                 <div className="w-24 h-24 mx-auto mb-6 flex items-center justify-center">
@@ -632,10 +632,10 @@ export default function EditStoryPage() {
                     }}
                   />
                 </div>
-                <h3 className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-pink-600 bg-clip-text text-transparent mb-2">
+                <h3 className="text-lg font-semibold text-white mb-2">
                   박스카 도안을 불러오는 중...
                 </h3>
-                <p className="text-sm text-gray-800">멋진 박스카 도안을 준비하고 있어요!</p>
+                <p className="text-sm text-white/80">멋진 박스카 도안을 준비하고 있어요!</p>
               </CardContent>
             </Card>
           </div>

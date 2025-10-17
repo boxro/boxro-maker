@@ -1616,7 +1616,7 @@ export default function GalleryPage() {
 
         {/* Loading State */}
         {loading && (
-          <Card className="bg-white border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden py-5 w-full rounded-2xl">
+          <Card className="bg-transparent border-0 shadow-none transition-all duration-300 overflow-hidden py-5 w-full rounded-2xl">
             <CardContent className="text-center py-12">
               {/* 로고 점프 애니메이션 */}
               <div className="w-24 h-24 mx-auto mb-6 flex items-center justify-center">
@@ -1631,10 +1631,10 @@ export default function GalleryPage() {
                   }}
                 />
               </div>
-              <h3 className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-pink-600 bg-clip-text text-transparent mb-2">
+              <h3 className="text-lg font-semibold text-white mb-2">
                 박스카 갤러리를 불러오는 중...
               </h3>
-              <p className="text-sm text-gray-800">멋진 박스카 작품들을 준비하고 있어요!</p>
+              <p className="text-sm text-white/80">멋진 박스카 작품들을 준비하고 있어요!</p>
             </CardContent>
           </Card>
         )}
@@ -1671,8 +1671,8 @@ export default function GalleryPage() {
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {/* 배너 표시 - 로딩 완료 후에만 표시 */}
-            {!loading && <BannerDisplay currentPage="gallery" />}
+            {/* 배너 표시 - 로딩 완료 후에만 표시, 내가 만든 박스카 탭에서는 제외 */}
+            {!loading && !showMyDesigns && <BannerDisplay currentPage="gallery" />}
             
             {filteredAndSortedDesigns.filter((design, index, self) => 
               index === self.findIndex(d => d.id === design.id)

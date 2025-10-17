@@ -3551,8 +3551,8 @@ export default function AdminPage() {
         <CommonHeader />
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-white mb-4">로그인이 필요합니다</h1>
-            <p className="text-white">관리자 화면에 접근하려면 로그인해주세요.</p>
+            <h1 className="text-lg font-semibold text-white mb-2">로그인이 필요합니다</h1>
+            <p className="text-sm text-white/80">관리자 화면에 접근하려면 로그인해주세요.</p>
           </div>
         </div>
       </CommonBackground>
@@ -3592,7 +3592,7 @@ export default function AdminPage() {
                 }}
               />
             </div>
-            <h3 className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-pink-600 bg-clip-text text-transparent mb-2">
+            <h3 className="text-lg font-semibold text-white mb-2">
               관리자 데이터를 불러오는 중...
             </h3>
             <p className="text-sm text-white/80">관리자 정보를 준비하고 있어요!</p>
