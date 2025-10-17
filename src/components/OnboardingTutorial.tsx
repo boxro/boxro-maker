@@ -165,11 +165,11 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete, showDo
           </div>
 
           {/* 하단 콘텐츠 영역 */}
-          <div className="px-8 pt-8 pb-6 flex flex-col flex-1">
+          <div className="px-8 pt-6 pb-6 flex flex-col flex-1">
             {/* 상단 콘텐츠 */}
             <div className="flex-1">
-              {/* 진행 표시 */}
-              <div className="flex justify-center items-center mb-4">
+              {/* 진행 표시 - 고정 높이로 레이아웃 시프트 방지 */}
+              <div className="flex justify-center items-center mb-4" style={{ height: '16px' }}>
                 <div className="flex space-x-2 items-center">
                   {tutorialSteps.map((_, index) => (
                     <div
@@ -235,7 +235,7 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete, showDo
                 >
                   {isLastStep ? (
                     <>
-                      지금 시작하기
+                      무료로 시작하기
                       <ChevronRight className="w-4 h-4 -ml-1" />
                     </>
                   ) : (

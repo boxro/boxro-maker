@@ -73,7 +73,7 @@ export default function HomePage() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link href="/draw">
                   <Button size="lg" className="text-white px-12 py-4 text-lg rounded-full min-w-[200px] hover:scale-103 transition-all duration-200" style={{ backgroundColor: '#26085e' }}>
-                    지금 시작하기
+                    무료로 시작하기
                     <ArrowRight className="w-5 h-5 ml-0" />
                   </Button>
                 </Link>
