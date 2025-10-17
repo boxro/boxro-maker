@@ -163,7 +163,16 @@ const BannerDisplay: React.FC<BannerDisplayProps> = ({ currentPage }) => {
           >
             <h3 
               className="text-lg font-bold mb-2"
-              style={{ color: banner.titleColor || '#1f2937' }}
+              style={{ 
+                color: banner.titleColor || '#1f2937',
+                display: '-webkit-box',
+                WebkitLineClamp: 1,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                lineHeight: '1.4',
+                maxHeight: '1.4em'
+              }}
             >
               {banner.title}
             </h3>

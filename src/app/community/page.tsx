@@ -1779,8 +1779,20 @@ export default function GalleryPage() {
                   </div>
                   
                   <div className="flex justify-between items-start">
-                    <CardTitle className="text-lg font-semibold flex-1 text-gray-900" title={design.name}>
-                      {truncateText(design.name, 20)}
+                    <CardTitle 
+                      className="text-lg font-semibold flex-1 text-gray-900" 
+                      title={design.name}
+                      style={{
+                        display: '-webkit-box',
+                        WebkitLineClamp: 1,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        lineHeight: '1.4',
+                        maxHeight: '1.4em'
+                      }}
+                    >
+                      {design.name}
                     </CardTitle>
                   </div>
                 </CardHeader>

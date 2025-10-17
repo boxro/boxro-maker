@@ -882,8 +882,17 @@ export default function StorePageClient() {
                 <div className="px-7 py-4 flex-1 flex flex-col">
                   <h3 
                     className="text-lg font-semibold mb-2 mt-1 text-gray-900"
+                    style={{
+                      display: '-webkit-box',
+                      WebkitLineClamp: 1,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      lineHeight: '1.4',
+                      maxHeight: '1.4em'
+                    }}
                   >
-                    {article.title.length > 20 ? `${article.title.substring(0, 20)}...` : article.title}
+                    {article.title}
                   </h3>
                   
                   {article.summary && (
