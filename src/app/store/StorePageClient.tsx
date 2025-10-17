@@ -268,12 +268,13 @@ export default function StorePageClient() {
       setArticles([]);
       setHasMore(true);
       
-      // 스토어 데이터 캐싱 확인
+      // 스토어 데이터 캐싱 확인 (캐시 무효화)
       const cachedStoreItems = sessionStorage.getItem('storeItems');
       const lastStoreItemsUpdate = sessionStorage.getItem('lastStoreItemsUpdate');
       const now = Date.now();
       
-      if (cachedStoreItems && lastStoreItemsUpdate && (now - parseInt(lastStoreItemsUpdate)) < 300000) { // 5분 캐시
+      // 캐시 무효화 - 임시로 캐시 사용 안함
+      if (false && cachedStoreItems && lastStoreItemsUpdate && (now - parseInt(lastStoreItemsUpdate)) < 300000) { // 5분 캐시
         const storeItemsData = JSON.parse(cachedStoreItems);
         console.log('캐시된 스토어 데이터 사용');
         
@@ -311,7 +312,10 @@ export default function StorePageClient() {
       setArticles(articlesData);
       
       // 스토어 데이터를 세션 스토리지에 캐싱
-      const storeItemsData = querySnapshot.docs.map(doc => doc.data());
+      const storeItemsData = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
       sessionStorage.setItem('storeItems', JSON.stringify(storeItemsData));
       sessionStorage.setItem('lastStoreItemsUpdate', Date.now().toString());
       
