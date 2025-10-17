@@ -162,9 +162,9 @@
 
 /* 데스크톱에서 쿠키런 폰트 우선 적용 */
 @media screen and (min-width: 769px) {
-  .font-cookie-run {
-    font-family: 'CookieRun', sans-serif;
-  }
+.font-cookie-run {
+  font-family: 'Noto Sans KR', sans-serif;
+}
 }
 
 /* 모바일 전용 폰트 설정 - 쿠키런 폰트 우선, 실패시 귀여운 한글 폰트 */

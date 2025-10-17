@@ -3579,8 +3579,23 @@ export default function AdminPage() {
         <CommonHeader />
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-[58px] border-b-2 border-purple-600 mx-auto mb-4"></div>
-            <p className="text-white">관리자 데이터를 불러오는 중...</p>
+            {/* 로고 점프 애니메이션 */}
+            <div className="w-24 h-24 mx-auto mb-6 flex items-center justify-center">
+              <img 
+                src="/logo_remoteonly.png" 
+                alt="박스로 로고" 
+                className="w-20 h-20 animate-bounce"
+                style={{ 
+                  animationDuration: '0.6s',
+                  animationIterationCount: 'infinite',
+                  animationTimingFunction: 'cubic-bezier(0.68, -0.55, 0.265, 1.55)'
+                }}
+              />
+            </div>
+            <h3 className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-pink-600 bg-clip-text text-transparent mb-2">
+              관리자 데이터를 불러오는 중...
+            </h3>
+            <p className="text-sm text-white/80">관리자 정보를 준비하고 있어요!</p>
           </div>
         </div>
       </CommonBackground>
