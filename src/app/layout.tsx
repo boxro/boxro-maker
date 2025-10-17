@@ -7,6 +7,7 @@ import { StoryProvider } from "@/contexts/StoryContext";
 import OnboardingWrapper from "@/components/OnboardingWrapper";
 import ConditionalPWA from "@/components/ConditionalPWA";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
+import ServiceWorkerUpdate from "@/components/ServiceWorkerUpdate";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -61,10 +62,6 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap" 
           rel="stylesheet" 
         />
-        <link 
-          href="https://fonts.googleapis.com/css2?family=CookieRun:wght@400;700;900&display=swap" 
-          rel="stylesheet" 
-        />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#2563eb" />
@@ -82,6 +79,7 @@ export default function RootLayout({
                 {children}
                 <ConditionalPWA />
                 <PWAInstallPrompt />
+                <ServiceWorkerUpdate />
               </OnboardingWrapper>
             </StoryProvider>
           </LanguageProvider>

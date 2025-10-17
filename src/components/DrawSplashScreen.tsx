@@ -58,7 +58,7 @@ export default function DrawSplashScreen({ onClose, onSignUp }: DrawSplashScreen
 
             {/* 설명 */}
             <div className="text-center mb-8">
-              <p className="text-gray-900 text-[15px] leading-relaxed">
+              <p className="text-gray-900 text-[14px] leading-relaxed">
                 누구나 자유롭게 그리고 꾸밀 수 있어요!<br />
                 하지만 도안 공유와 다운로드는<br />
                 <span className="font-semibold text-blue-600">회원만 이용할 수 있어요.</span>
@@ -71,14 +71,14 @@ export default function DrawSplashScreen({ onClose, onSignUp }: DrawSplashScreen
                 variant="outline"
                 onClick={onClose}
                 className="flex-1 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-full text-gray-900"
-                style={{fontSize: '15px'}}
+                style={{fontSize: '14px'}}
               >
                 그냥 그리기 (가입 없이 체험)
               </Button>
               <Button
                 onClick={onSignUp}
                 className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 rounded-full"
-                style={{fontSize: '15px'}}
+                style={{fontSize: '14px'}}
               >
                 저장하고 싶어요 (회원 가입)
               </Button>

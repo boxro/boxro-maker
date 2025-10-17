@@ -376,7 +376,7 @@ export default function EditProfilePage() {
                   <Input
                     value={profileData.email}
                     disabled
-                    className="bg-gray-50 text-gray-500 text-[15px]"
+                    className="bg-gray-50 text-gray-500 text-[14px]"
                   />
                 </div>
 
@@ -387,7 +387,7 @@ export default function EditProfilePage() {
                   <Input
                     value={profileData.originalName || profileData.displayName}
                     disabled
-                    className="bg-gray-50 text-gray-500 text-[15px]"
+                    className="bg-gray-50 text-gray-500 text-[14px]"
                   />
                 </div>
 
@@ -401,7 +401,7 @@ export default function EditProfilePage() {
                     disabled={!isEditing}
                     placeholder="닉네임을 입력하세요"
                     maxLength={20}
-                    className="text-[15px] bg-white border-gray-300 focus:border-purple-500 focus:ring-purple-500"
+                    className="text-[14px] bg-white border-gray-300 focus:border-purple-500 focus:ring-purple-500"
                   />
                 </div>
 

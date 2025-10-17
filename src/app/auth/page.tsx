@@ -133,7 +133,7 @@ export default function AuthPage() {
           onClick={handleGoogleLogin}
           disabled={loading}
           className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-full bg-white font-medium text-gray-900 hover:bg-gray-50 disabled:opacity-50"
-          style={{fontSize: '15px'}}
+          style={{fontSize: '14px'}}
         >
           <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
             <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -161,7 +161,7 @@ export default function AuthPage() {
               placeholder="이메일을 입력하세요"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-[15px]"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-[14px]"
               required
             />
           </div>
@@ -173,7 +173,7 @@ export default function AuthPage() {
               placeholder="비밀번호를 입력하세요"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-[15px]"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-[14px]"
               required
             />
           </div>
@@ -228,7 +228,7 @@ export default function AuthPage() {
           <button 
             type="submit" 
             className="w-full flex justify-center py-2 px-4 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white transition-all duration-200 rounded-full font-medium disabled:opacity-50"
-            style={{fontSize: '15px'}}
+            style={{fontSize: '14px'}}
             disabled={loading}
           >
             {loading ? '처리 중...' : (isLogin ? '로그인' : '회원가입')}
@@ -239,7 +239,7 @@ export default function AuthPage() {
           <button
             onClick={() => setIsLogin(!isLogin)}
             className="text-blue-600 hover:text-blue-500"
-            style={{fontSize: '15px'}}
+            style={{fontSize: '14px'}}
           >
             {isLogin ? '계정이 없으신가요? 회원가입' : '이미 계정이 있으신가요? 로그인'}
           </button>

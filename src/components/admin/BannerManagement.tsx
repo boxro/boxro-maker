@@ -214,7 +214,7 @@ const BannerManagement: React.FC<BannerManagementProps> = ({
                     onChange={(e) => setBannerTitle(e.target.value)}
                     placeholder="배너에 표시될 제목"
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] mb-3 bg-white"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] mb-3 bg-white"
                   />
                   <div className="flex gap-2">
                     <input 
@@ -228,7 +228,7 @@ const BannerManagement: React.FC<BannerManagementProps> = ({
                       value={bannerTitleColor || '#ffffff'}
                       onChange={(e) => setBannerTitleColor(e.target.value)}
                       placeholder="#ffffff"
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] bg-white"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
                     />
                   </div>
                 </div>
@@ -241,7 +241,7 @@ const BannerManagement: React.FC<BannerManagementProps> = ({
                     onChange={(e) => setBannerDescription(e.target.value)}
                     placeholder="배너에 표시될 설명"
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] mb-2 bg-white"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] mb-2 bg-white"
                   />
                   <div className="flex gap-2">
                     <input 
@@ -255,7 +255,7 @@ const BannerManagement: React.FC<BannerManagementProps> = ({
                       value={bannerDescriptionColor || '#ffffff'}
                       onChange={(e) => setBannerDescriptionColor(e.target.value)}
                       placeholder="#ffffff"
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] bg-white"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
                     />
                   </div>
                 </div>
@@ -302,7 +302,7 @@ const BannerManagement: React.FC<BannerManagementProps> = ({
                         value={bannerBackgroundColor || '#3b82f6'}
                         onChange={(e) => setBannerBackgroundColor(e.target.value)}
                         placeholder="#3b82f6"
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] bg-white"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
                       />
                       <button
                         type="button"
@@ -339,7 +339,7 @@ const BannerManagement: React.FC<BannerManagementProps> = ({
                         }
                       }
                     }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] bg-white"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
                   />
                   {bannerThumbnail && (
                     <button
@@ -385,7 +385,7 @@ const BannerManagement: React.FC<BannerManagementProps> = ({
                       value={bannerUrl || ''}
                       onChange={(e) => setBannerUrl(e.target.value)}
                       placeholder="예: /gallery, /story, https://example.com"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] bg-white"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
                     />
                   </div>
                   <div className="flex items-center gap-2">

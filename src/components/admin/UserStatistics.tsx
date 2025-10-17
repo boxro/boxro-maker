@@ -93,7 +93,7 @@ const UserStatistics: React.FC<UserStatisticsProps> = ({
               placeholder="이메일 또는 이름으로 검색..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-6 py-2 rounded-md bg-white text-[15px] border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-6 py-2 rounded-md bg-white text-[14px] border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <div className="flex flex-col sm:flex-row gap-3 min-w-0">

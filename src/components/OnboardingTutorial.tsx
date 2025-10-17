@@ -199,13 +199,13 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete, showDo
                 </p>
 
                 {/* 서브 텍스트 */}
-                <p className="text-gray-900 mb-0" style={{fontSize: '15px'}}>
+                <p className="text-gray-900 mb-0" style={{fontSize: '14px'}}>
                   {currentTutorial.subText}
                 </p>
 
                 {/* 디테일 텍스트 */}
                 {currentTutorial.detailText && (
-                  <p className="text-gray-900" style={{fontSize: '15px'}}>
+                  <p className="text-gray-900" style={{fontSize: '14px'}}>
                     {currentTutorial.detailText}
                   </p>
                 )}
@@ -221,7 +221,7 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete, showDo
                   variant="outline"
                   onClick={handlePrev}
                   className="flex-none w-20 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-full text-gray-900"
-                  style={{fontSize: '15px'}}
+                  style={{fontSize: '14px'}}
                 >
                   <ChevronLeft className="w-4 h-4 -mr-1" />
                   이전
@@ -231,7 +231,7 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete, showDo
                 <Button
                   onClick={handleNext}
                   className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-full"
-                  style={{fontSize: '15px'}}
+                  style={{fontSize: '14px'}}
                 >
                   {isLastStep ? (
                     <>

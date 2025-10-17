@@ -4789,7 +4789,7 @@ export default function DrawPage() {
         <div className="shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden py-5 px-5 md:px-8 rounded-2xl mb-6 border border-sky-400/30" style={{ backgroundColor: 'transparent' }}>
           {/* 1. 분석 과정 */}
           <div className="mb-6">
-            <h4 className="text-white mb-4 text-[15px] mt-0.5">대충 그려도 AI로 분석해 3D 자동차로 보여줘요!</h4>
+            <h4 className="text-white mb-4 text-[14px] mt-0.5">대충 그려도 AI로 분석해 3D 자동차로 보여줘요!</h4>
             <div className="flex items-center gap-1 md:gap-3 text-[13px] text-white">
               <div className="text-center p-2 md:p-3 py-[14px] md:py-4 rounded-2xl border border-sky-400/30 bg-white/10 flex-1">
                 <div className="flex justify-center mb-1 md:mb-2">
@@ -4817,7 +4817,7 @@ export default function DrawPage() {
 
           {/* 2. 분석 방법 */}
           <div className="mb-6">
-            <h4 className="text-white mb-4 text-[15px]">AI가 그림을 분석하는 방법이에요!</h4>
+            <h4 className="text-white mb-4 text-[14px]">AI가 그림을 분석하는 방법이에요!</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[13px] text-blue-200">
               <div className="flex items-center gap-2">
                 <Ruler className="w-4 h-4 text-blue-200" />
@@ -4849,7 +4849,7 @@ export default function DrawPage() {
 
           {/* 3. 차종 구분 */}
           <div className="mb-6">
-            <h4 className="text-white mb-4 text-[15px]">자동차를 어떻게 구분할까요?</h4>
+            <h4 className="text-white mb-4 text-[14px]">자동차를 어떻게 구분할까요?</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[13px] text-blue-200">
               <div className="flex items-center gap-2">
                 <Box className="w-4 h-4 text-blue-200" />
@@ -6123,7 +6123,7 @@ export default function DrawPage() {
                       }}
                       placeholder="작품 제목을 입력하세요"
                       maxLength={30}
-                      className={`flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-[15px] ${
+                      className={`flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-[14px] ${
                         !shareTitle.trim() 
                           ? 'border-red-300 focus:ring-red-500' 
                           : 'border-gray-300 focus:ring-purple-500'
@@ -6179,7 +6179,7 @@ export default function DrawPage() {
                       }}
                       className="px-4 py-2 bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 transition-colors text-sm font-medium whitespace-nowrap min-w-[80px]"
                     >
-                      🎲 랜덤
+                      랜덤
                     </button>
                   </div>
                   {!shareTitle.trim() && (
@@ -6242,7 +6242,7 @@ export default function DrawPage() {
                       }}
                       placeholder="작품 제목을 입력하세요"
                       maxLength={30}
-                      className={`flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-[15px] ${
+                      className={`flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-[14px] ${
                         !saveTitle.trim() 
                           ? 'border-red-300 focus:ring-red-500' 
                           : 'border-gray-300 focus:ring-purple-500'
@@ -6298,7 +6298,7 @@ export default function DrawPage() {
                       }}
                       className="px-3 py-2 bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 transition-colors text-sm font-medium"
                     >
-                      🎲 랜덤
+                      랜덤
                     </button>
                   </div>
                 </div>
@@ -6314,7 +6314,7 @@ export default function DrawPage() {
                     placeholder="작품에 대한 설명을 입력하세요"
                     rows={2}
                     maxLength={20}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-[15px]"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-[14px]"
                   />
                 </div>
               </div>

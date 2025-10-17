@@ -64,7 +64,7 @@ export default function HomePage() {
                 상상하는 자동차를 만들어보세요✨
               </span>
               
-              <p className="text-white/90 max-w-3xl mx-auto leading-relaxed" style={{ marginBottom: '46px', fontSize: '15px' }}>
+              <p className="text-white/90 max-w-3xl mx-auto leading-relaxed" style={{ marginBottom: '46px', fontSize: '14px' }}>
                 아이들이 직접 자동차를 디자인하고,<br />
                 박스카 도안을 출력해 조립하며,<br />
                 친구들과 공유할 수 있는 창작 놀이 플랫폼입니다.

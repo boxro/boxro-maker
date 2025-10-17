@@ -1052,7 +1052,7 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
             {isFontSizeOpen && (
               <div className="absolute top-full left-0 mt-1 p-3 bg-white border border-gray-300 rounded-lg shadow-lg z-[9999] min-w-[120px]">
                 <div className="space-y-1">
-                  {['12px', '14px', '15px', '16px', '18px', '20px', '24px', '28px', '32px'].map((size) => (
+                  {['12px', '14px', '16px', '18px', '20px', '24px', '28px', '32px'].map((size) => (
                     <button
                       key={size}
                       className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded"
@@ -1190,7 +1190,7 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
       </div>
 
       {/* 에디터 - 스크롤 가능 */}
-      <div className="text-[15px] max-h-[700px] overflow-y-auto">
+      <div className="text-[14px] max-h-[700px] overflow-y-auto">
         <EditorContent editor={editor} />
       </div>
 
@@ -1221,7 +1221,7 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
                   placeholder="URL을 입력하세요"
                   value={linkUrl}
                   onChange={(e) => setLinkUrl(e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-lg text-[15px]"
+                  className="w-full p-2 border border-gray-300 rounded-lg text-[14px]"
                   onKeyPress={(e) => e.key === 'Enter' && addLink()}
                 />
               </div>
@@ -1279,7 +1279,7 @@ export default function RichTextEditor({ content, onChange, placeholder = "내�
                 placeholder="이미지 URL을 입력하세요"
                 value={imageUrl}
                 onChange={(e) => setImageUrl(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-lg text-[15px]"
+                className="w-full p-2 border border-gray-300 rounded-lg text-[14px]"
               />
             </div>
 

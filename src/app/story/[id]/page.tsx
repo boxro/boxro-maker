@@ -1073,7 +1073,7 @@ export default function StoryArticlePage() {
                         placeholder="무슨 생각이 드셨나요?"
                         maxLength={30}
                         rows={2}
-                        className="w-full border-4 border-solid border-yellow-400/70 rounded-2xl overflow-hidden p-3 pr-12 focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none text-[15px]"
+                        className="w-full border-4 border-solid border-yellow-400/70 rounded-2xl overflow-hidden p-3 pr-12 focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none text-[14px]"
                       />
                       <button
                         type="button"
