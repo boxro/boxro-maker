@@ -2,12 +2,7 @@
 const CACHE_NAME = 'boxro-maker-v1';
 const urlsToCache = [
   '/',
-  '/community',
-  '/store',
-  '/story',
   '/draw',
-  '/static/js/bundle.js',
-  '/static/css/main.css',
   '/manifest.json'
 ];
 
@@ -17,7 +12,13 @@ self.addEventListener('install', (event) => {
     caches.open(CACHE_NAME)
       .then((cache) => {
         console.log('✅ PWA 캐시 열림');
-        return cache.addAll(urlsToCache);
+        // 기본 페이지만 캐시 (홈페이지, Draw 페이지, Manifest)
+        return cache.addAll(['/', '/draw', '/manifest.json']).catch((error) => {
+          console.warn('기본 캐시 실패:', error);
+        });
+      })
+      .catch((error) => {
+        console.warn('캐시 초기화 실패:', error);
       })
   );
 });
@@ -40,6 +41,11 @@ self.addEventListener('activate', (event) => {
 
 // fetch 이벤트 - 캐시 우선, 네트워크 폴백
 self.addEventListener('fetch', (event) => {
+  // GET 요청만 처리
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
@@ -48,7 +54,12 @@ self.addEventListener('fetch', (event) => {
           return response;
         }
         // 캐시에 없으면 네트워크에서 가져오기
-        return fetch(event.request);
+        return fetch(event.request).catch(() => {
+          // 네트워크 실패 시 오프라인 페이지 반환
+          if (event.request.destination === 'document') {
+            return caches.match('/');
+          }
+        });
       })
   );
 });

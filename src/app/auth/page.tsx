@@ -19,10 +19,12 @@ export default function AuthPage() {
 
   // URL 파라미터 확인하여 회원가입 모드로 설정
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const mode = urlParams.get('mode');
-    if (mode === 'signup') {
-      setIsLogin(false);
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const mode = urlParams.get('mode');
+      if (mode === 'signup') {
+        setIsLogin(false);
+      }
     }
   }, []);
 
@@ -30,9 +32,13 @@ export default function AuthPage() {
   useEffect(() => {
     if (user && user.email) {
       // URL 파라미터에서 returnUrl 확인, 없으면 홈으로
-      const urlParams = new URLSearchParams(window.location.search);
-      const returnUrl = urlParams.get('returnUrl') || '/';
-      router.push(returnUrl);
+      if (typeof window !== 'undefined') {
+        const urlParams = new URLSearchParams(window.location.search);
+        const returnUrl = urlParams.get('returnUrl') || '/';
+        router.push(returnUrl);
+      } else {
+        router.push('/');
+      }
     }
   }, [user, router]);
 

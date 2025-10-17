@@ -6,6 +6,7 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { StoryProvider } from "@/contexts/StoryContext";
 import OnboardingWrapper from "@/components/OnboardingWrapper";
 import ConditionalPWA from "@/components/ConditionalPWA";
+import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -80,6 +81,7 @@ export default function RootLayout({
               <OnboardingWrapper>
                 {children}
                 <ConditionalPWA />
+                <PWAInstallPrompt />
               </OnboardingWrapper>
             </StoryProvider>
           </LanguageProvider>

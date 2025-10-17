@@ -16,6 +16,14 @@ const nextConfig: NextConfig = {
       dynamic: 0,
       static: 0,
     },
+    turbo: {
+      rules: {
+        '*.svg': {
+          loaders: ['@svgr/webpack'],
+          as: '*.js',
+        },
+      },
+    },
   },
   async redirects() {
     return [
@@ -30,16 +38,6 @@ const nextConfig: NextConfig = {
         permanent: false,
       },
     ];
-  },
-  experimental: {
-    turbo: {
-      rules: {
-        '*.svg': {
-          loaders: ['@svgr/webpack'],
-          as: '*.js',
-        },
-      },
-    },
   },
   // prefetch 비활성화로 Failed to fetch 에러 방지
   onDemandEntries: {
