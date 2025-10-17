@@ -6,14 +6,6 @@ export default function ServiceWorkerUpdate() {
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null);
 
-  // 테스트용: 3초 후 모달 강제 표시
-  useEffect(() => {
-    const testTimer = setTimeout(() => {
-      setUpdateAvailable(true);
-    }, 3000);
-    
-    return () => clearTimeout(testTimer);
-  }, []);
 
   useEffect(() => {
     if ('serviceWorker' in navigator) {
