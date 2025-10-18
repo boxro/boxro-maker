@@ -917,7 +917,10 @@ export default function YoutubePageClient() {
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
-                        className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-full transition-colors text-sm font-medium"
+                        className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-white rounded-full transition-colors text-sm font-medium"
+                        style={{ backgroundColor: '#f0544c' }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e04a42'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f0544c'}
                       >
                         <Play className="w-4 h-4" />
                         유튜브에서 보기
