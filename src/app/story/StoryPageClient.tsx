@@ -237,7 +237,6 @@ export default function StoryPageClient() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [showFloatingMenu, setShowFloatingMenu] = useState(false);
   const [articles, setArticles] = useState<StoryArticle[]>([]);
   const router = useRouter();
   const [showShareModal, setShowShareModal] = useState(false);
@@ -1013,30 +1012,19 @@ export default function StoryPageClient() {
           </div>
         )}
 
-        {/* 모바일 플로팅 메뉴 */}
+        {/* 모바일 플로팅 메뉴 - 항상 펼쳐진 상태 */}
         {user && isAdmin && (
           <div className="fixed bottom-6 right-6 z-40 md:hidden">
-            {showFloatingMenu && (
-              <div className="absolute bottom-16 right-0 flex flex-col gap-3 mb-1">
-                <Button
-                  onClick={() => {
-                    router.push('/story/write');
-                    setShowFloatingMenu(false);
-                  }}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white transition-all duration-200 rounded-full px-6 py-3"
-                  style={{fontSize: '14px'}}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  새 글 작성하기
-                </Button>
-              </div>
-            )}
-            <Button
-              onClick={() => setShowFloatingMenu(!showFloatingMenu)}
-              className="bg-indigo-800 hover:bg-indigo-900 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-full w-14 h-14 p-0"
-            >
-              {showFloatingMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </Button>
+            <div className="flex flex-col gap-3 mb-1">
+              <Button
+                onClick={() => router.push('/story/write')}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white transition-all duration-200 rounded-full px-6 py-3"
+                style={{fontSize: '14px'}}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                새 글 작성하기
+              </Button>
+            </div>
           </div>
         )}
 

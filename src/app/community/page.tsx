@@ -295,8 +295,6 @@ export default function GalleryPage() {
   const [editPreview, setEditPreview] = useState<string | null>(null);
   const [showEditSuccessModal, setShowEditSuccessModal] = useState(false);
   
-  // 모바일 플로팅 메뉴 상태
-  const [showFloatingMenu, setShowFloatingMenu] = useState(false);
   const [showUploadSuccessModal, setShowUploadSuccessModal] = useState(false);
   const [showBoxroTalksModal, setShowBoxroTalksModal] = useState(false);
 
@@ -2450,38 +2448,27 @@ export default function GalleryPage() {
         </div>
       )}
 
-      {/* 모바일 플로팅 메뉴 */}
+      {/* 모바일 플로팅 메뉴 - 항상 펼쳐진 상태 */}
       <div className="fixed bottom-6 right-6 z-40 md:hidden">
-        {showFloatingMenu && (
-          <div className="absolute bottom-16 right-0 flex flex-col gap-3 mb-1">
-            <Link href="/draw" onClick={() => setShowFloatingMenu(false)}>
-              <Button
-                className="bg-pink-500 hover:bg-pink-600 text-white transition-all duration-200 rounded-full px-6 py-3"
-                style={{fontSize: '14px'}}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                박스카 그리기
-              </Button>
-            </Link>
+        <div className="flex flex-col gap-3 mb-1">
+          <Link href="/draw">
             <Button
-              onClick={() => {
-                setShowUploadModal(true);
-                setShowFloatingMenu(false);
-              }}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white transition-all duration-200 rounded-full px-6 py-3"
+              className="bg-pink-500 hover:bg-pink-600 text-white transition-all duration-200 rounded-full px-6 py-3"
               style={{fontSize: '14px'}}
             >
-              <Upload className="w-4 h-4 mr-2" />
-              내 작품 올리기
+              <Plus className="w-4 h-4 mr-2" />
+              박스카 그리기
             </Button>
-          </div>
-        )}
-        <Button
-          onClick={() => setShowFloatingMenu(!showFloatingMenu)}
-          className="bg-indigo-800 hover:bg-indigo-900 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-full w-14 h-14 p-0"
-        >
-          {showFloatingMenu ? <X className="w-6 h-6" /> : <Plus className="w-6 h-6" />}
-        </Button>
+          </Link>
+          <Button
+            onClick={() => setShowUploadModal(true)}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white transition-all duration-200 rounded-full px-6 py-3"
+            style={{fontSize: '14px'}}
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            내 작품 올리기
+          </Button>
+        </div>
       </div>
 
       {/* 안내 모달 */}
