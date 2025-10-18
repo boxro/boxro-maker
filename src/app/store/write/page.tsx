@@ -59,8 +59,8 @@ export default function WriteStoryPage() {
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   
-  // 뷰 상단 이미지 압축 함수 (700px, 500KB)
-  const compressViewTopImage = (file: File, maxWidth: number = 700, quality: number = 0.6): Promise<string> => {
+  // 뷰 상단 이미지 압축 함수 (800px, 80%)
+  const compressViewTopImage = (file: File, maxWidth: number = 800, quality: number = 0.8): Promise<string> => {
     return new Promise((resolve, reject) => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
@@ -73,8 +73,8 @@ export default function WriteStoryPage() {
       
       img.onload = () => {
         try {
-        // 700px로 강제 리사이즈 (가로 기준)
-        const maxWidth = 700;
+        // 800px로 강제 리사이즈 (가로 기준)
+        const maxWidth = 800;
         const ratio = maxWidth / img.width;
         canvas.width = maxWidth;
         canvas.height = img.height * ratio;
@@ -86,9 +86,9 @@ export default function WriteStoryPage() {
         const imageData = ctx?.getImageData(0, 0, canvas.width, canvas.height);
         const hasTransparency = imageData?.data.some((_, index) => index % 4 === 3 && imageData.data[index] < 255);
         
-        // 투명도가 있으면 PNG, 없으면 JPG 사용 (적당한 압축)
+        // 투명도가 있으면 PNG, 없으면 JPG 사용 (고품질)
         const format = hasTransparency ? 'image/png' : 'image/jpeg';
-        let startQuality = hasTransparency ? 0.8 : 0.7; // 화질 개선
+        let startQuality = hasTransparency ? 0.8 : 0.8; // 80% 품질
         
         // 파일 크기가 800KB 이하가 될 때까지 품질을 낮춤 (제한 완화)
         const compressImageRecursive = (currentQuality: number): string => {
@@ -165,8 +165,8 @@ export default function WriteStoryPage() {
     });
   };
 
-  // 에디터용 이미지 압축 함수 (400px, 300KB)
-  const compressEditorImage = (file: File, maxWidth: number = 400, quality: number = 0.6): Promise<string> => {
+  // 에디터용 이미지 압축 함수 (500px, 80%)
+  const compressEditorImage = (file: File, maxWidth: number = 500, quality: number = 0.8): Promise<string> => {
     return new Promise((resolve, reject) => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
@@ -179,8 +179,8 @@ export default function WriteStoryPage() {
       
       img.onload = () => {
         try {
-        // 400px로 강제 리사이즈 (가로 기준)
-        const maxWidth = 400;
+        // 500px로 강제 리사이즈 (가로 기준)
+        const maxWidth = 500;
         const ratio = maxWidth / img.width;
         canvas.width = maxWidth;
         canvas.height = img.height * ratio;
@@ -192,9 +192,9 @@ export default function WriteStoryPage() {
         const imageData = ctx?.getImageData(0, 0, canvas.width, canvas.height);
         const hasTransparency = imageData?.data.some((_, index) => index % 4 === 3 && imageData.data[index] < 255);
         
-        // 투명도가 있으면 PNG, 없으면 JPG 사용 (강력한 압축)
+        // 투명도가 있으면 PNG, 없으면 JPG 사용 (고품질)
         const format = hasTransparency ? 'image/png' : 'image/jpeg';
-        let startQuality = hasTransparency ? 0.6 : 0.5; // 더 강력한 압축
+        let startQuality = hasTransparency ? 0.8 : 0.8; // 80% 품질
         
         // 파일 크기가 300KB 이하가 될 때까지 품질을 낮춤
         const compressImageRecursive = (currentQuality: number): string => {
@@ -240,7 +240,7 @@ export default function WriteStoryPage() {
       }
 
       try {
-        const compressedImage = await compressEditorImage(file, 400, 0.6);
+        const compressedImage = await compressEditorImage(file, 500, 0.8);
         setUploadedImages(prev => [...prev, compressedImage]);
       } catch (error) {
         console.error('이미지 압축 실패:', error);
@@ -307,8 +307,8 @@ export default function WriteStoryPage() {
     const file = event.target.files?.[0];
     if (file) {
       try {
-        // 이미지 압축 (700px, 500KB 제한)
-        const compressedImage = await compressViewTopImage(file, 700, 0.6);
+        // 이미지 압축 (800px, 80% 품질)
+        const compressedImage = await compressViewTopImage(file, 800, 0.8);
         setViewTopImage(compressedImage);
       } catch (error) {
         console.error('이미지 압축 실패:', error);
@@ -877,8 +877,7 @@ export default function WriteStoryPage() {
                                   try {
                                     if (navigator.clipboard && navigator.clipboard.writeText) {
                                       await navigator.clipboard.writeText(image);
-                                      setSuccessMessage('이미지 URL이 클립보드에 복사되었습니다!');
-                                      setShowSuccessModal(true);
+                                      alert('이미지 URL이 클립보드에 복사되었습니다!');
                                     } else {
                                       // 클립보드 API를 사용할 수 없는 경우
                                       const textArea = document.createElement('textarea');
@@ -887,13 +886,11 @@ export default function WriteStoryPage() {
                                       textArea.select();
                                       document.execCommand('copy');
                                       document.body.removeChild(textArea);
-                                      setSuccessMessage('이미지 URL이 클립보드에 복사되었습니다!');
-                                      setShowSuccessModal(true);
+                                      alert('이미지 URL이 클립보드에 복사되었습니다!');
                                     }
                                   } catch (error) {
                                     console.error('클립보드 복사 실패:', error);
-                                    setErrorMessage('복사에 실패했습니다. 다시 시도해주세요.');
-                                    setShowErrorModal(true);
+                                    alert('복사에 실패했습니다. 다시 시도해주세요.');
                                   }
                                 }}
                                 className="px-2 py-1 bg-green-500 hover:bg-green-600 text-white text-xs rounded transition-colors"
