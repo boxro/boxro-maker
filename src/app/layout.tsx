@@ -71,10 +71,14 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               function setAppHeight() {
-                document.documentElement.style.setProperty('--app-height', window.innerHeight + 'px');
+                if (typeof window !== 'undefined') {
+                  document.documentElement.style.setProperty('--app-height', window.innerHeight + 'px');
+                }
               }
-              window.addEventListener('resize', setAppHeight);
-              setAppHeight();
+              if (typeof window !== 'undefined') {
+                window.addEventListener('resize', setAppHeight);
+                setAppHeight();
+              }
             `,
           }}
         />
