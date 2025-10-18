@@ -226,7 +226,7 @@ export default function HomeStoryCards() {
           target={article.openInNewTab ? '_blank' : undefined}
           rel={article.openInNewTab ? 'noopener noreferrer' : undefined}
         >
-          <Card className="group hover:shadow-xl transition-all duration-300 border-0 border-purple-300/50 shadow-2xl relative overflow-hidden bg-transparent min-h-[480px] flex flex-col justify-end cursor-pointer break-inside-avoid mb-3">
+          <Card className="group hover:shadow-xl transition-all duration-300 border-0 border-purple-300/50 shadow-2xl relative overflow-hidden bg-transparent min-h-[480px] flex flex-col justify-end cursor-pointer">
             {/* 배경 이미지 */}
             {article.cardThumbnail ? (
               <div className="absolute inset-0 overflow-hidden">

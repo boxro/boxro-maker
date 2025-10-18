@@ -22,7 +22,7 @@ interface Banner {
 }
 
 interface BannerDisplayProps {
-  currentPage: 'gallery' | 'story' | 'store';
+  currentPage: 'gallery' | 'story' | 'store' | 'youtube';
 }
 
 const BannerDisplay: React.FC<BannerDisplayProps> = ({ currentPage }) => {
@@ -33,7 +33,8 @@ const BannerDisplay: React.FC<BannerDisplayProps> = ({ currentPage }) => {
   const pageMapping: { [key: string]: string[] } = {
     'store': ['스토어', 'store'],
     'gallery': ['갤러리', 'gallery'],
-    'story': ['이야기', 'story']
+    'story': ['이야기', 'story'],
+    'youtube': ['박스로 유튜브', 'youtube']
   };
 
   useEffect(() => {

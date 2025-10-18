@@ -1,0 +1,149 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 사용자 프로필 정보
+    match /users/{userId} {
+      // 모든 사용자가 프로필 정보 읽기 및 쿼리 가능 (프로필 이미지 표시용)
+      allow read, list: if true;
+      // 사용자는 자신의 프로필 정보만 쓰기 가능
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // 갤러리 디자인 (공개)
+    match /communityDesigns/{document} {
+      allow read: if true; // 모든 사용자가 읽기 가능
+      allow create: if request.auth != null; // 로그인된 사용자만 생성 가능
+      allow update: if request.auth != null && 
+        (request.auth.token.email in ["beagle3651@gmail.com", "boxro.crafts@gmail.com"] ||
+         (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'shares', 'views', 'likedBy', 'sharedBy', 'viewedBy', 'popularityBoost']))); // 관리자 또는 인기도 조작, 좋아요/공유/조회수 업데이트만 가능
+      // 작성자만 삭제 가능 또는 관리자만 삭제 가능
+      allow delete: if request.auth != null && 
+        (resource.data.authorId == request.auth.uid || 
+         (resource.data.authorId == null && resource.data.authorEmail == request.auth.token.email) ||
+         request.auth.token.email in ["beagle3651@gmail.com", "boxro.crafts@gmail.com"]);
+    }
+    
+    // 사용자 개인 디자인
+    match /userDesigns/{document} {
+      allow create: if request.auth != null && request.resource.data.authorId == request.auth.uid;
+      allow read, update, delete: if request.auth != null && 
+        (resource.data.authorId == request.auth.uid ||
+         request.auth.token.email in ["beagle3651@gmail.com", "boxro.crafts@gmail.com"]);
+    }
+    
+    // 박스로 톡 (갤러리 디자인에 대한 박스로 톡)
+    match /boxroTalks/{document} {
+      allow read: if true; // 모든 사용자가 읽기 가능
+      allow create: if request.auth != null; // 로그인된 사용자만 박스로 톡 작성 가능
+      // 작성자만 수정/삭제 가능 또는 관리자만 수정/삭제 가능
+      allow update, delete: if request.auth != null && 
+        (resource.data.authorId == request.auth.uid ||
+         request.auth.token.email in ["beagle3651@gmail.com", "boxro.crafts@gmail.com"]);
+    }
+    
+    // 박스로 톡 (스토리에 대한 박스로 톡)
+    match /storyBoxroTalks/{document} {
+      allow read: if true; // 모든 사용자가 읽기 가능
+      allow create: if request.auth != null; // 로그인된 사용자만 박스로 톡 작성 가능
+      // 작성자만 수정/삭제 가능 또는 관리자만 수정/삭제 가능
+      allow update, delete: if request.auth != null && 
+        (resource.data.authorId == request.auth.uid ||
+         request.auth.token.email in ["beagle3651@gmail.com", "boxro.crafts@gmail.com"]);
+    }
+    
+    // 박스로 톡 (스토어에 대한 박스로 톡)
+    match /storeBoxroTalks/{document} {
+      allow read: if true; // 모든 사용자가 읽기 가능
+      allow create: if request.auth != null; // 로그인된 사용자만 박스로 톡 작성 가능
+      // 작성자만 수정/삭제 가능 또는 관리자만 수정/삭제 가능
+      allow update, delete: if request.auth != null && 
+        (resource.data.authorId == request.auth.uid ||
+         request.auth.token.email in ["beagle3651@gmail.com", "boxro.crafts@gmail.com"]);
+    }
+    
+    // 박스로 톡 (유튜브에 대한 박스로 톡)
+    match /youtubeBoxroTalks/{document} {
+      allow read: if true; // 모든 사용자가 읽기 가능
+      allow create: if request.auth != null; // 로그인된 사용자만 박스로 톡 작성 가능
+      // 작성자만 수정/삭제 가능 또는 관리자만 수정/삭제 가능
+      allow update, delete: if request.auth != null && 
+        (resource.data.authorId == request.auth.uid ||
+         request.auth.token.email in ["beagle3651@gmail.com", "boxro.crafts@gmail.com"]);
+    }
+    
+    // 박스카 이야기 글
+    match /storyArticles/{document} {
+      allow read: if true; // 모든 사용자가 읽기 가능
+      allow create, delete: if request.auth != null && 
+        request.auth.token.email in ["beagle3651@gmail.com", "boxro.crafts@gmail.com"]; // 관리자만 생성/삭제 가능
+      // 일반 사용자는 좋아요, 공유, 댓글 등 업데이트만 가능
+      allow update: if request.auth != null && 
+        (request.auth.token.email in ["beagle3651@gmail.com", "boxro.crafts@gmail.com"] ||
+         (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'shares', 'views', 'likedBy', 'sharedBy', 'viewedBy', 'popularityBoost'])));
+    }
+    
+    // 스토어 아이템 (박스로 스토어)
+    match /storeItems/{document} {
+      allow read: if true; // 모든 사용자가 읽기 가능
+      allow create, delete: if request.auth != null && 
+        request.auth.token.email in ["beagle3651@gmail.com", "boxro.crafts@gmail.com"]; // 관리자만 생성/삭제 가능
+      // 일반 사용자는 좋아요, 공유, 댓글 등 업데이트만 가능
+      allow update: if request.auth != null && 
+        (request.auth.token.email in ["beagle3651@gmail.com", "boxro.crafts@gmail.com"] ||
+         (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'shares', 'views', 'likedBy', 'sharedBy', 'viewedBy', 'boxroTalks', 'boxroTalkedBy', 'popularityBoost'])));
+    }
+    
+    // 유튜브 아이템 (박스로 유튜브)
+    match /youtubeItems/{document} {
+      allow read: if true; // 모든 사용자가 읽기 가능
+      allow create, delete: if request.auth != null && 
+        request.auth.token.email in ["beagle3651@gmail.com", "boxro.crafts@gmail.com"]; // 관리자만 생성/삭제 가능
+      // 일반 사용자는 좋아요, 공유, 댓글 등 업데이트만 가능
+      allow update: if request.auth != null && 
+        (request.auth.token.email in ["beagle3651@gmail.com", "boxro.crafts@gmail.com"] ||
+         (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'shares', 'views', 'likedBy', 'sharedBy', 'viewedBy', 'boxroTalks', 'boxroTalkedBy', 'popularityBoost'])));
+    }
+    
+    // 박스카 이야기 댓글
+    match /storyComments/{document} {
+      allow read: if true; // 모든 사용자가 읽기 가능
+      allow create: if request.auth != null; // 로그인된 사용자만 댓글 작성 가능
+      allow update, delete: if request.auth != null && resource.data.authorId == request.auth.uid; // 작성자만 수정/삭제 가능
+    }
+    
+    // 사용자 상호작용 상태 (다운로드, 공유, 댓글 등)
+    match /userInteractions/{userId} {
+      // 사용자는 자신의 상호작용 데이터만 읽기/쓰기 가능
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // 홈카드 관리 (관리자만 접근 가능)
+    match /homeCards/{document} {
+      allow read: if true; // 모든 사용자가 읽기 가능 (홈화면 표시용)
+      allow create, update, delete: if request.auth != null && 
+        request.auth.token.email in ["beagle3651@gmail.com", "boxro.crafts@gmail.com"]; // 관리자만 생성/수정/삭제 가능
+    }
+    
+    // 도안 다운로드 기록
+    match /blueprintDownloads/{document} {
+      allow create: if request.auth != null; // 로그인된 사용자만 다운로드 기록 생성 가능
+      allow read: if request.auth != null && 
+        request.auth.token.email in ["beagle3651@gmail.com", "boxro.crafts@gmail.com"]; // 관리자만 읽기 가능
+      allow update, delete: if request.auth != null && 
+        request.auth.token.email in ["beagle3651@gmail.com", "boxro.crafts@gmail.com"]; // 관리자만 수정/삭제 가능
+    }
+    
+    // 이용약관 버전 관리 (관리자만 작성, 모든 사람이 읽기 가능)
+    match /termsVersions/{document} {
+      allow read: if true; // 모든 사용자가 읽기 가능 (약관 표시용) - 회원가입 안된 사람도 가능
+      allow create, update, delete: if request.auth != null && 
+        request.auth.token.email in ["beagle3651@gmail.com", "boxro.crafts@gmail.com"]; // 관리자만 생성/수정/삭제 가능
+    }
+    
+    // 배너 관리 (임시로 모든 로그인 사용자 접근 가능)
+    match /banners/{document} {
+      allow read: if true; // 모든 사용자가 읽기 가능 (배너 표시용)
+      allow create, update, delete: if request.auth != null; // 임시로 모든 로그인 사용자 접근 가능
+    }
+  }
+}

@@ -361,7 +361,7 @@ const BannerManagement: React.FC<BannerManagementProps> = ({
                 <label className="block text-sm font-medium text-gray-800 mb-2">배포 위치</label>
                 <div className="bg-transparent p-4 rounded-lg border border-gray-300">
                   <div className="flex flex-wrap gap-4">
-                    {['갤러리', '이야기', '스토어'].map((page) => (
+                    {['갤러리', '이야기', '스토어', '박스로 유튜브'].map((page) => (
                       <label key={page} className="flex items-center gap-2">
                         <input
                           type="checkbox"

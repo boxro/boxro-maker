@@ -164,6 +164,12 @@ export default function CommonHeader({ className = "" }: CommonHeaderProps) {
                         <span>박스카 이야기</span>
                       </div>
                     </Link>
+                    <Link href="/youtube" onClick={() => setIsMenuOpen(false)} className="block px-6 py-2 rounded-full transition-colors text-gray-900 hover:bg-purple-100">
+                      <div className="flex items-center gap-3">
+                        <Play className="w-4 h-4" />
+                        <span>박스로 유튜브</span>
+                      </div>
+                    </Link>
                     <Link href="/store" onClick={() => setIsMenuOpen(false)} className="block px-6 py-2 rounded-full transition-colors text-gray-900 hover:bg-purple-100">
                       <div className="flex items-center gap-3">
                         <ShoppingBag className="w-4 h-4" />
