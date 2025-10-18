@@ -4761,7 +4761,7 @@ export default function DrawPage() {
           </Card>
 
         </div>
-
+      </div>
     </div>
   );
 
