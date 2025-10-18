@@ -419,7 +419,7 @@ export default function EditProfilePage() {
                 <Button
                   onClick={handleCancel}
                   variant="outline"
-                  className="flex-1 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300"
+                  className="flex-1 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-full"
                   disabled={isSaving}
                 >
                   취소
@@ -427,7 +427,7 @@ export default function EditProfilePage() {
                 <Button
                   onClick={handleSave}
                   disabled={isSaving || !profileData.displayName.trim()}
-                  className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+                  className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-full"
                 >
                   {isSaving ? (
                     <div className="flex items-center gap-2">
