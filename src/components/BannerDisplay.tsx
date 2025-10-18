@@ -44,12 +44,17 @@ const BannerDisplay: React.FC<BannerDisplayProps> = ({ currentPage }) => {
         const cachedBanners = sessionStorage.getItem('banners');
         const lastBannerUpdate = sessionStorage.getItem('lastBannerUpdate');
         const bannerCacheInvalidated = sessionStorage.getItem('bannerCacheInvalidated');
+        const localStorageCacheInvalidated = localStorage.getItem('bannerCacheInvalidated');
         const now = Date.now();
         
         // 캐시 무효화 플래그가 있거나 캐시가 없으면 서버에서 새로 가져오기
-        if (bannerCacheInvalidated || !cachedBanners || !lastBannerUpdate) {
+        if (bannerCacheInvalidated || localStorageCacheInvalidated || !cachedBanners || !lastBannerUpdate) {
           console.log('캐시 무효화됨 또는 캐시 없음, 서버에서 새로 가져오기');
-        } else if (cachedBanners && lastBannerUpdate && (now - parseInt(lastBannerUpdate)) < 300000) { // 30초 -> 5분으로 증가
+          // localStorage 캐시 무효화 플래그 삭제
+          if (localStorageCacheInvalidated) {
+            localStorage.removeItem('bannerCacheInvalidated');
+          }
+        } else if (cachedBanners && lastBannerUpdate && (now - parseInt(lastBannerUpdate)) < 60000) { // 5분 -> 1분으로 단축
           const bannersData = JSON.parse(cachedBanners);
           console.log('캐시된 배너 데이터 사용');
           

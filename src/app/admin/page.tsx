@@ -573,6 +573,11 @@ export default function AdminPage() {
       // 강제로 캐시 무효화를 위한 타임스탬프 추가
       sessionStorage.setItem('bannerCacheInvalidated', Date.now().toString());
       
+      // 모든 탭에서 배너 캐시 무효화 알림
+      if (typeof window !== 'undefined' && 'localStorage' in window) {
+        localStorage.setItem('bannerCacheInvalidated', Date.now().toString());
+      }
+      
       // 폼 초기화
       resetBannerForm();
       
@@ -617,6 +622,11 @@ export default function AdminPage() {
       sessionStorage.removeItem('lastBannerUpdate');
       // 강제로 캐시 무효화를 위한 타임스탬프 추가
       sessionStorage.setItem('bannerCacheInvalidated', Date.now().toString());
+      
+      // 모든 탭에서 배너 캐시 무효화 알림
+      if (typeof window !== 'undefined' && 'localStorage' in window) {
+        localStorage.setItem('bannerCacheInvalidated', Date.now().toString());
+      }
       
       // 폼 초기화
       resetBannerForm();

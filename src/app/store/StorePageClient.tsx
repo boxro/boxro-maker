@@ -839,7 +839,11 @@ export default function StorePageClient() {
                 key={`${article.id}-${index}`} 
                 className="group shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden w-full rounded-2xl relative cursor-pointer flex flex-col"
                 style={{ backgroundColor: article.cardBackgroundColor || 'rgba(255, 255, 255, 0.97)' }}
-                      onClick={() => router.push(`/store/${article.id}`)}
+                onClick={() => {
+                  if (article.storeUrl) {
+                    window.open(article.storeUrl, '_blank', 'noopener,noreferrer');
+                  }
+                }}
               >
                 {/* 썸네일 */}
                 {article.thumbnail && (
@@ -907,23 +911,44 @@ export default function StorePageClient() {
                   
                   {article.price && (
                     <div className="mb-3">
-                      <p 
-                        className="text-lg font-semibold"
-                        style={{ color: article.priceColor || '#1f2937' }}
-                      >
-                        {article.price}
-                      </p>
-                      {article.isFullDonation && (
-                        <div 
-                          className="inline-block px-3 py-1 rounded-full text-white text-sm font-medium mt-1"
-                          style={{ backgroundColor: article.priceColor || '#1f2937' }}
+                      <div className="flex items-center justify-between">
+                        <p 
+                          className="text-lg font-semibold"
+                          style={{ color: article.priceColor || '#1f2937' }}
                         >
-                          수익금 전액 기부
-                        </div>
-                      )}
+                          {article.price}
+                        </p>
+                        {article.isFullDonation && (
+                 <div
+                   className="inline-block px-3 py-1 rounded-lg text-white text-sm font-medium"
+                   style={{ backgroundColor: '#ec4899' }}
+                 >
+                   수익금 전액 기부
+                 </div>
+                        )}
+                      </div>
                     </div>
                   )}
                   
+                  {/* 스토어 바로가기 버튼 */}
+                  {article.storeUrl && (
+                    <div className="mb-3">
+                      <a
+                        href={article.storeUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-white rounded-full transition-colors text-sm font-medium"
+                        style={{ backgroundColor: '#3b82f6' }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#3b82f6'}
+                      >
+                        <ShoppingBag className="w-4 h-4" />
+                        스토어 바로가기
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+                    </div>
+                  )}
                   
                   {/* 좋아요, 공유, 박스로 톡, 보기 버튼 */}
                   <div className="flex items-center justify-center gap-2 pt-1 pb-0">
