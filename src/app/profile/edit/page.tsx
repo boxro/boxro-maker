@@ -435,10 +435,7 @@ export default function EditProfilePage() {
                       저장 중...
                     </div>
                   ) : (
-                    <div className="flex items-center gap-2">
-                      <Save className="w-4 h-4" />
-                      저장하기
-                    </div>
+                    '저장하기'
                   )}
                 </Button>
               </div>
