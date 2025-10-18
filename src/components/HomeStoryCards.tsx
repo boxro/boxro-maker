@@ -66,7 +66,7 @@ export default function HomeStoryCards() {
       const lastHomeCardsUpdate = sessionStorage.getItem('lastHomeCardsUpdate');
       const now = Date.now();
       
-      if (cachedHomeCards && lastHomeCardsUpdate && (now - parseInt(lastHomeCardsUpdate)) < 300000) { // 5분 캐시
+      if (cachedHomeCards && lastHomeCardsUpdate && (now - parseInt(lastHomeCardsUpdate)) < 60000) { // 5분 -> 1분으로 단축
         const allHomeCards = JSON.parse(cachedHomeCards);
         console.log('캐시된 홈카드 데이터 사용');
         
@@ -87,8 +87,11 @@ export default function HomeStoryCards() {
           })
           .slice(0, 15);
         
-        setHomeCards(filteredHomeCards);
-        setLoading(false);
+        // 로딩을 잠깐 보여주기 위해 setTimeout 사용
+        setTimeout(() => {
+          setHomeCards(filteredHomeCards);
+          setLoading(false);
+        }, 500);
         return;
       }
       
