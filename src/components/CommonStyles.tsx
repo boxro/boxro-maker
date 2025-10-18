@@ -4,7 +4,7 @@ export const COMMON_CARD_HEADER_STYLES = "text-gray-800 px-4 md:px-8 pb-0";
 export const COMMON_CARD_TITLE_STYLES = "text-lg flex items-center";
 
 // 버튼 스타일들
-export const PRIMARY_BUTTON_STYLES = "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200";
+export const PRIMARY_BUTTON_STYLES = "bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200";
 export const SECONDARY_BUTTON_STYLES = "bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30 transition-all duration-200 py-2 px-4 rounded-lg";
 export const OUTLINE_BUTTON_STYLES = "bg-white/20 border-white/30 text-white hover:bg-white/30 border py-2 px-4 rounded-lg transition-all duration-200";
 
