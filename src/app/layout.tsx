@@ -67,6 +67,17 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="BOXRO" />
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              function setAppHeight() {
+                document.documentElement.style.setProperty('--app-height', window.innerHeight + 'px');
+              }
+              window.addEventListener('resize', setAppHeight);
+              setAppHeight();
+            `,
+          }}
+        />
       </head>
       <body className={inter.className}>
         <AuthProvider>
