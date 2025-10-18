@@ -66,7 +66,7 @@ export default function HomeStoryCards() {
       const lastHomeCardsUpdate = sessionStorage.getItem('lastHomeCardsUpdate');
       const now = Date.now();
       
-      if (cachedHomeCards && lastHomeCardsUpdate && (now - parseInt(lastHomeCardsUpdate)) < 60000) { // 5분 -> 1분으로 단축
+      if (cachedHomeCards && lastHomeCardsUpdate && (now - parseInt(lastHomeCardsUpdate)) < 300000) { // 5분 캐시
         const allHomeCards = JSON.parse(cachedHomeCards);
         console.log('캐시된 홈카드 데이터 사용');
         
@@ -87,11 +87,8 @@ export default function HomeStoryCards() {
           })
           .slice(0, 15);
         
-        // 로딩을 잠깐 보여주기 위해 setTimeout 사용
-        setTimeout(() => {
-          setHomeCards(filteredHomeCards);
-          setLoading(false);
-        }, 500);
+        setHomeCards(filteredHomeCards);
+        setLoading(false);
         return;
       }
       
@@ -212,29 +209,7 @@ export default function HomeStoryCards() {
   }
 
   if (loading) {
-    return (
-      <Card className="bg-transparent border-0 shadow-none transition-all duration-300 overflow-hidden py-5 w-full rounded-2xl">
-        <div className="text-center py-12">
-          {/* 점프 애니메이션 (더 역동적인 뛰는 효과) */}
-          <div className="w-24 h-24 mx-auto mb-6 flex items-center justify-center">
-            <img 
-              src="/logo_remoteonly.png" 
-              alt="박스로 로고" 
-              className="w-20 h-20 animate-bounce"
-              style={{ 
-                animationDuration: '0.6s',
-                animationIterationCount: 'infinite',
-                animationTimingFunction: 'cubic-bezier(0.68, -0.55, 0.265, 1.55)'
-              }}
-            />
-          </div>
-          <h3 className="text-lg font-semibold text-white mb-2">
-            홈 카드를 불러오는 중...
-          </h3>
-          <p className="text-sm text-white/80">재미있는 홈 카드를 준비하고 있어요!</p>
-        </div>
-      </Card>
-    );
+    return null; // 로딩 중에는 아무것도 표시하지 않음
   }
 
   if (homeCards.length === 0) {
