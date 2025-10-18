@@ -921,7 +921,7 @@ export default function StorePageClient() {
                         {article.isFullDonation && (
                  <div
                    className="inline-block px-3 py-1 rounded-lg text-white text-sm font-medium"
-                   style={{ backgroundColor: '#ec4899' }}
+                   style={{ backgroundColor: article.priceColor || '#1f2937' }}
                  >
                    수익금 전액 기부
                  </div>
