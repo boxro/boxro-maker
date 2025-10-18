@@ -117,7 +117,8 @@
     border-color: hsl(var(--border));
   }
   html, body {
-    background-color: hsl(var(--background));
+    background: linear-gradient(130deg, #2563eb, #7c3aed, #ec4899);
+    background-attachment: fixed;
     color: hsl(var(--foreground));
   }
 }
