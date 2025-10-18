@@ -14,6 +14,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NODE_ENV === 'production' ? 'https://boxro-maker.vercel.app' : 'http://localhost:3000'),
   title: "BOXRO 박스로 | Eco-Friendly Maker Project",
   description: "버려진 박스로 자동차를 만들고, 상상력을 움직이는 친환경 놀이 플랫폼",
   openGraph: {
@@ -67,21 +68,6 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="BOXRO" />
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              function setAppHeight() {
-                if (typeof window !== 'undefined') {
-                  document.documentElement.style.setProperty('--app-height', window.innerHeight + 'px');
-                }
-              }
-              if (typeof window !== 'undefined') {
-                window.addEventListener('resize', setAppHeight);
-                setAppHeight();
-              }
-            `,
-          }}
-        />
       </head>
       <body className={inter.className}>
         <AuthProvider>
