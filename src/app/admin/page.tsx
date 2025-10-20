@@ -432,8 +432,20 @@ export default function AdminPage() {
       setHomeCardList(prev => [...prev, newCard]);
       setHomeCards(prev => [...prev, newCard]);
       
-      // 서버에서 최신 데이터 다시 불러오기
-      await fetchHomeCards();
+      // 홈카드 컬렉션만 다시 조회 (빠른 반영)
+      const homeCardsQuery = await getDocs(query(collection(db, 'homeCards'), orderBy('createdAt', 'desc')));
+      const updatedHomeCards = homeCardsQuery.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate?.() || new Date()
+      }));
+      setHomeCards(updatedHomeCards);
+      
+      // 홈페이지 캐시 무효화
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem('homeCards');
+        sessionStorage.removeItem('lastHomeCardsUpdate');
+      }
       
       resetForm();
       alert('홈카드가 성공적으로 추가되었습니다!');
@@ -1283,8 +1295,20 @@ export default function AdminPage() {
           : card
       ));
 
-      // 서버에서 최신 데이터 다시 불러오기
-      await fetchHomeCards();
+      // 홈카드 컬렉션만 다시 조회 (빠른 반영)
+      const homeCardsQuery = await getDocs(query(collection(db, 'homeCards'), orderBy('createdAt', 'desc')));
+      const updatedHomeCards = homeCardsQuery.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate?.() || new Date()
+      }));
+      setHomeCards(updatedHomeCards);
+
+      // 홈페이지 캐시 무효화
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem('homeCards');
+        sessionStorage.removeItem('lastHomeCardsUpdate');
+      }
 
       cancelEdit();
       alert('홈카드가 수정되었습니다.');

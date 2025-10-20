@@ -66,7 +66,7 @@ export default function HomeStoryCards() {
       const lastHomeCardsUpdate = sessionStorage.getItem('lastHomeCardsUpdate');
       const now = Date.now();
       
-      if (cachedHomeCards && lastHomeCardsUpdate && (now - parseInt(lastHomeCardsUpdate)) < 300000) { // 5분 캐시
+      if (cachedHomeCards && lastHomeCardsUpdate && (now - parseInt(lastHomeCardsUpdate)) < 30000) { // 30초 캐시
         const allHomeCards = JSON.parse(cachedHomeCards);
         console.log('캐시된 홈카드 데이터 사용');
         
