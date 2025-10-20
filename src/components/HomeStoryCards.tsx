@@ -272,14 +272,8 @@ export default function HomeStoryCards() {
         </Link>
       ))}
       
-      {/* 더 많은 데이터 로딩 중 */}
-      {loadingMore && (
-        <div className="flex justify-center py-8">
-          <div className="flex items-center gap-2">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
-          </div>
-        </div>
-      )}
+      {/* 더 많은 데이터 로딩 중 - UI 표시 없음 */}
+      {loadingMore && null}
       
     </>
   );
