@@ -52,7 +52,7 @@ export default function AdminDashboard({ adminStats, loading }: AdminDashboardPr
       <div className="bg-white/95 backdrop-blur-sm border border-white/20 rounded-lg p-6 mb-4">
         <div className="animate-pulse">
           <div className="h-6 bg-gray-200 rounded mb-4"></div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
             {[...Array(6)].map((_, i) => (
               <div key={i} className="bg-gray-100 rounded-lg p-6">
                 <div className="h-4 bg-gray-200 rounded mb-2"></div>
@@ -69,7 +69,7 @@ export default function AdminDashboard({ adminStats, loading }: AdminDashboardPr
   return (
     <div className="bg-white/95 backdrop-blur-sm border border-white/20 rounded-lg p-6 mb-4">
       <h3 className="text-lg font-semibold mb-4">전체 통계</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
         {/* 전체 회원 수 */}
         <div className="bg-white text-gray-900 py-2 gap-2 border border-gray-200 rounded-lg px-8 py-6">
           <div className="flex flex-row items-center justify-between space-y-0 pb-2 border-b border-gray-200">

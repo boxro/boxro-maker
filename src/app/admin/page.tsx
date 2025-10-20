@@ -432,6 +432,9 @@ export default function AdminPage() {
       setHomeCardList(prev => [...prev, newCard]);
       setHomeCards(prev => [...prev, newCard]);
       
+      // 서버에서 최신 데이터 다시 불러오기
+      await fetchHomeCards();
+      
       resetForm();
       alert('홈카드가 성공적으로 추가되었습니다!');
     } catch (error: unknown) {
@@ -1279,6 +1282,9 @@ export default function AdminPage() {
           ? { ...card, title: homeCardTitle, cardDescription: homeCardDescription, cardThumbnail: homeCardThumbnail, thumbnail: homeCardThumbnail, url: homeCardUrl, openInNewTab: homeCardOpenInNewTab, titleColor: homeCardTitleColor, descriptionColor: homeCardDescriptionColor, textPosition: homeCardTextPosition, backgroundColor: homeCardBackgroundColor }
           : card
       ));
+
+      // 서버에서 최신 데이터 다시 불러오기
+      await fetchHomeCards();
 
       cancelEdit();
       alert('홈카드가 수정되었습니다.');
