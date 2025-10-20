@@ -85,7 +85,7 @@ export default function HomeStoryCards() {
             const bOrder = b.homeOrder || 999999;
             return aOrder - bOrder;
           })
-          .slice(0, 15);
+          .slice(0, 6);
         
         setHomeCards(filteredHomeCards);
         setLoading(false);
@@ -99,7 +99,7 @@ export default function HomeStoryCards() {
           where('showOnHome', '==', true),
           where('isPublished', '==', true),
           orderBy('createdAt', 'desc'),
-          limit(15)
+          limit(6)
         )
       );
       
@@ -134,7 +134,7 @@ export default function HomeStoryCards() {
       }
       
       // 더 이상 데이터가 없으면 hasMore를 false로 설정
-      if (homeCardsQuery.docs.length < 15) {
+      if (homeCardsQuery.docs.length < 6) {
         setHasMore(false);
       }
     } catch (error) {
@@ -158,7 +158,7 @@ export default function HomeStoryCards() {
         where('isPublished', '==', true),
         orderBy('createdAt', 'desc'),
         startAfter(lastDoc),
-        limit(20)
+        limit(6)
       );
       
       const articlesSnapshot = await getDocs(articlesQuery);
@@ -187,7 +187,7 @@ export default function HomeStoryCards() {
       }
       
       // 더 이상 데이터가 없으면 hasMore를 false로 설정
-      if (articlesSnapshot.docs.length < 15) {
+      if (articlesSnapshot.docs.length < 6) {
         setHasMore(false);
       }
     } catch (error) {
