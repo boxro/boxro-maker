@@ -27,6 +27,12 @@ const nextConfig = {
     pagesBufferLength: 2,
   },
   webpack: (config) => {
+    // Typescript paths(@/*) 별칭을 Webpack에도 반영
+    config.resolve = config.resolve || {};
+    config.resolve.alias = {
+      ...(config.resolve.alias || {}),
+      '@': new URL('./src', import.meta.url).pathname,
+    };
     // SVG를 React 컴포넌트로 임포트할 수 있도록 설정
     config.module = config.module || { rules: [] };
     config.module.rules = config.module.rules || [];
