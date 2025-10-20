@@ -1,6 +1,4 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
+const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -19,16 +17,8 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
-      {
-        source: '/gallery',
-        destination: '/community',
-        permanent: false,
-      },
-      {
-        source: '/gallery/:path*',
-        destination: '/community/:path*',
-        permanent: false,
-      },
+      { source: '/gallery', destination: '/community', permanent: false },
+      { source: '/gallery/:path*', destination: '/community/:path*', permanent: false },
     ];
   },
   // prefetch 비활성화로 Failed to fetch 에러 방지
@@ -38,13 +28,11 @@ const nextConfig: NextConfig = {
   },
   webpack: (config) => {
     // SVG를 React 컴포넌트로 임포트할 수 있도록 설정
-    // 예: import Logo from "./logo.svg";
-    //     <Logo />
-    config.module = config.module || { rules: [] } as any;
-    (config.module as any).rules = (config.module as any).rules || [];
-    (config.module as any).rules.push({
+    config.module = config.module || { rules: [] };
+    config.module.rules = config.module.rules || [];
+    config.module.rules.push({
       test: /\.svg$/,
-      issuer: { and: [/{\\.js|\.jsx|\.ts|\.tsx}$/] },
+      issuer: /\.[jt]sx?$/,
       use: [
         {
           loader: '@svgr/webpack',
@@ -61,3 +49,5 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+
+
