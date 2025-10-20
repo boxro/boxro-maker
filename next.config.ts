@@ -10,21 +10,11 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [],
   },
-  // 폰트 최적화 비활성화 (구글폰트 자동 추가 방지)
-  optimizeFonts: false,
   // 캐시 비활성화
   experimental: {
     staleTimes: {
       dynamic: 0,
       static: 0,
-    },
-    turbo: {
-      rules: {
-        '*.svg': {
-          loaders: ['@svgr/webpack'],
-          as: '*.js',
-        },
-      },
     },
   },
   async redirects() {
@@ -47,6 +37,21 @@ const nextConfig: NextConfig = {
     pagesBufferLength: 2,
   },
   webpack: (config) => {
+    // SVG를 React 컴포넌트로 임포트할 수 있도록 설정
+    // 예: import Logo from "./logo.svg";
+    //     <Logo />
+    config.module = config.module || { rules: [] } as any;
+    (config.module as any).rules = (config.module as any).rules || [];
+    (config.module as any).rules.push({
+      test: /\.svg$/,
+      issuer: { and: [/{\\.js|\.jsx|\.ts|\.tsx}$/] },
+      use: [
+        {
+          loader: '@svgr/webpack',
+          options: { svgo: true },
+        },
+      ],
+    });
     config.resolve.fallback = {
       ...config.resolve.fallback,
       fs: false,
