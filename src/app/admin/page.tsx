@@ -2108,7 +2108,8 @@ export default function AdminPage() {
       const uniqueInstalls = new Set();
       installedPWAs.forEach(install => {
         const userAgent = install.userAgent || '';
-        const key = userAgent.substring(0, 50); // User Agent의 일부를 키로 사용
+        // User Agent의 해시값을 키로 사용하여 더 정확한 중복 제거
+        const key = userAgent.length > 0 ? userAgent.substring(0, Math.min(userAgent.length, 100)) : 'unknown';
         uniqueInstalls.add(key);
       });
       
@@ -2146,8 +2147,13 @@ export default function AdminPage() {
           const docCount = snapshot.docs.length;
           totalDocs += docCount;
           
-          // 각 문서당 평균 크기 추정 (1KB 정도)
-          estimatedSize += docCount * 1024; // 1KB per document
+          // 각 문서의 실제 크기 추정
+          snapshot.docs.forEach(doc => {
+            const data = doc.data();
+            // JSON 문자열 길이로 실제 크기 추정
+            const jsonSize = JSON.stringify(data).length;
+            estimatedSize += jsonSize;
+          });
           
           // 오늘 생성된 문서 수 (쓰기 작업 추정)
           const todayDocs = snapshot.docs.filter(doc => {
@@ -2161,8 +2167,10 @@ export default function AdminPage() {
           
           // 읽기 작업은 실제 조회 패턴을 기반으로 계산
           // 오늘 생성된 문서는 더 많이 조회될 가능성이 높음
-          // 오늘 생성된 문서는 평균 5번 조회, 기존 문서는 1번 조회로 추정
-          dailyReads += (todayDocs.length * 5) + ((docCount - todayDocs.length) * 1);
+          // 실제 조회 빈도를 기반으로 계산 (오늘 생성: 3-5번, 기존: 0.5-1번)
+          const todayReads = todayDocs.length * 4; // 오늘 생성된 문서는 평균 4번 조회
+          const existingReads = Math.max((docCount - todayDocs.length) * 0.5, 0); // 기존 문서는 평균 0.5번 조회
+          dailyReads += todayReads + existingReads;
           
         } catch (error) {
           console.warn(`${collectionName} 컬렉션 접근 실패:`, error);
@@ -2261,8 +2269,10 @@ export default function AdminPage() {
             return false;
           });
           
-          // 오늘 생성된 문서는 더 많이 조회됨 (5번), 기존 문서는 적게 조회됨 (1번)
-          firestoreReads += (todayDocs.length * 5) + ((docCount - todayDocs.length) * 1);
+          // 오늘 생성된 문서는 더 많이 조회됨, 기존 문서는 적게 조회됨
+          const todayReads = todayDocs.length * 4; // 오늘 생성된 문서는 평균 4번 조회
+          const existingReads = Math.max((docCount - todayDocs.length) * 0.5, 0); // 기존 문서는 평균 0.5번 조회
+          firestoreReads += todayReads + existingReads;
         } catch (error) {
           console.warn(`${collectionName} 컬렉션 읽기 실패:`, error);
         }
@@ -2271,8 +2281,8 @@ export default function AdminPage() {
       // Auth 로그인은 실제 사용자 활동 기반으로 계산
       // 오늘 활동한 사용자 수를 기반으로 추정 (작품 생성, 댓글 작성 등)
       const todayActivityUsers = todayDesigns + todayBoxroTalks + todayStories + todayStore;
-      // 각 활동한 사용자는 평균 2-3번 로그인한다고 추정
-      authLogins = Math.max(todayActivityUsers * 2, authSignups);
+      // 각 활동한 사용자는 평균 1.5-2번 로그인한다고 추정 (더 보수적으로)
+      authLogins = Math.max(Math.round(todayActivityUsers * 1.5), authSignups);
       
       return {
         firestoreReads,
