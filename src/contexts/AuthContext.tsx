@@ -43,9 +43,39 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return await createDefaultAvatar(user);
     }
     
-    // CORS 문제를 피하기 위해 Google 원본 URL을 직접 사용하지 않고 기본 아바타 생성
-    console.log('CORS 문제 방지를 위해 기본 아바타 생성');
-    return await createDefaultAvatar(user);
+    try {
+      console.log('🔄 구글 프로필 이미지 가져오기 시작:', user.photoURL);
+      
+      // CORS 문제를 피하기 위해 이미지 프록시 서비스 사용
+      const proxyUrl = `https://images.weserv.nl/?url=${encodeURIComponent(user.photoURL)}&w=96&h=96&fit=cover&output=webp`;
+      
+      // 이미지를 fetch로 가져오기
+      const response = await fetch(proxyUrl);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const blob = await response.blob();
+      
+      // Blob을 base64로 변환
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const base64 = reader.result as string;
+          console.log('✅ 구글 프로필 이미지 base64 변환 완료');
+          resolve(base64);
+        };
+        reader.onerror = () => {
+          console.error('❌ 이미지 변환 실패');
+          reject(new Error('이미지 변환 실패'));
+        };
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.error('❌ 구글 프로필 이미지 가져오기 실패:', error);
+      console.log('🔄 기본 아바타로 폴백');
+      return await createDefaultAvatar(user);
+    }
   };
 
   // 기본 아바타 생성 함수
