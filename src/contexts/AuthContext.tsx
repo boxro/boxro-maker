@@ -291,7 +291,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
     } catch (error: any) {
-      console.error('이메일 로그인 오류:', error);
+      // 개발자 콘솔에만 에러 로그 출력 (사용자 화면에는 영향 없음)
+      console.log('이메일 로그인 오류:', error);
       
       // 구체적인 에러 메시지 제공
       if (error.code === 'auth/invalid-credential') {

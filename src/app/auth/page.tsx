@@ -79,7 +79,8 @@ export default function AuthPage() {
       }
       // 로그인 성공 시 리다이렉트는 onAuthStateChanged에서 처리됨
     } catch (error: any) {
-      console.error('인증 오류:', error);
+      // 개발자 콘솔에만 에러 로그 출력 (사용자 화면에는 영향 없음)
+      console.log('인증 오류:', error);
       setError(error.message || '로그인 중 오류가 발생했습니다. 다시 시도해주세요.');
     }
   };
