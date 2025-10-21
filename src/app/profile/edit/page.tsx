@@ -543,7 +543,7 @@ export default function EditProfilePage() {
                       className="text-gray-500 hover:text-red-600 underline"
                     >
                       <span style={{ fontSize: '14px' }}>회원탈퇴</span>
-                      <span style={{ fontSize: '12px' }}> (모든 데이터가 영구적으로 삭제됩니다)</span>
+                      <span style={{ fontSize: '12px' }}> (탈퇴 시 모든 데이터가 완전히 삭제됩니다)</span>
                     </button>
                   </div>
                 </div>
@@ -611,7 +611,7 @@ export default function EditProfilePage() {
                 <h3 className="text-lg font-bold text-gray-900 mb-2" style={{ fontSize: '18px' }}>회원 탈퇴</h3>
                 <p className="text-sm text-gray-600 mb-4">
                   정말 떠나시겠어요? 😢<br />
-                  <strong className="text-red-600">모든 데이터가 영구적으로 삭제</strong>되며 복구할 수 없습니다.
+                  <strong className="text-red-600">탈퇴 시 모든 데이터가 완전히 삭제</strong>됩니다.
                 </p>
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
                   <p className="text-xs text-red-700">
