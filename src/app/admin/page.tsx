@@ -112,7 +112,9 @@ export default function AdminPage() {
   // 관리자 이메일 목록
   const ADMIN_EMAILS = [
     'admin@boxro.com',
-    'dongwoo@boxro.com'
+    'dongwoo@boxro.com',
+    'beagle3651@gmail.com',
+    'boxro.crafts@gmail.com'
   ];
 
   // 관리자 권한 확인 함수
