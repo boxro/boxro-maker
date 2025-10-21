@@ -179,43 +179,50 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           const userSnap = await getDoc(userRef);
           
           let onboardingCompleted = false;
+          let onboardingSkipped = false;
+          
           if (userSnap.exists()) {
             const userData = userSnap.data();
             onboardingCompleted = userData.onboardingCompleted === true;
+            onboardingSkipped = userData.onboardingSkipped === true;
           }
           
           console.log('🔍 온보딩 상태 확인 (Firestore):', { 
             userId, 
             onboardingCompleted, 
+            onboardingSkipped,
             showOnboarding,
             userExists: userSnap.exists()
           });
           
-          // 온보딩이 완료되지 않았고, 현재 showOnboarding이 false인 경우에만 true로 설정
-          if (!onboardingCompleted && !showOnboarding) {
+          // 온보딩이 완료되었거나 스킵된 경우 표시하지 않음
+          if (onboardingCompleted || onboardingSkipped) {
+            console.log('⏭️ 온보딩 스플래시 건너뜀:', { 
+              reason: onboardingCompleted ? '이미 완료됨' : '스킵됨' 
+            });
+            setShowOnboarding(false);
+          } else {
+            // 온보딩이 완료되지 않았고 스킵되지 않은 경우 표시
             console.log('✅ 온보딩 스플래시 표시 설정');
             setShowOnboarding(true);
-          } else {
-            console.log('⏭️ 온보딩 스플래시 건너뜀:', { 
-              reason: onboardingCompleted ? '이미 완료됨' : '이미 표시 중' 
-            });
           }
         } catch (error) {
           console.error('❌ Firestore 온보딩 상태 확인 실패:', error);
           // Firestore 확인 실패 시 localStorage로 폴백
           try {
-            localStorage.setItem('current_user_id', userId);
             const onboardingCompleted = localStorage.getItem(`onboarding_completed_${userId}`);
+            const onboardingSkipped = localStorage.getItem(`onboarding_skipped_${userId}`);
             
-            if (!onboardingCompleted && !showOnboarding) {
+            if (onboardingCompleted === 'true' || onboardingSkipped === 'true') {
+              console.log('⏭️ localStorage에서 온보딩 스플래시 건너뜀');
+              setShowOnboarding(false);
+            } else {
               console.log('✅ localStorage 폴백으로 온보딩 스플래시 표시');
               setShowOnboarding(true);
             }
           } catch (localStorageError) {
             console.warn('⚠️ localStorage도 사용 불가, 온보딩 스플래시 표시:', localStorageError);
-            if (!showOnboarding) {
-              setShowOnboarding(true);
-            }
+            setShowOnboarding(true);
           }
         }
       }

@@ -80,30 +80,30 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete, showDo
   };
 
   const handleComplete = async () => {
-    // 온보딩 완료 상태를 Firestore에 저장
+    // "무료로 시작하기" 버튼 클릭 시 - 영구적으로 온보딩 스킵
     try {
       const { doc, setDoc } = await import('firebase/firestore');
       const { db } = await import('@/lib/firebase');
       
       const userId = localStorage.getItem('current_user_id');
       if (userId) {
-        // Firestore에 온보딩 완료 상태 저장
+        // Firestore에 온보딩 스킵 상태 저장 (영구적)
         await setDoc(doc(db, 'users', userId), {
-          onboardingCompleted: true,
-          onboardingCompletedAt: new Date().toISOString()
+          onboardingSkipped: true,
+          onboardingSkippedAt: new Date().toISOString()
         }, { merge: true });
         
-        console.log('✅ 온보딩 완료 상태 Firestore에 저장됨:', userId);
+        console.log('✅ 온보딩 스킵 상태 Firestore에 저장됨 (영구적):', userId);
         
         // localStorage에도 백업 저장
         try {
-          localStorage.setItem(`onboarding_completed_${userId}`, 'true');
+          localStorage.setItem(`onboarding_skipped_${userId}`, 'true');
           console.log('✅ localStorage 백업 저장 완료');
         } catch (localStorageError) {
           console.warn('⚠️ localStorage 백업 저장 실패:', localStorageError);
         }
       } else {
-        console.warn('⚠️ current_user_id가 없어서 온보딩 완료 상태를 저장할 수 없음');
+        console.warn('⚠️ current_user_id가 없어서 온보딩 스킵 상태를 저장할 수 없음');
       }
     } catch (error) {
       console.error('❌ Firestore 저장 실패, localStorage로 폴백:', error);
@@ -112,7 +112,7 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete, showDo
       try {
         const userId = localStorage.getItem('current_user_id');
         if (userId) {
-          localStorage.setItem(`onboarding_completed_${userId}`, 'true');
+          localStorage.setItem(`onboarding_skipped_${userId}`, 'true');
           console.log('✅ localStorage 폴백 저장 완료');
         }
       } catch (localStorageError) {
@@ -130,6 +130,9 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete, showDo
   };
 
   const handleSkip = () => {
+    // "나중에 할래" 버튼 클릭 시 - 스킵 상태를 저장하지 않고 단순히 창만 닫음
+    // 다음 로그인 시에 다시 표시됨
+    console.log('⏭️ 온보딩 스플래시 닫기 (다음 로그인 시 다시 표시)');
     onClose();
   };
 
