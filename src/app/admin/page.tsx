@@ -3529,6 +3529,20 @@ export default function AdminPage() {
         }
       });
 
+      // PWA 설치 정보 업데이트
+      for (const [email, userStat] of userStatsMap.entries()) {
+        // User Agent 기반으로 PWA 설치 정보 매칭 (임시 방법)
+        for (const [tempKey, pwaInfo] of pwaInstallMap.entries()) {
+          // 실제로는 더 정확한 사용자 식별이 필요하지만, 
+          // 현재는 User Agent의 일부를 기반으로 추정
+          if (pwaInfo.installed) {
+            userStat.pwaInstalled = true;
+            userStat.pwaInstallDate = pwaInfo.installDate;
+            break; // 첫 번째 매칭되는 PWA 설치 정보만 사용
+          }
+        }
+      }
+
       const finalUserStats = Array.from(userStatsMap.values());
       setUserStats(finalUserStats);
       setFilteredUserStats(finalUserStats);
@@ -4118,6 +4132,9 @@ export default function AdminPage() {
                         )}
                       </button>
                     </th>
+                    <th className="text-center py-3 px-1 text-[13px] font-medium text-gray-800 w-[58px]">
+                      PWA
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -4189,6 +4206,22 @@ export default function AdminPage() {
                         <span className="bg-orange-100 text-orange-800 px-1 py-1 rounded-full text-[13px]">
                           {user.storeRedirectsCount || 0}
                         </span>
+                      </td>
+                      <td className="py-3 px-2 text-center w-[58px]">
+                        {user.pwaInstalled ? (
+                          <div className="flex flex-col items-center">
+                            <span className="bg-green-100 text-green-800 px-1 py-1 rounded-full text-[12px] mb-1">
+                              설치됨
+                            </span>
+                            {user.pwaInstallDate && (
+                              <span className="text-[10px] text-gray-600">
+                                {new Date(user.pwaInstallDate).toLocaleDateString('ko-KR')}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 text-[12px]">-</span>
+                        )}
                       </td>
                     </tr>
                     </React.Fragment>
