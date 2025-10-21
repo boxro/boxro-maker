@@ -16,6 +16,17 @@ import PageHeader from "@/components/PageHeader";
 import CommonBackground from "@/components/CommonBackground";
 import BannerDisplay from "@/components/BannerDisplay";
 
+// 관리자 이메일 목록
+const ADMIN_EMAILS = [
+  'admin@boxro.com',
+  'dongwoo@boxro.com'
+];
+
+// 관리자 권한 확인 함수
+const isAdmin = (userEmail?: string) => {
+  return userEmail && ADMIN_EMAILS.includes(userEmail);
+};
+
 interface StoryArticle {
   id: string;
   title: string;
@@ -857,7 +868,7 @@ export default function StorePageClient() {
                 )}
                 
                 {/* 수정/삭제 버튼 */}
-                {user && (user.uid === article.authorId || user.email === article.authorEmail) && (
+                {user && (user.uid === article.authorId || user.email === article.authorEmail || isAdmin(user.email)) && (
                   <div className="absolute top-2 right-2 flex gap-1 z-10">
                     <Button
                       variant="outline"
