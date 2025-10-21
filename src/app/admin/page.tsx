@@ -1363,13 +1363,10 @@ export default function AdminPage() {
   };
 
   // 관리자 권한 체크
-  const isAdmin = user?.email === "admin@boxro.com" || 
-                  user?.email === "dongwoo.kang@boxro.com" || 
-                  user?.email === "beagle3651@gmail.com" || 
-                  user?.email === "boxro.crafts@gmail.com";
+  const isAdminUser = isAdmin(user?.email);
 
   // 디버깅용: 현재 사용자 정보 로그
-  console.log('현재 사용자:', user?.email, '관리자 여부:', isAdmin);
+  console.log('현재 사용자:', user?.email, '관리자 여부:', isAdminUser);
 
   // 홈카드 관리 함수들
   const fetchHomeCards = async () => {
@@ -3811,7 +3808,7 @@ export default function AdminPage() {
     );
   }
 
-  if (!isAdmin) {
+  if (!isAdminUser) {
     return (
       <CommonBackground>
         <CommonHeader />
