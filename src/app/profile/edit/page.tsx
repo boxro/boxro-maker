@@ -358,22 +358,31 @@ export default function EditProfilePage() {
         console.warn('사용자 프로필 삭제 실패:', error);
       }
 
-      // 4. Firebase Auth에서 사용자 삭제
+      // 4. Firebase Auth에서 사용자 삭제 (재인증 필요 시 처리)
       try {
-        const { deleteUser } = await import('firebase/auth');
+        const { deleteUser, reauthenticateWithCredential, EmailAuthProvider } = await import('firebase/auth');
         const { auth } = await import('@/lib/firebase');
         
         if (!auth.currentUser) {
           throw new Error('현재 로그인된 사용자가 없습니다.');
         }
         
-        await deleteUser(auth.currentUser);
-        console.log('✅ Firebase Auth 사용자 삭제 완료');
+        try {
+          await deleteUser(auth.currentUser);
+          console.log('✅ Firebase Auth 사용자 삭제 완료');
+        } catch (deleteError: any) {
+          if (deleteError.code === 'auth/requires-recent-login') {
+            // 재인증이 필요한 경우 사용자에게 알림
+            throw new Error('보안을 위해 다시 로그인한 후 탈퇴를 진행해주세요. 로그아웃 후 다시 로그인하시면 탈퇴가 가능합니다.');
+          } else {
+            throw deleteError;
+          }
+        }
       } catch (error: any) {
         console.error('Firebase Auth 사용자 삭제 실패:', error);
         
         if (error.code === 'auth/requires-recent-login') {
-          throw new Error('보안을 위해 다시 로그인한 후 탈퇴를 진행해주세요.');
+          throw new Error('보안을 위해 다시 로그인한 후 탈퇴를 진행해주세요. 로그아웃 후 다시 로그인하시면 탈퇴가 가능합니다.');
         } else if (error.code === 'auth/network-request-failed') {
           throw new Error('네트워크 연결을 확인해주세요.');
         } else if (error.code === 'auth/too-many-requests') {
