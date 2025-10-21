@@ -80,7 +80,7 @@ export default function AuthPage() {
       // 로그인 성공 시 리다이렉트는 onAuthStateChanged에서 처리됨
     } catch (error: any) {
       console.error('인증 오류:', error);
-      setError('로그인 중 오류가 발생했습니다. 다시 시도해주세요.');
+      setError(error.message || '로그인 중 오류가 발생했습니다. 다시 시도해주세요.');
     }
   };
 
@@ -95,11 +95,6 @@ export default function AuthPage() {
     }
   };
 
-  console.log('AuthPage: 로그인 폼 렌더링', { 
-    user: user ? user.email : null, 
-    loading,
-    isLogin 
-  });
 
   return (
     <CommonBackground className="flex flex-col items-center justify-center py-12 px-4">
