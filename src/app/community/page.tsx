@@ -1058,13 +1058,13 @@ export default function GalleryPage() {
 
     try {
       // 사용자의 최신 닉네임 가져오기
-      let userNickname = user.displayName || 'Anonymous';
+      let userNickname = user.displayName || (user.email ? user.email.split('@')[0] : 'Anonymous');
       try {
         const userRef = doc(db, 'users', user.uid);
         const userSnap = await getDoc(userRef);
         if (userSnap.exists()) {
           const userData = userSnap.data();
-          userNickname = userData.authorNickname || userData.displayName || user.displayName || 'Anonymous';
+          userNickname = userData.authorNickname || userData.displayName || user.displayName || (user.email ? user.email.split('@')[0] : 'Anonymous');
         }
       } catch (error) {
         console.warn('사용자 닉네임 조회 실패, 기본값 사용:', error);
@@ -1162,13 +1162,13 @@ export default function GalleryPage() {
 
     try {
       // 사용자의 최신 닉네임 가져오기
-      let userNickname = user.displayName || 'Anonymous';
+      let userNickname = user.displayName || (user.email ? user.email.split('@')[0] : 'Anonymous');
       try {
         const userRef = doc(db, 'users', user.uid);
         const userSnap = await getDoc(userRef);
         if (userSnap.exists()) {
           const userData = userSnap.data();
-          userNickname = userData.authorNickname || userData.displayName || user.displayName || 'Anonymous';
+          userNickname = userData.authorNickname || userData.displayName || user.displayName || (user.email ? user.email.split('@')[0] : 'Anonymous');
         }
       } catch (error) {
         console.warn('사용자 닉네임 조회 실패, 기본값 사용:', error);
