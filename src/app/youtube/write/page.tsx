@@ -255,7 +255,7 @@ export default function WriteYoutubePage() {
         title: title.trim(),
         summary: summary.trim() || '',
         storeUrl: storeUrl.trim() || '',
-        author: user.displayName || 'Anonymous',
+        author: user.displayName || (user.email ? user.email.split('@')[0] : 'Anonymous'),
         authorNickname: userNickname,
         authorEmail: user.email || '',
         showOnHome: showOnHome,

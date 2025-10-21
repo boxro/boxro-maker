@@ -30,9 +30,10 @@ import BannerDisplay from '@/components/BannerDisplay';
 
 // 프로필 이미지와 이니셜 생성 유틸리티 함수
 const getInitials = (name: string, email?: string): string => {
-  if (!name) return 'U';
   // 이메일이 있으면 이메일의 첫 글자, 없으면 이름의 첫 글자 사용
-  return (email?.charAt(0) || name.charAt(0)).toUpperCase();
+  if (email) return email.charAt(0).toUpperCase();
+  if (name && name !== 'Anonymous') return name.charAt(0).toUpperCase();
+  return 'U';
 };
 
 

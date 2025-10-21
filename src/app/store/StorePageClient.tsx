@@ -196,9 +196,11 @@ const ProfileImage = ({ authorId, authorName, authorEmail, size = "w-8 h-8" }: {
   }
 
   // 이니셜 생성 함수
-  const getInitials = (name: string) => {
-    if (!name) return '?';
-    return name.split(' ').map(word => word.charAt(0)).join('').toUpperCase().slice(0, 2);
+  const getInitials = (name: string, email?: string) => {
+    // 이메일이 있으면 이메일의 첫 글자 사용
+    if (email) return email.charAt(0).toUpperCase();
+    if (name && name !== 'Anonymous') return name.split(' ').map(word => word.charAt(0)).join('').toUpperCase().slice(0, 2);
+    return '?';
   };
 
   // 프로필 색상 생성 함수
@@ -214,7 +216,7 @@ const ProfileImage = ({ authorId, authorName, authorEmail, size = "w-8 h-8" }: {
   return (
     <div className={`${size} ${getProfileColor(authorName)} rounded-full flex items-center justify-center flex-shrink-0`}>
       <span className="text-white text-xs font-medium">
-        {getInitials(authorName)}
+        {getInitials(authorName, authorEmail)}
       </span>
     </div>
   );

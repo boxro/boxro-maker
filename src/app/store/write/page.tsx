@@ -432,7 +432,7 @@ export default function WriteStoryPage() {
         summary: summary.trim() || '',
         price: price.trim() || '',
         storeUrl: storeUrl.trim() || '',
-        author: user.displayName || 'Anonymous',
+        author: user.displayName || (user.email ? user.email.split('@')[0] : 'Anonymous'),
         authorNickname: userNickname,
         authorEmail: user.email || '',
         showOnHome: showOnHome,

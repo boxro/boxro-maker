@@ -3778,7 +3778,7 @@ export default function DrawPage() {
       const designData = {
         name: shareTitle,
         type: selectedCarType || drawingAnalysis?.analysis?.carType || 'sedan',
-        author: user.displayName || 'Anonymous',
+        author: user.displayName || (user.email ? user.email.split('@')[0] : 'Anonymous'),
         authorNickname: userNickname, // Firestore에서 가져온 최신 닉네임 사용
         authorEmail: user.email || '',
         authorId: user.uid, // 작성자 ID 추가
@@ -3973,7 +3973,7 @@ export default function DrawPage() {
       const userDesignData = {
         name: finalTitle,
         type: selectedCarType || drawingAnalysis?.analysis?.carType || 'sedan',
-        author: user.displayName || 'Anonymous',
+        author: user.displayName || (user.email ? user.email.split('@')[0] : 'Anonymous'),
         authorEmail: user.email || '',
         authorId: user.uid, // 이 값이 중요합니다
         thumbnail: thumbnail,
