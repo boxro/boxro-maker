@@ -4011,7 +4011,7 @@ export default function AdminPage() {
                         )}
                       </button>
                     </th>
-                    <th className="text-center py-3 px-1 text-[13px] font-medium text-gray-800 w-20">
+                    <th className="text-center py-3 px-1 text-[13px] font-medium text-gray-800 w-24">
                       <button
                         onClick={() => {
                           if (tableSortField === 'createdAt') {
@@ -4029,7 +4029,7 @@ export default function AdminPage() {
                         )}
                       </button>
                     </th>
-                    <th className="text-center py-3 px-1 text-[13px] font-medium text-gray-800 w-20">
+                    <th className="text-center py-3 px-1 text-[13px] font-medium text-gray-800 w-24">
                       <button
                         onClick={() => {
                           if (tableSortField === 'lastSignIn') {
@@ -4173,7 +4173,7 @@ export default function AdminPage() {
                         )}
                       </button>
                     </th>
-                    <th className="text-center py-3 px-1 text-[13px] font-medium text-gray-800 w-[58px]">
+                    <th className="text-center py-3 px-1 text-[13px] font-medium text-gray-800 w-20">
                       PWA
                     </th>
                   </tr>
@@ -4207,10 +4207,10 @@ export default function AdminPage() {
                           )}
                         </div>
                       </td>
-                      <td className="py-3 px-1 text-center text-[13px] text-gray-800 w-20">
+                      <td className="py-3 px-1 text-center text-[13px] text-gray-800 w-24">
                         {user.createdAt ? new Date(user.createdAt).toLocaleDateString('ko-KR') : 'N/A'}
                       </td>
-                      <td className="py-3 px-1 text-center text-[13px] text-gray-800 w-20">
+                      <td className="py-3 px-1 text-center text-[13px] text-gray-800 w-24">
                         {user.lastSignIn ? new Date(user.lastSignIn).toLocaleDateString('ko-KR') : 'N/A'}
                       </td>
                       <td className="py-3 px-2 text-center w-[58px]">
@@ -4248,7 +4248,7 @@ export default function AdminPage() {
                           {user.storeRedirectsCount || 0}
                         </span>
                       </td>
-                      <td className="py-3 px-2 text-center w-[58px]">
+                      <td className="py-3 px-2 text-center w-20">
                         {user.pwaInstalled ? (
                           <div className="flex flex-col items-center">
                             <span className="bg-green-100 text-green-800 px-1 py-1 rounded-full text-[12px] mb-1">
