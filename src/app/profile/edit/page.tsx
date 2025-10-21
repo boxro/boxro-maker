@@ -362,11 +362,25 @@ export default function EditProfilePage() {
       try {
         const { deleteUser } = await import('firebase/auth');
         const { auth } = await import('@/lib/firebase');
-        await deleteUser(auth.currentUser!);
+        
+        if (!auth.currentUser) {
+          throw new Error('현재 로그인된 사용자가 없습니다.');
+        }
+        
+        await deleteUser(auth.currentUser);
         console.log('✅ Firebase Auth 사용자 삭제 완료');
-      } catch (error) {
+      } catch (error: any) {
         console.error('Firebase Auth 사용자 삭제 실패:', error);
-        throw new Error('계정 삭제에 실패했습니다. 다시 시도해주세요.');
+        
+        if (error.code === 'auth/requires-recent-login') {
+          throw new Error('보안을 위해 다시 로그인한 후 탈퇴를 진행해주세요.');
+        } else if (error.code === 'auth/network-request-failed') {
+          throw new Error('네트워크 연결을 확인해주세요.');
+        } else if (error.code === 'auth/too-many-requests') {
+          throw new Error('요청이 너무 많습니다. 잠시 후 다시 시도해주세요.');
+        } else {
+          throw new Error(`계정 삭제에 실패했습니다: ${error.message}`);
+        }
       }
 
       // 5. 로컬 스토리지 정리
@@ -383,12 +397,17 @@ export default function EditProfilePage() {
     } catch (error: any) {
       console.error('회원 탈퇴 오류:', error);
       
-      if (error.code === 'auth/requires-recent-login') {
+      // 에러 메시지가 이미 설정된 경우 그대로 사용
+      if (error.message && error.message !== '회원 탈퇴에 실패했습니다. 다시 시도해주세요.') {
+        setMessage(error.message);
+      } else if (error.code === 'auth/requires-recent-login') {
         setMessage('보안을 위해 다시 로그인한 후 탈퇴를 진행해주세요.');
       } else if (error.code === 'auth/network-request-failed') {
         setMessage('네트워크 연결을 확인해주세요.');
+      } else if (error.code === 'auth/too-many-requests') {
+        setMessage('요청이 너무 많습니다. 잠시 후 다시 시도해주세요.');
       } else {
-        setMessage('회원 탈퇴에 실패했습니다. 다시 시도해주세요.');
+        setMessage(`회원 탈퇴에 실패했습니다: ${error.message || '알 수 없는 오류가 발생했습니다.'}`);
       }
     } finally {
       setIsDeleting(false);
