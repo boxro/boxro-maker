@@ -75,7 +75,7 @@ interface AdminStats {
   lastBuild: string;
   todayActiveUsers: number;
   recent24hActivity: number;
-  peakTime: string;
+  pwaInstallCount: number;
 }
 
 interface HomeCard {
@@ -234,7 +234,7 @@ export default function AdminPage() {
     lastBuild: 'N/A',
     todayActiveUsers: 0,
     recent24hActivity: 0,
-    peakTime: 'N/A'
+    pwaInstallCount: 0
   });
 
   // 홈카드 관리 관련 state
@@ -2049,74 +2049,35 @@ export default function AdminPage() {
     }
   };
 
-  // 피크 시간 가져오기
-  const getPeakTime = async (): Promise<string> => {
+  // PWA 설치수 계산
+  const getPWAInstallCount = async (): Promise<number> => {
     try {
-      // 최근 30일간의 활동 데이터를 시간대별로 분석
-      const monthAgo = new Date();
-      monthAgo.setDate(monthAgo.getDate() - 30);
+      // PWA 설치 데이터 가져오기
+      const pwaInstallsQuery = query(collection(db, 'pwaInstalls'), orderBy('timestamp', 'desc'));
+      const pwaInstallsSnapshot = await getDocs(pwaInstallsQuery);
+      const pwaInstalls = pwaInstallsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       
-      // 갤러리 작품 생성 시간 분석
-      const designsQuery = query(
-        collection(db, 'communityDesigns'),
-        where('createdAt', '>=', monthAgo)
+      // 설치 완료된 PWA 수 계산
+      const installedPWAs = pwaInstalls.filter(install => 
+        install.eventType === 'install_complete' || 
+        install.eventType === 'already_installed' || 
+        install.eventType === 'install_detected'
       );
-      const designsSnapshot = await getDocs(designsQuery);
       
-      // 박스로 톡 생성 시간 분석
-      const boxroTalksQuery = query(
-        collection(db, 'boxroTalks'),
-        where('createdAt', '>=', monthAgo)
-      );
-      const boxroTalksSnapshot = await getDocs(boxroTalksQuery);
-      
-      const hourCounts: { [key: number]: number } = {};
-      
-      // 갤러리 작품 시간 분석
-      designsSnapshot.docs.forEach(doc => {
-        const data = doc.data();
-        if (data.createdAt && data.createdAt.toDate) {
-          const date = data.createdAt.toDate();
-          const hour = date.getHours();
-          hourCounts[hour] = (hourCounts[hour] || 0) + 1;
-        }
+      // 중복 제거 (같은 사용자가 여러 번 설치한 경우)
+      const uniqueInstalls = new Set();
+      installedPWAs.forEach(install => {
+        const userAgent = install.userAgent || '';
+        const key = userAgent.substring(0, 50); // User Agent의 일부를 키로 사용
+        uniqueInstalls.add(key);
       });
       
-      // 박스로 톡 시간 분석
-      boxroTalksSnapshot.docs.forEach(doc => {
-        const data = doc.data();
-        if (data.createdAt && data.createdAt.toDate) {
-          const date = data.createdAt.toDate();
-          const hour = date.getHours();
-          hourCounts[hour] = (hourCounts[hour] || 0) + 1;
-        }
-      });
-      
-      console.log('시간대별 활동 수:', hourCounts);
-      
-      // 가장 활발한 시간대 찾기
-      let peakHour = 14; // 기본값: 오후 2시
-      let maxCount = 0;
-      
-      for (const [hour, count] of Object.entries(hourCounts)) {
-        if (count > maxCount) {
-          maxCount = count;
-          peakHour = parseInt(hour);
-        }
-      }
-      
-      // 데이터가 없으면 일반적인 피크 시간 사용
-      if (Object.keys(hourCounts).length === 0) {
-        peakHour = 14; // 오후 2시
-        console.log('활동 데이터 없음, 기본 피크 시간 사용:', peakHour);
-      }
-      
-      const result = `${peakHour}:00`;
-      console.log('피크 시간 결과:', result);
-      return result;
+      const installCount = uniqueInstalls.size;
+      console.log('PWA 설치수 계산:', { totalInstalls: pwaInstalls.length, uniqueInstalls: installCount });
+      return installCount;
     } catch (error: unknown) {
-      console.warn('피크 시간 가져오기 실패:', error);
-      return '14:00'; // 기본값 반환
+      console.error('PWA 설치수 계산 실패:', error);
+      return 0;
     }
   };
 
@@ -3685,7 +3646,7 @@ export default function AdminPage() {
         lastBuild: await getLastBuildTime(),
         todayActiveUsers: await getTodayActiveUsers(),
         recent24hActivity: await getRecent24hActivity(),
-        peakTime: await getPeakTime()
+        pwaInstallCount: await getPWAInstallCount()
       };
 
       setAdminStats(totalStats);
