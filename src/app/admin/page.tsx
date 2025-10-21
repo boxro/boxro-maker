@@ -1978,34 +1978,34 @@ export default function AdminPage() {
   }, [showUserModal]);
 
   useEffect(() => {
-    if (user && isAdmin) {
+    if (user && isAdminUser) {
       loadAdminData();
     }
-  }, [user, isAdmin]);
+  }, [user, isAdminUser]);
 
   useEffect(() => {
-    if (activeTab === 'home-cards' && isAdmin) {
+    if (activeTab === 'home-cards' && isAdminUser) {
       fetchHomeCards();
     }
-  }, [activeTab, isAdmin]);
+  }, [activeTab, isAdminUser]);
 
   useEffect(() => {
-    if (activeTab === 'home-card-management' && isAdmin) {
+    if (activeTab === 'home-card-management' && isAdminUser) {
       fetchHomeCardList();
     }
-  }, [activeTab, isAdmin]);
+  }, [activeTab, isAdminUser]);
 
   useEffect(() => {
-    if (activeTab === 'banner-management' && isAdmin) {
+    if (activeTab === 'banner-management' && isAdminUser) {
       fetchBanners();
     }
-  }, [activeTab, isAdmin]);
+  }, [activeTab, isAdminUser]);
 
   useEffect(() => {
-    if (activeTab === 'popularity-management' && isAdmin) {
+    if (activeTab === 'popularity-management' && isAdminUser) {
       fetchPopularityData();
     }
-  }, [activeTab, isAdmin]);
+  }, [activeTab, isAdminUser]);
 
   // Firebase 연결 상태 확인 함수
   const checkFirebaseConnection = async () => {
