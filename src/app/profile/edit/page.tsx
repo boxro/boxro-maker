@@ -512,7 +512,7 @@ export default function EditProfilePage() {
                   />
                 </div>
 
-                {(profileData.originalName || profileData.displayName) && (
+                {(profileData.originalName || (profileData.displayName && profileData.displayName !== profileData.email?.split('@')[0])) && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       이름 <span className="text-[12px] text-gray-500 font-normal">(변경할 수 없어요)</span>
