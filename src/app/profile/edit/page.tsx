@@ -341,7 +341,7 @@ export default function EditProfilePage() {
                       />
                     ) : null}
                     <span className="profile-fallback text-2xl font-bold text-gray-600">
-                      {profileData.displayName?.charAt(0) || 'U'}
+                      {profileData.email?.charAt(0) || profileData.displayName?.charAt(0) || 'U'}
                     </span>
                   </div>
                   {isEditing && (

@@ -29,9 +29,10 @@ import { useScrollLock } from '@/hooks/useScrollLock';
 import BannerDisplay from '@/components/BannerDisplay';
 
 // 프로필 이미지와 이니셜 생성 유틸리티 함수
-const getInitials = (name: string): string => {
+const getInitials = (name: string, email?: string): string => {
   if (!name) return 'U';
-  return name.charAt(0).toUpperCase();
+  // 이메일이 있으면 이메일의 첫 글자, 없으면 이름의 첫 글자 사용
+  return (email?.charAt(0) || name.charAt(0)).toUpperCase();
 };
 
 
@@ -188,7 +189,7 @@ const ProfileImage = ({ authorId, authorName, authorEmail, size = "w-8 h-8" }: {
   return (
     <div className={`${size} ${getProfileColor(authorName)} rounded-full flex items-center justify-center flex-shrink-0`}>
       <span className="text-white text-xs font-medium">
-        {getInitials(authorName)}
+        {getInitials(authorName, authorEmail)}
       </span>
     </div>
   );

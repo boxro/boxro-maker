@@ -99,7 +99,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         ctx.font = 'bold 36px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        const initial = user.displayName?.charAt(0)?.toUpperCase() || 'U';
+        // 이메일 주소의 첫 글자를 이니셜로 사용
+        const initial = user.email?.charAt(0)?.toUpperCase() || user.displayName?.charAt(0)?.toUpperCase() || 'U';
         ctx.fillText(initial, 48, 48);
       }
       
