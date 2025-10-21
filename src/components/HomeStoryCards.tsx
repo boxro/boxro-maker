@@ -64,6 +64,7 @@ export default function HomeStoryCards() {
 
   const fetchHomeCards = async () => {
     try {
+      console.log('🏠 홈카드 로딩 시작');
       setLoading(true);
       setHomeCards([]); // 최초 로딩 시에는 빈 배열로 시작
       setHasMore(true);
@@ -74,50 +75,14 @@ export default function HomeStoryCards() {
       const homeCardsCacheInvalidated = sessionStorage.getItem('homeCardsCacheInvalidated');
       const now = Date.now();
       
-      // 캐시 무효화 플래그 확인
+      // 캐시 무효화 플래그가 있으면 무조건 서버에서 새로 가져오기
       if (homeCardsCacheInvalidated) {
-        console.log('홈카드 캐시 무효화됨, 서버에서 새로 가져오기');
+        console.log('🔄 홈카드 캐시 무효화됨, 서버에서 새로 가져오기');
         sessionStorage.removeItem('homeCardsCacheInvalidated');
       }
       
-      // 캐시 무효화 플래그가 있거나 캐시가 없으면 서버에서 새로 가져오기
-      if (homeCardsCacheInvalidated || !cachedHomeCards || !lastHomeCardsUpdate) {
-        console.log('홈카드 캐시 무효화됨 또는 캐시 없음, 서버에서 새로 가져오기');
-        // 캐시 무효화 플래그 삭제
-        if (homeCardsCacheInvalidated) {
-          sessionStorage.removeItem('homeCardsCacheInvalidated');
-        }
-      } else if (cachedHomeCards && lastHomeCardsUpdate && (now - parseInt(lastHomeCardsUpdate)) < 600000) { // 10분 캐시
-        const allHomeCards = JSON.parse(cachedHomeCards);
-        // 캐시된 데이터 사용 (로깅 제거로 성능 향상)
-        
-        // 클라이언트에서 홈 표시 조건 필터링 및 중복 제거
-        const filteredHomeCards = allHomeCards
-          .filter(article => 
-            article.showOnHome === true && 
-            article.isPublished === true &&
-            article.cardTitle && 
-            article.cardTitle.trim() && 
-            article.cardDescription && 
-            article.cardDescription.trim()
-          )
-          .filter((article, index, self) => 
-            // ID 기준으로 중복 제거
-            index === self.findIndex(a => a.id === article.id)
-          )
-          .sort((a, b) => {
-            const aOrder = a.homeOrder || 999999;
-            const bOrder = b.homeOrder || 999999;
-            return aOrder - bOrder;
-          })
-          .slice(0, 6);
-        
-        setHomeCards(filteredHomeCards);
-        setLoading(false);
-        return;
-      }
-      
       // 최초 로딩을 위한 단순화된 쿼리
+      console.log('🔍 Firestore에서 홈카드 조회 시작');
       const homeCardsQuery = await getDocs(
         query(
           collection(db, 'homeCards'),
@@ -127,6 +92,7 @@ export default function HomeStoryCards() {
           limit(6)
         )
       );
+      console.log('📊 Firestore 조회 결과:', homeCardsQuery.docs.length, '개');
       
       // 최소한의 데이터만 변환하여 성능 최적화
       const filteredHomeCards = homeCardsQuery.docs
@@ -155,10 +121,12 @@ export default function HomeStoryCards() {
           article.cardTitle?.trim() && article.cardDescription?.trim()
         );
       
+      
       // 홈카드 데이터를 세션 스토리지에 캐싱(필터/정렬된 결과 저장)
       sessionStorage.setItem('homeCards', JSON.stringify(filteredHomeCards));
       sessionStorage.setItem('lastHomeCardsUpdate', Date.now().toString());
       
+      console.log('✅ 홈카드 설정 완료:', filteredHomeCards.length, '개');
       setHomeCards(filteredHomeCards);
       
       // 마지막 문서 저장
@@ -171,9 +139,10 @@ export default function HomeStoryCards() {
         setHasMore(false);
       }
     } catch (error) {
-      console.error('홈 카드 데이터 불러오기 실패:', error);
+      console.error('❌ 홈 카드 데이터 불러오기 실패:', error);
       setHomeCards([]);
     } finally {
+      console.log('🏁 홈카드 로딩 완료');
       setLoading(false);
     }
   };
@@ -258,9 +227,11 @@ export default function HomeStoryCards() {
   }
 
   if (homeCards.length === 0) {
+    console.log('❌ 홈카드가 없음 - 렌더링하지 않음');
     return null; // 홈 카드가 없으면 아무것도 표시하지 않음
   }
 
+  console.log('🎨 홈카드 렌더링 시작:', homeCards.length, '개');
   return (
     <>
       {homeCards.map((article, index) => {
