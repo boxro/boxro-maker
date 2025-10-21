@@ -129,9 +129,47 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete, showDo
     }
   };
 
-  const handleSkip = () => {
-    // "나중에 할래" 버튼 클릭 시 - 스킵 상태를 저장하지 않고 단순히 창만 닫음
-    // 다음 로그인 시에 다시 표시됨
+  const handleSkip = async () => {
+    // X 버튼 클릭 시 - 임시 스킵 상태를 저장 (다음 로그인 시에만 다시 표시)
+    try {
+      const { doc, setDoc } = await import('firebase/firestore');
+      const { db } = await import('@/lib/firebase');
+      
+      const userId = localStorage.getItem('current_user_id');
+      if (userId) {
+        // Firestore에 임시 스킵 상태 저장 (다음 로그인 시에만 다시 표시)
+        await setDoc(doc(db, 'users', userId), {
+          onboardingTemporarilySkipped: true,
+          onboardingTemporarilySkippedAt: new Date().toISOString()
+        }, { merge: true });
+        
+        console.log('✅ 온보딩 임시 스킵 상태 Firestore에 저장됨 (다음 로그인 시 다시 표시):', userId);
+        
+        // localStorage에도 백업 저장
+        try {
+          localStorage.setItem(`onboarding_temporarily_skipped_${userId}`, 'true');
+          console.log('✅ localStorage 백업 저장 완료');
+        } catch (localStorageError) {
+          console.warn('⚠️ localStorage 백업 저장 실패:', localStorageError);
+        }
+      } else {
+        console.warn('⚠️ current_user_id가 없어서 온보딩 임시 스킵 상태를 저장할 수 없음');
+      }
+    } catch (error) {
+      console.error('❌ Firestore 저장 실패, localStorage로 폴백:', error);
+      
+      // Firestore 저장 실패 시 localStorage로 폴백
+      try {
+        const userId = localStorage.getItem('current_user_id');
+        if (userId) {
+          localStorage.setItem(`onboarding_temporarily_skipped_${userId}`, 'true');
+          console.log('✅ localStorage 폴백 저장 완료');
+        }
+      } catch (localStorageError) {
+        console.error('❌ localStorage 폴백 저장도 실패:', localStorageError);
+      }
+    }
+    
     console.log('⏭️ 온보딩 스플래시 닫기 (다음 로그인 시 다시 표시)');
     onClose();
   };

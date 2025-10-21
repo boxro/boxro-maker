@@ -180,26 +180,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           
           let onboardingCompleted = false;
           let onboardingSkipped = false;
+          let onboardingTemporarilySkipped = false;
           
           if (userSnap.exists()) {
             const userData = userSnap.data();
             onboardingCompleted = userData.onboardingCompleted === true;
             onboardingSkipped = userData.onboardingSkipped === true;
+            onboardingTemporarilySkipped = userData.onboardingTemporarilySkipped === true;
           }
           
           console.log('🔍 온보딩 상태 확인 (Firestore):', { 
             userId, 
             onboardingCompleted, 
             onboardingSkipped,
+            onboardingTemporarilySkipped,
             showOnboarding,
             userExists: userSnap.exists()
           });
           
-          // 온보딩이 완료되었거나 스킵된 경우 표시하지 않음
+          // 온보딩이 완료되었거나 영구 스킵된 경우 표시하지 않음
           if (onboardingCompleted || onboardingSkipped) {
             console.log('⏭️ 온보딩 스플래시 건너뜀:', { 
-              reason: onboardingCompleted ? '이미 완료됨' : '스킵됨' 
+              reason: onboardingCompleted ? '이미 완료됨' : '영구 스킵됨' 
             });
+            setShowOnboarding(false);
+          } else if (onboardingTemporarilySkipped) {
+            // 임시 스킵된 경우 현재 세션에서는 표시하지 않음 (다음 로그인 시에만 표시)
+            console.log('⏭️ 온보딩 스플래시 건너뜀: 임시 스킵됨 (다음 로그인 시 표시)');
             setShowOnboarding(false);
           } else {
             // 온보딩이 완료되지 않았고 스킵되지 않은 경우 표시
@@ -212,9 +219,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           try {
             const onboardingCompleted = localStorage.getItem(`onboarding_completed_${userId}`);
             const onboardingSkipped = localStorage.getItem(`onboarding_skipped_${userId}`);
+            const onboardingTemporarilySkipped = localStorage.getItem(`onboarding_temporarily_skipped_${userId}`);
             
             if (onboardingCompleted === 'true' || onboardingSkipped === 'true') {
               console.log('⏭️ localStorage에서 온보딩 스플래시 건너뜀');
+              setShowOnboarding(false);
+            } else if (onboardingTemporarilySkipped === 'true') {
+              console.log('⏭️ localStorage에서 온보딩 스플래시 건너뜀: 임시 스킵됨');
               setShowOnboarding(false);
             } else {
               console.log('✅ localStorage 폴백으로 온보딩 스플래시 표시');
@@ -330,6 +341,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
     setLoading(true);
     try {
+      // 로그아웃 시 임시 스킵 상태 초기화 (다음 로그인 시 온보딩 다시 표시)
+      const userId = localStorage.getItem('current_user_id');
+      if (userId) {
+        try {
+          // Firestore에서 임시 스킵 상태 제거
+          const { doc, updateDoc } = await import('firebase/firestore');
+          const { db } = await import('@/lib/firebase');
+          await updateDoc(doc(db, 'users', userId), {
+            onboardingTemporarilySkipped: false
+          });
+          console.log('✅ 임시 스킵 상태 Firestore에서 초기화');
+        } catch (firestoreError) {
+          console.warn('⚠️ Firestore 임시 스킵 상태 초기화 실패:', firestoreError);
+        }
+        
+        // localStorage에서도 임시 스킵 상태 제거
+        try {
+          localStorage.removeItem(`onboarding_temporarily_skipped_${userId}`);
+          console.log('✅ localStorage 임시 스킵 상태 초기화');
+        } catch (localStorageError) {
+          console.warn('⚠️ localStorage 임시 스킵 상태 초기화 실패:', localStorageError);
+        }
+      }
+      
       await signOut(auth);
     } catch (error: any) {
       console.error('로그아웃 오류:', error);
