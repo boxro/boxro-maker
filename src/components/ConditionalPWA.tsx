@@ -62,7 +62,12 @@ export default function ConditionalPWA() {
         });
         console.log('📊 PWA 설치 이벤트 추적:', eventType);
       } catch (error) {
-        console.warn('PWA 설치 추적 실패:', error);
+        // 권한 오류인 경우 조용히 무시 (개발 중에는 로그 출력)
+        if (error instanceof Error && error.message.includes('permissions')) {
+          console.log('PWA 설치 추적 권한 없음 (개발 중):', eventType);
+        } else {
+          console.warn('PWA 설치 추적 실패:', error);
+        }
       }
     };
 

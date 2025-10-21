@@ -1863,7 +1863,7 @@ export default function AdminPage() {
 
       // 2. 스토리 작품 데이터 수정
       console.log('📖 스토리 작품 데이터 수정 중...');
-      const storyRef = collection(db, 'stories');
+      const storyRef = collection(db, 'storyArticles');
       const storySnapshot = await getDocs(storyRef);
       
       let storyUpdated = 0;
@@ -1871,7 +1871,7 @@ export default function AdminPage() {
         const data = docSnapshot.data();
         if (data.author && data.author.includes('@')) {
           const newAuthor = data.author.split('@')[0];
-          await updateDoc(doc(db, 'stories', docSnapshot.id), {
+          await updateDoc(doc(db, 'storyArticles', docSnapshot.id), {
             author: newAuthor
           });
           storyUpdated++;
@@ -2973,7 +2973,12 @@ export default function AdminPage() {
         pwaInstalls = pwaInstallsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         console.log('📱 PWA 설치 데이터 로드:', pwaInstalls.length);
       } catch (error: unknown) {
-        console.warn('⚠️ pwaInstalls 컬렉션 접근 권한 없음, 빈 배열로 처리:', error);
+        // 권한 오류인 경우 조용히 무시
+        if (error instanceof Error && error.message.includes('permissions')) {
+          console.log('📝 PWA 설치 데이터 접근 권한 없음 (정상)');
+        } else {
+          console.warn('⚠️ PWA 설치 데이터 로드 오류:', error);
+        }
         pwaInstalls = [];
       }
 
@@ -3222,7 +3227,12 @@ export default function AdminPage() {
           console.log(`🔍 ${collectionName} 컬렉션에서 박스로 톡:`, 
             items.filter(item => item.boxroTalks && item.boxroTalks.length > 0).length);
         } catch (error: unknown) {
-          console.warn(`⚠️ ${collectionName} 컬렉션 접근 권한 없음:`, error);
+          // 권한 오류인 경우 조용히 무시
+          if (error instanceof Error && error.message.includes('permissions')) {
+            console.log(`📝 ${collectionName} 컬렉션 접근 권한 없음 (정상)`);
+          } else {
+            console.warn(`⚠️ ${collectionName} 컬렉션 접근 오류:`, error);
+          }
         }
       }
       
