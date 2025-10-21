@@ -35,6 +35,20 @@ export default function EditProfilePage() {
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // 모달이 열릴 때 body 스크롤 방지
+  useEffect(() => {
+    if (showDeleteModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    // 컴포넌트 언마운트 시 스크롤 복원
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showDeleteModal]);
+
   const resizeImageToSquare = (file: File, size: number): Promise<Blob> => {
     return new Promise((resolve, reject) => {
       const canvas = document.createElement('canvas');
@@ -607,6 +621,7 @@ export default function EditProfilePage() {
                     setShowDeleteModal(false);
                     setDeleteConfirmText('');
                     setMessage('');
+                    document.body.style.overflow = 'unset';
                   }}
                   variant="outline"
                   className="flex-1 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-full"
