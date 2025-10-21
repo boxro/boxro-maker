@@ -36,6 +36,8 @@ interface UserStats {
   viewsCount: number;
   storeRedirectsCount: number;
   uid: string;
+  pwaInstalled: boolean;
+  pwaInstallDate: string;
 }
 
 interface AdminStats {
@@ -2826,6 +2828,36 @@ export default function AdminPage() {
         users = [];
       }
 
+      // PWA 설치 데이터 가져오기
+      let pwaInstalls: any[] = [];
+      try {
+        const pwaInstallsQuery = query(collection(db, 'pwaInstalls'), orderBy('timestamp', 'desc'));
+        const pwaInstallsSnapshot = await getDocs(pwaInstallsQuery);
+        pwaInstalls = pwaInstallsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        console.log('📱 PWA 설치 데이터 로드:', pwaInstalls.length);
+      } catch (error: unknown) {
+        console.warn('⚠️ pwaInstalls 컬렉션 접근 권한 없음, 빈 배열로 처리:', error);
+        pwaInstalls = [];
+      }
+
+      // PWA 설치 데이터를 사용자별로 정리
+      const pwaInstallMap = new Map<string, { installed: boolean; installDate: string }>();
+      pwaInstalls.forEach((pwaInstall: any) => {
+        if (pwaInstall.eventType === 'install_complete' || pwaInstall.eventType === 'already_installed' || pwaInstall.eventType === 'install_detected') {
+          // User Agent에서 이메일을 추출하거나, 다른 방법으로 사용자 식별
+          // 여기서는 User Agent를 기반으로 추정하거나, 별도의 사용자 식별 방법이 필요할 수 있습니다
+          const userAgent = pwaInstall.userAgent || '';
+          const installDate = pwaInstall.timestamp?.toDate?.()?.toISOString() || pwaInstall.timestamp || '';
+          
+          // User Agent 기반으로 임시 키 생성 (실제로는 더 정확한 사용자 식별이 필요)
+          const tempKey = userAgent.substring(0, 50); // User Agent의 일부를 키로 사용
+          pwaInstallMap.set(tempKey, {
+            installed: true,
+            installDate: installDate
+          });
+        }
+      });
+
       // 사용자별 통계 계산
       const userStatsMap = new Map<string, UserStats>();
       
@@ -2835,8 +2867,8 @@ export default function AdminPage() {
         if (!userStatsMap.has(email)) {
           userStatsMap.set(email, {
             email,
-            displayName: design.author || '익명',
-            authorNickname: design.authorNickname || design.author || '익명',
+            displayName: design.author || (email !== 'unknown' ? email.split('@')[0] : '익명'),
+            authorNickname: design.authorNickname || design.author || (email !== 'unknown' ? email.split('@')[0] : '익명'),
             photoURL: '',
             createdAt: design.createdAt || '',
             lastSignIn: '',
@@ -2847,7 +2879,9 @@ export default function AdminPage() {
             sharesCount: 0,
             viewsCount: 0,
             storeRedirectsCount: 0,
-            uid: design.authorId || ''
+            uid: design.authorId || '',
+            pwaInstalled: false,
+            pwaInstallDate: ''
           });
         }
         
@@ -2862,8 +2896,8 @@ export default function AdminPage() {
         if (!userStatsMap.has(email)) {
           userStatsMap.set(email, {
             email,
-            displayName: story.author || '익명',
-            authorNickname: story.authorNickname || story.author || '익명',
+            displayName: story.author || (email !== 'unknown' ? email.split('@')[0] : '익명'),
+            authorNickname: story.authorNickname || story.author || (email !== 'unknown' ? email.split('@')[0] : '익명'),
             photoURL: '',
             createdAt: story.createdAt || '',
             lastSignIn: '',
@@ -2893,8 +2927,8 @@ export default function AdminPage() {
         if (!userStatsMap.has(email)) {
           userStatsMap.set(email, {
             email,
-            displayName: boxroTalk.author || '익명',
-            authorNickname: boxroTalk.authorNickname || boxroTalk.author || '익명',
+            displayName: boxroTalk.author || (email !== 'unknown' ? email.split('@')[0] : '익명'),
+            authorNickname: boxroTalk.authorNickname || boxroTalk.author || (email !== 'unknown' ? email.split('@')[0] : '익명'),
             photoURL: '',
             createdAt: boxroTalk.createdAt || '',
             lastSignIn: '',
@@ -2927,8 +2961,8 @@ export default function AdminPage() {
         if (!userStatsMap.has(email)) {
           userStatsMap.set(email, {
             email,
-            displayName: boxroTalk.author || '익명',
-            authorNickname: boxroTalk.authorNickname || boxroTalk.author || '익명',
+            displayName: boxroTalk.author || (email !== 'unknown' ? email.split('@')[0] : '익명'),
+            authorNickname: boxroTalk.authorNickname || boxroTalk.author || (email !== 'unknown' ? email.split('@')[0] : '익명'),
             photoURL: '',
             createdAt: boxroTalk.createdAt || '',
             lastSignIn: '',
@@ -2958,8 +2992,8 @@ export default function AdminPage() {
         if (!userStatsMap.has(email)) {
           userStatsMap.set(email, {
             email,
-            displayName: storeItem.author || '익명',
-            authorNickname: storeItem.authorNickname || storeItem.author || '익명',
+            displayName: storeItem.author || (email !== 'unknown' ? email.split('@')[0] : '익명'),
+            authorNickname: storeItem.authorNickname || storeItem.author || (email !== 'unknown' ? email.split('@')[0] : '익명'),
             photoURL: '',
             createdAt: storeItem.createdAt || '',
             lastSignIn: '',
@@ -3078,8 +3112,8 @@ export default function AdminPage() {
         if (!userStatsMap.has(email)) {
           userStatsMap.set(email, {
             email,
-            displayName: boxroTalk.author || '익명',
-            authorNickname: boxroTalk.authorNickname || boxroTalk.author || '익명',
+            displayName: boxroTalk.author || (email !== 'unknown' ? email.split('@')[0] : '익명'),
+            authorNickname: boxroTalk.authorNickname || boxroTalk.author || (email !== 'unknown' ? email.split('@')[0] : '익명'),
             photoURL: '',
             createdAt: boxroTalk.createdAt || '',
             lastSignIn: '',
@@ -3161,8 +3195,8 @@ export default function AdminPage() {
             if (!userStatsMap.has(email)) {
               userStatsMap.set(email, {
                 email,
-                displayName: user.displayName || '익명',
-                authorNickname: user.authorNickname || user.displayName || '익명',
+                displayName: user.displayName || (user.email ? user.email.split('@')[0] : '익명'),
+                authorNickname: user.authorNickname || user.displayName || (user.email ? user.email.split('@')[0] : '익명'),
                 photoURL: user.photoURL || '',
                 createdAt: user.createdAt || '',
                 lastSignIn: user.lastSignIn || '',
@@ -3188,8 +3222,8 @@ export default function AdminPage() {
             if (!userStatsMap.has(email)) {
               userStatsMap.set(email, {
                 email,
-                displayName: user.displayName || '익명',
-                authorNickname: user.authorNickname || user.displayName || '익명',
+                displayName: user.displayName || (user.email ? user.email.split('@')[0] : '익명'),
+                authorNickname: user.authorNickname || user.displayName || (user.email ? user.email.split('@')[0] : '익명'),
                 photoURL: user.photoURL || '',
                 createdAt: user.createdAt || '',
                 lastSignIn: user.lastSignIn || '',
@@ -3246,8 +3280,8 @@ export default function AdminPage() {
             if (!userStatsMap.has(email)) {
               userStatsMap.set(email, {
                 email,
-                displayName: user.displayName || '익명',
-                authorNickname: user.authorNickname || user.displayName || '익명',
+                displayName: user.displayName || (user.email ? user.email.split('@')[0] : '익명'),
+                authorNickname: user.authorNickname || user.displayName || (user.email ? user.email.split('@')[0] : '익명'),
                 photoURL: user.photoURL || '',
                 createdAt: user.createdAt || '',
                 lastSignIn: user.lastSignIn || '',
@@ -3281,8 +3315,8 @@ export default function AdminPage() {
             if (!userStatsMap.has(email)) {
               userStatsMap.set(email, {
                 email,
-                displayName: user.displayName || '익명',
-                authorNickname: user.authorNickname || user.displayName || '익명',
+                displayName: user.displayName || (user.email ? user.email.split('@')[0] : '익명'),
+                authorNickname: user.authorNickname || user.displayName || (user.email ? user.email.split('@')[0] : '익명'),
                 photoURL: user.photoURL || '',
                 createdAt: user.createdAt || '',
                 lastSignIn: user.lastSignIn || '',
@@ -3339,8 +3373,8 @@ export default function AdminPage() {
             if (!userStatsMap.has(email)) {
               userStatsMap.set(email, {
                 email,
-                displayName: user.displayName || '익명',
-                authorNickname: user.authorNickname || user.displayName || '익명',
+                displayName: user.displayName || (user.email ? user.email.split('@')[0] : '익명'),
+                authorNickname: user.authorNickname || user.displayName || (user.email ? user.email.split('@')[0] : '익명'),
                 photoURL: user.photoURL || '',
                 createdAt: user.createdAt || '',
                 lastSignIn: user.lastSignIn || '',
@@ -3374,8 +3408,8 @@ export default function AdminPage() {
             if (!userStatsMap.has(email)) {
               userStatsMap.set(email, {
                 email,
-                displayName: user.displayName || '익명',
-                authorNickname: user.authorNickname || user.displayName || '익명',
+                displayName: user.displayName || (user.email ? user.email.split('@')[0] : '익명'),
+                authorNickname: user.authorNickname || user.displayName || (user.email ? user.email.split('@')[0] : '익명'),
                 photoURL: user.photoURL || '',
                 createdAt: user.createdAt || '',
                 lastSignIn: user.lastSignIn || '',
@@ -3432,8 +3466,8 @@ export default function AdminPage() {
             if (!userStatsMap.has(email)) {
               userStatsMap.set(email, {
                 email,
-                displayName: user.displayName || '익명',
-                authorNickname: user.authorNickname || user.displayName || '익명',
+                displayName: user.displayName || (user.email ? user.email.split('@')[0] : '익명'),
+                authorNickname: user.authorNickname || user.displayName || (user.email ? user.email.split('@')[0] : '익명'),
                 photoURL: user.photoURL || '',
                 createdAt: user.createdAt || '',
                 lastSignIn: user.lastSignIn || '',
