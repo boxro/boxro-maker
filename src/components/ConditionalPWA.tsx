@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect } from 'react';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 export default function ConditionalPWA() {
   useEffect(() => {
@@ -46,6 +48,71 @@ export default function ConditionalPWA() {
           console.log('❌ PWA Service Worker 등록 실패:', error);
         });
     }
+
+    // PWA 설치 감지 및 추적
+    const trackPWAInstall = async (eventType: string, details?: any) => {
+      try {
+        await addDoc(collection(db, 'pwaInstalls'), {
+          eventType, // 'install_prompt', 'install_complete', 'install_deferred'
+          userAgent: navigator.userAgent,
+          platform: navigator.platform,
+          language: navigator.language,
+          timestamp: serverTimestamp(),
+          details: details || {}
+        });
+        console.log('📊 PWA 설치 이벤트 추적:', eventType);
+      } catch (error) {
+        console.warn('PWA 설치 추적 실패:', error);
+      }
+    };
+
+    // PWA 설치 프롬프트 감지
+    let deferredPrompt: any = null;
+    
+    window.addEventListener('beforeinstallprompt', (e) => {
+      console.log('📱 PWA 설치 프롬프트 표시됨');
+      e.preventDefault();
+      deferredPrompt = e;
+      
+      // 설치 프롬프트 표시 이벤트 추적
+      trackPWAInstall('install_prompt', {
+        canInstall: true,
+        userAgent: navigator.userAgent
+      });
+    });
+
+    // PWA 설치 완료 감지
+    window.addEventListener('appinstalled', (e) => {
+      console.log('✅ PWA 설치 완료');
+      deferredPrompt = null;
+      
+      // 설치 완료 이벤트 추적
+      trackPWAInstall('install_complete', {
+        installed: true,
+        userAgent: navigator.userAgent
+      });
+    });
+
+    // PWA가 이미 설치되어 있는지 확인
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      console.log('📱 PWA가 이미 설치되어 있음');
+      trackPWAInstall('already_installed', {
+        displayMode: 'standalone',
+        userAgent: navigator.userAgent
+      });
+    }
+
+    // PWA 설치 상태 변경 감지
+    window.matchMedia('(display-mode: standalone)').addEventListener('change', (e) => {
+      if (e.matches) {
+        console.log('📱 PWA 설치됨 (display-mode 변경)');
+        trackPWAInstall('install_detected', {
+          displayMode: 'standalone',
+          userAgent: navigator.userAgent
+        });
+      }
+    });
+
   }, []);
 
   return null;
