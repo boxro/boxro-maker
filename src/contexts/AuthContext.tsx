@@ -166,11 +166,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  console.log('🔧 AuthProvider 렌더링됨', { user, loading, auth: !!auth });
+  // 디버그 로그 제거 (개발 환경에서만 필요시 주석 해제)
+  // console.log('🔧 AuthProvider 렌더링됨', { user, loading, auth: !!auth });
 
   useEffect(() => {
-    console.log('🔧 AuthProvider useEffect 실행됨');
-    console.log('🔧 Firebase auth 상태:', { auth: !!auth, authType: typeof auth });
+    // 디버그 로그 제거 (개발 환경에서만 필요시 주석 해제)
+    // console.log('🔧 AuthProvider useEffect 실행됨');
+    // console.log('🔧 Firebase auth 상태:', { auth: !!auth, authType: typeof auth });
     
     // auth가 null이면 로딩 해제
     if (!auth) {
@@ -179,9 +181,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return;
     }
     
-    console.log('🔧 onAuthStateChanged 등록 시작');
+    // console.log('🔧 onAuthStateChanged 등록 시작');
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      console.log('🔧 Firebase 인증 상태 변경됨', user ? `사용자: ${user.email}` : '사용자 없음');
+      // console.log('🔧 Firebase 인증 상태 변경됨', user ? `사용자: ${user.email}` : '사용자 없음');
       
       // 사용자가 로그인한 경우 Firestore에서 customPhotoURL 확인
       if (user) {
