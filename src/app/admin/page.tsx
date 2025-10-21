@@ -445,6 +445,7 @@ export default function AdminPage() {
       if (typeof window !== 'undefined') {
         sessionStorage.removeItem('homeCards');
         sessionStorage.removeItem('lastHomeCardsUpdate');
+        sessionStorage.setItem('homeCardsCacheInvalidated', 'true');
       }
       
       resetForm();
@@ -1221,6 +1222,14 @@ export default function AdminPage() {
     try {
       await deleteDoc(doc(db, 'homeCards', cardId));
       setHomeCardList(prev => prev.filter(card => card.id !== cardId));
+      
+      // 홈페이지 캐시 무효화
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem('homeCards');
+        sessionStorage.removeItem('lastHomeCardsUpdate');
+        sessionStorage.setItem('homeCardsCacheInvalidated', 'true');
+      }
+      
       alert('홈카드가 삭제되었습니다.');
     } catch (error: unknown) {
       console.error('홈카드 삭제 실패:', error);
@@ -1308,6 +1317,7 @@ export default function AdminPage() {
       if (typeof window !== 'undefined') {
         sessionStorage.removeItem('homeCards');
         sessionStorage.removeItem('lastHomeCardsUpdate');
+        sessionStorage.setItem('homeCardsCacheInvalidated', 'true');
       }
 
       cancelEdit();

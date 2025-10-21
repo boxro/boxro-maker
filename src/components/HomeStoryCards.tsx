@@ -64,11 +64,19 @@ export default function HomeStoryCards() {
       // 홈카드 데이터 캐싱 확인
       const cachedHomeCards = sessionStorage.getItem('homeCards');
       const lastHomeCardsUpdate = sessionStorage.getItem('lastHomeCardsUpdate');
+      const homeCardsCacheInvalidated = sessionStorage.getItem('homeCardsCacheInvalidated');
       const now = Date.now();
       
-      if (cachedHomeCards && lastHomeCardsUpdate && (now - parseInt(lastHomeCardsUpdate)) < 30000) { // 30초 캐시
+      // 캐시 무효화 플래그가 있거나 캐시가 없으면 서버에서 새로 가져오기
+      if (homeCardsCacheInvalidated || !cachedHomeCards || !lastHomeCardsUpdate) {
+        console.log('홈카드 캐시 무효화됨 또는 캐시 없음, 서버에서 새로 가져오기');
+        // 캐시 무효화 플래그 삭제
+        if (homeCardsCacheInvalidated) {
+          sessionStorage.removeItem('homeCardsCacheInvalidated');
+        }
+      } else if (cachedHomeCards && lastHomeCardsUpdate && (now - parseInt(lastHomeCardsUpdate)) < 300000) { // 5분 캐시
         const allHomeCards = JSON.parse(cachedHomeCards);
-        console.log('캐시된 홈카드 데이터 사용');
+        // 캐시된 데이터 사용 (로깅 제거로 성능 향상)
         
         // 클라이언트에서 홈 표시 조건 필터링
         const filteredHomeCards = allHomeCards
@@ -93,11 +101,15 @@ export default function HomeStoryCards() {
       }
       
       // homeCards 컬렉션 서버사이드 필터링 및 최소 데이터만 로드
+      // 필수 필드만 선택하여 네트워크 전송량 최소화
       const homeCardsQuery = await getDocs(
         query(
           collection(db, 'homeCards'),
           where('showOnHome', '==', true),
           where('isPublished', '==', true),
+          where('cardTitle', '!=', ''),
+          where('cardDescription', '!=', ''),
+          orderBy('homeOrder', 'asc'),
           orderBy('createdAt', 'desc'),
           limit(6)
         )
@@ -110,17 +122,8 @@ export default function HomeStoryCards() {
         source: doc.data().source || 'homeCards'
       })) as (StoryArticle & { source: string })[];
       
-      // 안전 필터 + 클라이언트 정렬(서버 필터에 더해 보강)
-      const filteredHomeCards = allHomeCards
-        .filter(article =>
-          article.cardTitle && article.cardTitle.trim() &&
-          article.cardDescription && article.cardDescription.trim()
-        )
-        .sort((a, b) => {
-          const aOrder = a.homeOrder || 999999;
-          const bOrder = b.homeOrder || 999999;
-          return aOrder - bOrder;
-        });
+      // 서버에서 이미 필터링되었으므로 클라이언트 필터링 최소화
+      const filteredHomeCards = allHomeCards;
       
       // 홈카드 데이터를 세션 스토리지에 캐싱(필터/정렬된 결과 저장)
       sessionStorage.setItem('homeCards', JSON.stringify(filteredHomeCards));
@@ -156,6 +159,9 @@ export default function HomeStoryCards() {
         collection(db, 'homeCards'),
         where('showOnHome', '==', true),
         where('isPublished', '==', true),
+        where('cardTitle', '!=', ''),
+        where('cardDescription', '!=', ''),
+        orderBy('homeOrder', 'asc'),
         orderBy('createdAt', 'desc'),
         startAfter(lastDoc),
         limit(6)
@@ -167,17 +173,8 @@ export default function HomeStoryCards() {
         ...doc.data()
       })) as StoryArticle[];
       
-      // 안전 필터 + 정렬
-      const newHomeCards = newArticles
-        .filter(article =>
-          article.cardTitle && article.cardTitle.trim() &&
-          article.cardDescription && article.cardDescription.trim()
-        )
-        .sort((a, b) => {
-          const aOrder = a.homeOrder || 999999;
-          const bOrder = b.homeOrder || 999999;
-          return aOrder - bOrder;
-        });
+      // 서버에서 이미 필터링되었으므로 클라이언트 필터링 최소화
+      const newHomeCards = newArticles;
       
       setHomeCards(prev => [...prev, ...newHomeCards]);
       
@@ -203,7 +200,20 @@ export default function HomeStoryCards() {
   }
 
   if (loading) {
-    return null; // 로딩 중에는 아무것도 표시하지 않음
+    // 스켈레톤 로더 표시
+    return (
+      <>
+        {Array.from({ length: 6 }).map((_, index) => (
+          <Card key={`skeleton-${index}`} className="border-0 border-purple-300/50 shadow-2xl relative overflow-hidden bg-transparent min-h-[480px] flex flex-col justify-end">
+            <div className="absolute inset-0 bg-gradient-to-br from-gray-200 to-gray-300 animate-pulse" />
+            <div className="text-center pt-1 pb-2 relative z-10 absolute bottom-4 left-1/2 transform -translate-x-1/2 w-full">
+              <div className="h-6 bg-gray-300 rounded animate-pulse mb-2 mx-4" />
+              <div className="h-4 bg-gray-300 rounded animate-pulse mx-4" />
+            </div>
+          </Card>
+        ))}
+      </>
+    );
   }
 
   if (homeCards.length === 0) {
@@ -229,6 +239,9 @@ export default function HomeStoryCards() {
                   alt={article.cardTitle || article.title}
                   fill
                   className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                  loading="lazy"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  quality={75}
                 />
               </div>
             ) : (
