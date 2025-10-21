@@ -106,6 +106,17 @@ interface HomeCard {
   views?: number;
 }
 
+// 관리자 이메일 목록
+const ADMIN_EMAILS = [
+  'admin@boxro.com',
+  'dongwoo@boxro.com'
+];
+
+// 관리자 권한 확인 함수
+const isAdmin = (userEmail?: string) => {
+  return userEmail && ADMIN_EMAILS.includes(userEmail);
+};
+
 export default function AdminPage() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
