@@ -572,7 +572,7 @@ export default function EditProfilePage() {
 
       {/* 회원 탈퇴 확인 모달 */}
       {showDeleteModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl shadow-2xl border border-white/20 w-full max-w-md">
             <div className="p-6">
               <div className="text-center mb-6">
@@ -581,20 +581,19 @@ export default function EditProfilePage() {
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-2">회원 탈퇴</h3>
                 <p className="text-sm text-gray-600 mb-4">
-                  정말로 탈퇴하시겠습니까?<br />
-                  <strong className="text-red-600">모든 데이터가 영구적으로 삭제</strong>되며 복구할 수 없습니다.
+                  정말 떠나시겠어요? 😢<br />
+                  <strong className="text-red-600">탈퇴하시면 모든 데이터가 영구적으로 삭제</strong>되며, 다시 복구할 수 없습니다.
                 </p>
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
                   <p className="text-xs text-red-700">
-                    • 갤러리에 올린 모든 디자인<br />
-                    • 작성한 모든 댓글<br />
-                    • 프로필 정보<br />
-                    • 기타 모든 활동 기록
+                    • 갤러리에 올린 모든 작품<br />
+                    • 친구들과 나눈 톡<br />
+                    • 프로필 정보 및 기타 활동 기록
                   </p>
                 </div>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    탈퇴를 확인하려면 <strong>"탈퇴"</strong>라고 입력하세요
+                    탈퇴를 원하신다면 아래에 <strong>"탈퇴"</strong>라고 입력해주세요
                   </label>
                   <Input
                     value={deleteConfirmText}
