@@ -137,9 +137,11 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete, showDo
       
       // 사용자 ID를 여러 방법으로 시도
       let userId = localStorage.getItem('current_user_id');
+      console.log('🔍 X 버튼 클릭 - 사용자 ID 확인:', { userId, hasUserId: !!userId });
       
       // current_user_id가 없으면 AuthContext에서 사용자 정보 가져오기
       if (!userId) {
+        console.log('🔄 localStorage에 사용자 ID 없음, AuthContext에서 가져오기 시도');
         const { auth } = await import('@/lib/firebase');
         const { onAuthStateChanged } = await import('firebase/auth');
         
@@ -149,17 +151,29 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete, showDo
             if (user) {
               userId = user.uid;
               console.log('🔍 AuthContext에서 사용자 ID 가져옴:', userId);
+              console.log('🔍 사용자 정보 상세:', { 
+                uid: user.uid, 
+                email: user.email, 
+                displayName: user.displayName 
+              });
               
               // localStorage에 사용자 ID 저장
               localStorage.setItem('current_user_id', userId);
+              console.log('✅ localStorage에 사용자 ID 저장 완료');
               
               // Firestore에 임시 스킵 상태 저장
-              await setDoc(doc(db, 'users', userId), {
-                onboardingTemporarilySkipped: true,
-                onboardingTemporarilySkippedAt: new Date().toISOString()
-              }, { merge: true });
-              
-              console.log('✅ 온보딩 임시 스킵 상태 Firestore에 저장됨 (다음 로그인 시 다시 표시):', userId);
+              console.log('🔄 Firestore에 임시 스킵 상태 저장 시작:', userId);
+              try {
+                await setDoc(doc(db, 'users', userId), {
+                  onboardingTemporarilySkipped: true,
+                  onboardingTemporarilySkippedAt: new Date().toISOString()
+                }, { merge: true });
+                
+                console.log('✅ 온보딩 임시 스킵 상태 Firestore에 저장됨 (다음 로그인 시 다시 표시):', userId);
+              } catch (firestoreError) {
+                console.error('❌ Firestore 저장 실패:', firestoreError);
+                throw firestoreError;
+              }
               
               // localStorage에도 백업 저장
               try {
