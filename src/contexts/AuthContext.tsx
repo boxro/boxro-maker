@@ -295,9 +295,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       // 구체적인 에러 메시지 제공
       if (error.code === 'auth/invalid-credential') {
-        throw new Error('이메일 또는 비밀번호가 올바르지 않습니다.');
+        throw new Error('이메일 또는 비밀번호가 올바르지 않습니다. 계정이 탈퇴되었을 수도 있습니다.');
       } else if (error.code === 'auth/user-not-found') {
-        throw new Error('등록되지 않은 이메일입니다.');
+        throw new Error('등록되지 않은 이메일입니다. 회원가입을 진행해주세요.');
       } else if (error.code === 'auth/wrong-password') {
         throw new Error('비밀번호가 올바르지 않습니다.');
       } else if (error.code === 'auth/network-request-failed') {
