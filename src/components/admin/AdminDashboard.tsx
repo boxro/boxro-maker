@@ -73,7 +73,7 @@ export default function AdminDashboard({ adminStats, loading }: AdminDashboardPr
         <div className="animate-pulse">
           <div className="h-6 bg-gray-200 rounded mb-4"></div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
-            {[...Array(6)].map((_, i) => (
+            {[...Array(6)].map((_, i) => ( // 로딩 스켈레톤 카드 수
               <div key={i} className="bg-gray-100 rounded-lg p-6">
                 <div className="h-4 bg-gray-200 rounded mb-2"></div>
                 <div className="h-8 bg-gray-200 rounded mb-2"></div>
@@ -197,7 +197,7 @@ export default function AdminDashboard({ adminStats, loading }: AdminDashboardPr
           </div>
           <div className="flex flex-row items-end justify-between h-24">
             <div className="text-3xl font-bold text-blue-600">
-              v1.0.0
+              v1.0.0 {/* 프로젝트 버전 */}
             </div>
             <div className="text-right">
               <div className="text-xs text-gray-800">

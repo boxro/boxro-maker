@@ -155,7 +155,7 @@ export default function AdminPage() {
   const [showUserModal, setShowUserModal] = useState(false);
   const [activeActivityTab, setActiveActivityTab] = useState('작품');
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const itemsPerPage = 5; // 활동내역 페이지당 아이템 수
   
   // 활동내역 소팅 상태
   const [activitySortField, setActivitySortField] = useState('');
@@ -217,7 +217,7 @@ export default function AdminPage() {
   
   // 회원통계 페이지네이션 상태
   const [userStatsCurrentPage, setUserStatsCurrentPage] = useState(1);
-  const [userStatsPageSize, setUserStatsPageSize] = useState(20);
+  const [userStatsPageSize, setUserStatsPageSize] = useState(20); // 회원통계 페이지당 아이템 수
   const [userStatsTotalPages, setUserStatsTotalPages] = useState(0);
   const [adminStats, setAdminStats] = useState<AdminStats>({
     totalUsers: 0,
@@ -264,10 +264,10 @@ export default function AdminPage() {
       dailyDeletes: 0
     },
     firebaseLimits: {
-      readsLimit: 50000,
-      writesLimit: 20000,
-      deletesLimit: 20000,
-      storageLimitGB: 1
+      readsLimit: 50000,    // Firebase 무료 플랜 일일 읽기 제한
+      writesLimit: 20000,   // Firebase 무료 플랜 일일 쓰기 제한
+      deletesLimit: 20000,  // Firebase 무료 플랜 일일 삭제 제한
+      storageLimitGB: 1     // Firebase 무료 플랜 저장용량 제한
     },
     apiCalls: {
       firestoreReads: 0,
@@ -637,7 +637,7 @@ export default function AdminPage() {
         descriptionColor: bannerDescriptionColor,
         textPosition: bannerTextPosition,
         isActive: true,
-        order: 0,
+        order: 0, // 배너 기본 순서
         isPublished: true,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()

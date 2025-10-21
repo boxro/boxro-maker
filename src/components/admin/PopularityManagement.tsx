@@ -121,7 +121,7 @@ const PopularityManagement: React.FC<PopularityManagementProps> = ({
                 <option value="20">20개씩</option>
                 <option value="30">30개씩</option>
                 <option value="50">50개씩</option>
-                <option value="100">100개씩</option>
+                <option value="100">100개씩</option> {/* 페이지 크기 옵션 */}
               </select>
             </div>
           </div>
@@ -338,7 +338,7 @@ const PopularityManagement: React.FC<PopularityManagementProps> = ({
                         <div className="flex items-center gap-2">
                           <input
                             type="number"
-                            min="0"
+                            min="0" // 최소값 0
                             value={popularityBoosts[item.id]?.likes || 0}
                             onChange={(e) => setPopularityBoosts(prev => ({
                               ...prev,
