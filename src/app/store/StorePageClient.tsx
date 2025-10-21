@@ -224,7 +224,7 @@ const ProfileImage = ({ authorId, authorName, authorEmail, size = "w-8 h-8" }: {
 export default function StorePageClient() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdminUser, setIsAdminUser] = useState(false);
   const [showFloatingMenu, setShowFloatingMenu] = useState(false);
   const [articles, setArticles] = useState<StoryArticle[]>([]);
   const router = useRouter();
@@ -263,9 +263,9 @@ export default function StorePageClient() {
   // 관리자 권한 확인
   useEffect(() => {
     if (user && adminEmails.includes(user.email || "")) {
-      setIsAdmin(true);
+      setIsAdminUser(true);
     } else {
-      setIsAdmin(false);
+      setIsAdminUser(false);
     }
   }, [user]);
 
