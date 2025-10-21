@@ -195,7 +195,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             onboardingSkipped,
             onboardingTemporarilySkipped,
             showOnboarding,
-            userExists: userSnap.exists()
+            userExists: userSnap.exists(),
+            userData: userSnap.exists() ? userSnap.data() : null
           });
           
           // 온보딩이 완료되었거나 영구 스킵된 경우 표시하지 않음
