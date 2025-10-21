@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { doc, getDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { doc, getDoc, updateDoc, collection, query, where, getDocs, deleteDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db, storage } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Camera, Save } from 'lucide-react';
+import { Camera, Save, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import CommonHeader from '@/components/CommonHeader';
 import { SuccessModal } from '@/components/Modal';
@@ -30,6 +30,9 @@ export default function EditProfilePage() {
   const [message, setMessage] = useState('');
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const resizeImageToSquare = (file: File, size: number): Promise<Blob> => {
@@ -292,6 +295,92 @@ export default function EditProfilePage() {
     router.push('/');
   };
 
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+    
+    if (deleteConfirmText !== '탈퇴') {
+      setMessage('정확히 "탈퇴"라고 입력해주세요.');
+      return;
+    }
+
+    setIsDeleting(true);
+    setMessage('');
+
+    try {
+      const userId = user.uid;
+      
+      // 1. 사용자의 모든 갤러리 디자인 삭제
+      try {
+        const galleryRef = collection(db, 'communityDesigns');
+        const userDesignsQuery = query(galleryRef, where('authorId', '==', userId));
+        const userDesignsSnapshot = await getDocs(userDesignsQuery);
+        
+        const deleteDesignPromises = userDesignsSnapshot.docs.map(doc => deleteDoc(doc.ref));
+        await Promise.all(deleteDesignPromises);
+        console.log('✅ 갤러리 디자인 삭제 완료');
+      } catch (error) {
+        console.warn('갤러리 디자인 삭제 실패:', error);
+      }
+
+      // 2. 사용자의 모든 댓글 삭제
+      try {
+        const commentsRef = collection(db, 'boxroTalks');
+        const userCommentsQuery = query(commentsRef, where('authorId', '==', userId));
+        const userCommentsSnapshot = await getDocs(userCommentsQuery);
+        
+        const deleteCommentPromises = userCommentsSnapshot.docs.map(doc => deleteDoc(doc.ref));
+        await Promise.all(deleteCommentPromises);
+        console.log('✅ 댓글 삭제 완료');
+      } catch (error) {
+        console.warn('댓글 삭제 실패:', error);
+      }
+
+      // 3. 사용자 프로필 정보 삭제
+      try {
+        const userRef = doc(db, 'users', userId);
+        await deleteDoc(userRef);
+        console.log('✅ 사용자 프로필 삭제 완료');
+      } catch (error) {
+        console.warn('사용자 프로필 삭제 실패:', error);
+      }
+
+      // 4. Firebase Auth에서 사용자 삭제
+      try {
+        const { deleteUser } = await import('firebase/auth');
+        const { auth } = await import('@/lib/firebase');
+        await deleteUser(auth.currentUser!);
+        console.log('✅ Firebase Auth 사용자 삭제 완료');
+      } catch (error) {
+        console.error('Firebase Auth 사용자 삭제 실패:', error);
+        throw new Error('계정 삭제에 실패했습니다. 다시 시도해주세요.');
+      }
+
+      // 5. 로컬 스토리지 정리
+      try {
+        localStorage.clear();
+        console.log('✅ 로컬 스토리지 정리 완료');
+      } catch (error) {
+        console.warn('로컬 스토리지 정리 실패:', error);
+      }
+
+      // 6. 홈페이지로 리다이렉트
+      router.push('/');
+      
+    } catch (error: any) {
+      console.error('회원 탈퇴 오류:', error);
+      
+      if (error.code === 'auth/requires-recent-login') {
+        setMessage('보안을 위해 다시 로그인한 후 탈퇴를 진행해주세요.');
+      } else if (error.code === 'auth/network-request-failed') {
+        setMessage('네트워크 연결을 확인해주세요.');
+      } else {
+        setMessage('회원 탈퇴에 실패했습니다. 다시 시도해주세요.');
+      }
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   useEffect(() => {
     if (!loading && !user) {
       router.push('/auth');
@@ -405,6 +494,15 @@ export default function EditProfilePage() {
                     maxLength={20}
                     className="text-[14px] bg-white border-gray-300 focus:border-purple-500 focus:ring-purple-500"
                   />
+                  <div className="text-left mt-4">
+                    <button
+                      onClick={() => setShowDeleteModal(true)}
+                      className="text-gray-500 hover:text-red-600 underline"
+                    >
+                      <span style={{ fontSize: '14px' }}>회원탈퇴</span>
+                      <span style={{ fontSize: '12px' }}> (모든 데이터가 영구적으로 삭제됩니다.)</span>
+                    </button>
+                  </div>
                 </div>
 
                 {message && (
@@ -457,6 +555,84 @@ export default function EditProfilePage() {
         onButtonClick={() => router.push('/')}
         icon="✨"
       />
+
+      {/* 회원 탈퇴 확인 모달 */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl shadow-2xl border border-white/20 w-full max-w-md">
+            <div className="p-6">
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+                  <Trash2 className="w-8 h-8 text-red-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">회원 탈퇴</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  정말로 탈퇴하시겠습니까?<br />
+                  <strong className="text-red-600">모든 데이터가 영구적으로 삭제</strong>되며 복구할 수 없습니다.
+                </p>
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                  <p className="text-xs text-red-700">
+                    • 갤러리에 올린 모든 디자인<br />
+                    • 작성한 모든 댓글<br />
+                    • 프로필 정보<br />
+                    • 기타 모든 활동 기록
+                  </p>
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    탈퇴를 확인하려면 <strong>"탈퇴"</strong>라고 입력하세요
+                  </label>
+                  <Input
+                    value={deleteConfirmText}
+                    onChange={(e) => setDeleteConfirmText(e.target.value)}
+                    placeholder="탈퇴"
+                    className="text-center border-red-300 focus:border-red-500 focus:ring-red-500"
+                  />
+                </div>
+              </div>
+              
+              {message && (
+                <div className={`p-3 rounded-lg text-sm mb-4 ${
+                  message.includes('실패') 
+                    ? 'bg-red-50 text-red-700 border border-red-200' 
+                    : 'bg-green-50 text-green-700 border border-green-200'
+                }`}>
+                  {message}
+                </div>
+              )}
+
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setDeleteConfirmText('');
+                    setMessage('');
+                  }}
+                  variant="outline"
+                  className="flex-1 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 rounded-full"
+                  disabled={isDeleting}
+                >
+                  취소
+                </Button>
+                <Button
+                  onClick={handleDeleteAccount}
+                  disabled={isDeleting || deleteConfirmText !== '탈퇴'}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white rounded-full"
+                >
+                  {isDeleting ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      탈퇴 중...
+                    </div>
+                  ) : (
+                    '탈퇴하기'
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </CommonBackground>
   );
 }
