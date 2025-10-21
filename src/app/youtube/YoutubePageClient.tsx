@@ -16,6 +16,17 @@ import PageHeader from "@/components/PageHeader";
 import CommonBackground from "@/components/CommonBackground";
 import BannerDisplay from "@/components/BannerDisplay";
 
+// 관리자 이메일 목록
+const ADMIN_EMAILS = [
+  'admin@boxro.com',
+  'dongwoo@boxro.com'
+];
+
+// 관리자 권한 확인 함수
+const isAdmin = (userEmail?: string) => {
+  return userEmail && ADMIN_EMAILS.includes(userEmail);
+};
+
 interface StoryArticle {
   id: string;
   title: string;
@@ -213,7 +224,7 @@ const ProfileImage = ({ authorId, authorName, authorEmail, size = "w-8 h-8" }: {
 export default function YoutubePageClient() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdminUser, setIsAdminUser] = useState(false);
   const [showFloatingMenu, setShowFloatingMenu] = useState(false);
   const [articles, setArticles] = useState<StoryArticle[]>([]);
   const router = useRouter();
@@ -252,9 +263,9 @@ export default function YoutubePageClient() {
   // 관리자 권한 확인
   useEffect(() => {
     if (user && adminEmails.includes(user.email || "")) {
-      setIsAdmin(true);
+      setIsAdminUser(true);
     } else {
-      setIsAdmin(false);
+      setIsAdminUser(false);
     }
   }, [user]);
 
@@ -802,7 +813,7 @@ export default function YoutubePageClient() {
                 description="박스카와 함께하는 즐거운 영상들을 만나보세요!"
               />
             </div>
-            {user && isAdmin && (
+            {user && isAdminUser && (
               <div className="hidden sm:flex gap-3">
                 <Button
                   onClick={() => router.push('/youtube/write')}
@@ -857,7 +868,7 @@ export default function YoutubePageClient() {
                 )}
                 
                 {/* 수정/삭제 버튼 */}
-                {user && (user.uid === article.authorId || user.email === article.authorEmail || isAdmin()) && (
+                {user && (user.uid === article.authorId || user.email === article.authorEmail || isAdmin(user.email)) && (
                   <div className="absolute top-2 right-2 flex gap-1 z-10">
                     <Button
                       variant="outline"
@@ -1001,7 +1012,7 @@ export default function YoutubePageClient() {
         )}
 
         {/* 모바일 플로팅 메뉴 */}
-        {user && isAdmin && (
+        {user && isAdminUser && (
           <div className="fixed bottom-6 right-6 z-40 md:hidden">
             {showFloatingMenu && (
               <div className="absolute bottom-16 right-0 flex flex-col gap-3 mb-1">
@@ -1150,7 +1161,7 @@ export default function YoutubePageClient() {
                               {comment.text}
                             </div>
                             {/* 박스로 톡 삭제 버튼 (작성자 또는 관리자) */}
-                            {user && (user.uid === comment.authorId || isAdmin) && (
+                            {user && (user.uid === comment.authorId || isAdmin(user.email)) && (
                               <button
                                 onClick={() => deleteBoxroTalk(comment.id)}
                                 className="ml-2 text-red-500 hover:text-red-700 text-xs"
