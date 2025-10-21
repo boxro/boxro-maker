@@ -39,6 +39,26 @@ interface AdminStats {
   todayActiveUsers: number;
   recent24hActivity: number;
   pwaInstallCount: number;
+  // Firebase 사용량 통계
+  firestoreUsage: {
+    totalDocs: number;
+    estimatedSizeMB: number;
+    dailyReads: number;
+    dailyWrites: number;
+    dailyDeletes: number;
+  };
+  firebaseLimits: {
+    readsLimit: number;
+    writesLimit: number;
+    deletesLimit: number;
+    storageLimitGB: number;
+  };
+  apiCalls: {
+    firestoreReads: number;
+    firestoreWrites: number;
+    authLogins: number;
+    authSignups: number;
+  };
 }
 
 interface AdminDashboardProps {
@@ -184,6 +204,71 @@ export default function AdminDashboard({ adminStats, loading }: AdminDashboardPr
                 커밋: {adminStats.totalCommits || 'N/A'}<br/>
                 배포: {adminStats.lastDeploy || 'N/A'}<br/>
                 빌드: {adminStats.lastBuild || 'N/A'}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Firestore 사용량 */}
+        <div className="bg-white text-gray-900 py-2 gap-2 border border-gray-200 rounded-lg px-8 py-6">
+          <div className="flex flex-row items-center justify-between space-y-0 pb-2 border-b border-gray-200">
+            <div className="text-sm font-medium">Firestore 사용량</div>
+            <div className="w-4 h-4 rounded-full bg-blue-500"></div>
+          </div>
+          <div className="flex flex-row items-end justify-between h-24">
+            <div className="text-3xl font-bold text-blue-600">{adminStats.firestoreUsage.estimatedSizeMB}MB</div>
+            <div className="text-right">
+              <div className="text-xs text-gray-800">
+                총 문서: {adminStats.firestoreUsage.totalDocs}개<br/>
+                읽기: {adminStats.firestoreUsage.dailyReads}회<br/>
+                쓰기: {adminStats.firestoreUsage.dailyWrites}회<br/>
+                삭제: {adminStats.firestoreUsage.dailyDeletes}회
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 사용량 경고 */}
+        <div className="bg-white text-gray-900 py-2 gap-2 border border-gray-200 rounded-lg px-8 py-6">
+          <div className="flex flex-row items-center justify-between space-y-0 pb-2 border-b border-gray-200">
+            <div className="text-sm font-medium">사용량 경고</div>
+            <div className={`w-4 h-4 rounded-full ${
+              (adminStats.firestoreUsage.dailyReads / adminStats.firebaseLimits.readsLimit) > 0.5 ? 'bg-red-500' :
+              (adminStats.firestoreUsage.dailyReads / adminStats.firebaseLimits.readsLimit) > 0.3 ? 'bg-yellow-500' : 'bg-green-500'
+            }`}></div>
+          </div>
+          <div className="flex flex-row items-end justify-between h-24">
+            <div className={`text-3xl font-bold ${
+              (adminStats.firestoreUsage.dailyReads / adminStats.firebaseLimits.readsLimit) > 0.5 ? 'text-red-600' :
+              (adminStats.firestoreUsage.dailyReads / adminStats.firebaseLimits.readsLimit) > 0.3 ? 'text-yellow-600' : 'text-green-600'
+            }`}>
+              {Math.round((adminStats.firestoreUsage.dailyReads / adminStats.firebaseLimits.readsLimit) * 100)}%
+            </div>
+            <div className="text-right">
+              <div className="text-xs text-gray-800">
+                읽기: {adminStats.firestoreUsage.dailyReads}/{adminStats.firebaseLimits.readsLimit}<br/>
+                쓰기: {adminStats.firestoreUsage.dailyWrites}/{adminStats.firebaseLimits.writesLimit}<br/>
+                삭제: {adminStats.firestoreUsage.dailyDeletes}/{adminStats.firebaseLimits.deletesLimit}<br/>
+                저장용량: {adminStats.firestoreUsage.estimatedSizeMB}MB/{adminStats.firebaseLimits.storageLimitGB}GB
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* API 호출 통계 */}
+        <div className="bg-white text-gray-900 py-2 gap-2 border border-gray-200 rounded-lg px-8 py-6">
+          <div className="flex flex-row items-center justify-between space-y-0 pb-2 border-b border-gray-200">
+            <div className="text-sm font-medium">API 호출 통계</div>
+            <div className="w-4 h-4 rounded-full bg-purple-500"></div>
+          </div>
+          <div className="flex flex-row items-end justify-between h-24">
+            <div className="text-3xl font-bold text-purple-600">{adminStats.apiCalls.firestoreReads + adminStats.apiCalls.firestoreWrites}</div>
+            <div className="text-right">
+              <div className="text-xs text-gray-800">
+                Firestore 읽기: {adminStats.apiCalls.firestoreReads}회<br/>
+                Firestore 쓰기: {adminStats.apiCalls.firestoreWrites}회<br/>
+                Auth 로그인: {adminStats.apiCalls.authLogins}회<br/>
+                Auth 회원가입: {adminStats.apiCalls.authSignups}회
               </div>
             </div>
           </div>

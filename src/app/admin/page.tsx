@@ -76,6 +76,26 @@ interface AdminStats {
   todayActiveUsers: number;
   recent24hActivity: number;
   pwaInstallCount: number;
+  // Firebase 사용량 통계
+  firestoreUsage: {
+    totalDocs: number;
+    estimatedSizeMB: number;
+    dailyReads: number;
+    dailyWrites: number;
+    dailyDeletes: number;
+  };
+  firebaseLimits: {
+    readsLimit: number;
+    writesLimit: number;
+    deletesLimit: number;
+    storageLimitGB: number;
+  };
+  apiCalls: {
+    firestoreReads: number;
+    firestoreWrites: number;
+    authLogins: number;
+    authSignups: number;
+  };
 }
 
 interface HomeCard {
@@ -234,7 +254,27 @@ export default function AdminPage() {
     lastBuild: 'N/A',
     todayActiveUsers: 0,
     recent24hActivity: 0,
-    pwaInstallCount: 0
+    pwaInstallCount: 0,
+    // Firebase 사용량 통계 초기값
+    firestoreUsage: {
+      totalDocs: 0,
+      estimatedSizeMB: 0,
+      dailyReads: 0,
+      dailyWrites: 0,
+      dailyDeletes: 0
+    },
+    firebaseLimits: {
+      readsLimit: 50000,
+      writesLimit: 20000,
+      deletesLimit: 20000,
+      storageLimitGB: 1
+    },
+    apiCalls: {
+      firestoreReads: 0,
+      firestoreWrites: 0,
+      authLogins: 0,
+      authSignups: 0
+    }
   });
 
   // 홈카드 관리 관련 state
@@ -2081,6 +2121,96 @@ export default function AdminPage() {
     }
   };
 
+  // Firestore 사용량 계산
+  const getFirestoreUsage = async () => {
+    try {
+      const collections = [
+        'users', 'communityDesigns', 'storyArticles', 
+        'storeItems', 'boxroTalks', 'storyBoxroTalks', 
+        'storeBoxroTalks', 'pwaInstalls', 'homeCards', 'banners'
+      ];
+      
+      let totalDocs = 0;
+      let estimatedSize = 0;
+      
+      for (const collectionName of collections) {
+        try {
+          const snapshot = await getDocs(collection(db, collectionName));
+          const docCount = snapshot.docs.length;
+          totalDocs += docCount;
+          
+          // 각 문서당 평균 크기 추정 (1KB 정도)
+          estimatedSize += docCount * 1024; // 1KB per document
+        } catch (error) {
+          console.warn(`${collectionName} 컬렉션 접근 실패:`, error);
+        }
+      }
+      
+      const estimatedSizeMB = Math.round(estimatedSize / (1024 * 1024) * 100) / 100;
+      
+      return {
+        totalDocs,
+        estimatedSizeMB,
+        dailyReads: 0, // 실제로는 Firebase Admin SDK로 가져와야 함
+        dailyWrites: 0, // 실제로는 Firebase Admin SDK로 가져와야 함
+        dailyDeletes: 0 // 실제로는 Firebase Admin SDK로 가져와야 함
+      };
+    } catch (error: unknown) {
+      console.error('Firestore 사용량 계산 실패:', error);
+      return {
+        totalDocs: 0,
+        estimatedSizeMB: 0,
+        dailyReads: 0,
+        dailyWrites: 0,
+        dailyDeletes: 0
+      };
+    }
+  };
+
+  // API 호출 통계 계산
+  const getAPICalls = async () => {
+    try {
+      // 오늘 생성된 데이터 기반으로 추정
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      // 오늘 생성된 작품 수 (읽기 + 쓰기)
+      const todayDesignsQuery = query(
+        collection(db, 'communityDesigns'),
+        where('createdAt', '>=', today)
+      );
+      const todayDesignsSnapshot = await getDocs(todayDesignsQuery);
+      const todayDesigns = todayDesignsSnapshot.docs.length;
+      
+      // 오늘 생성된 박스로톡 수
+      const todayBoxroTalksQuery = query(
+        collection(db, 'boxroTalks'),
+        where('createdAt', '>=', today)
+      );
+      const todayBoxroTalksSnapshot = await getDocs(todayBoxroTalksQuery);
+      const todayBoxroTalks = todayBoxroTalksSnapshot.docs.length;
+      
+      // 추정치 계산 (실제로는 Firebase Admin SDK로 정확한 수치를 가져와야 함)
+      const estimatedReads = (todayDesigns + todayBoxroTalks) * 3; // 작품 조회 시 여러 번 읽기
+      const estimatedWrites = todayDesigns + todayBoxroTalks;
+      
+      return {
+        firestoreReads: estimatedReads,
+        firestoreWrites: estimatedWrites,
+        authLogins: 0, // 실제로는 Firebase Admin SDK로 가져와야 함
+        authSignups: 0 // 실제로는 Firebase Admin SDK로 가져와야 함
+      };
+    } catch (error: unknown) {
+      console.error('API 호출 통계 계산 실패:', error);
+      return {
+        firestoreReads: 0,
+        firestoreWrites: 0,
+        authLogins: 0,
+        authSignups: 0
+      };
+    }
+  };
+
   // 사용자 활동 데이터 가져오기
   const loadUserActivities = async (userEmail: string) => {
     try {
@@ -3646,7 +3776,9 @@ export default function AdminPage() {
         lastBuild: await getLastBuildTime(),
         todayActiveUsers: await getTodayActiveUsers(),
         recent24hActivity: await getRecent24hActivity(),
-        pwaInstallCount: await getPWAInstallCount()
+        pwaInstallCount: await getPWAInstallCount(),
+        firestoreUsage: await getFirestoreUsage(),
+        apiCalls: await getAPICalls()
       };
 
       setAdminStats(totalStats);
