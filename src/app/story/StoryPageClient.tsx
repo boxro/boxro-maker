@@ -1203,7 +1203,7 @@ export default function StoryPageClient() {
                     <div className="hidden sm:block">
                       <ProfileImage 
                         authorId={user.uid || ''} 
-                        authorName={user.displayName || user.email || 'Anonymous'} 
+                        authorName={user.displayName || (user.email ? user.email.split('@')[0] : 'Anonymous')} 
                         authorEmail={user.email || undefined}
                         size="w-10 h-10"
                       />
@@ -1400,7 +1400,7 @@ export default function StoryPageClient() {
                     <div className="hidden sm:block">
                       <ProfileImage 
                         authorId={user.uid || ''} 
-                        authorName={user.displayName || user.email || 'Anonymous'} 
+                        authorName={user.displayName || (user.email ? user.email.split('@')[0] : 'Anonymous')} 
                         authorEmail={user.email || undefined}
                         size="w-10 h-10"
                       />
