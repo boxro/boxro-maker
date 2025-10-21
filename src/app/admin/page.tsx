@@ -4173,7 +4173,7 @@ export default function AdminPage() {
                         )}
                       </button>
                     </th>
-                    <th className="text-center py-3 px-1 text-[13px] font-medium text-gray-800 w-20">
+                    <th className="text-center py-3 px-1 text-[13px] font-medium text-gray-800 w-24">
                       PWA
                     </th>
                   </tr>
@@ -4248,7 +4248,7 @@ export default function AdminPage() {
                           {user.storeRedirectsCount || 0}
                         </span>
                       </td>
-                      <td className="py-3 px-2 text-center w-20">
+                      <td className="py-3 px-2 text-center w-24">
                         {user.pwaInstalled ? (
                           <div className="flex flex-col items-center">
                             <span className="bg-green-100 text-green-800 px-1 py-1 rounded-full text-[12px] mb-1">
