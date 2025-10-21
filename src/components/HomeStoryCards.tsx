@@ -65,7 +65,7 @@ export default function HomeStoryCards() {
   const fetchHomeCards = async () => {
     try {
       setLoading(true);
-      setHomeCards([]);
+      setHomeCards([]); // 최초 로딩 시에는 빈 배열로 시작
       setHasMore(true);
       
       // 홈카드 데이터 캐싱 확인
@@ -74,11 +74,11 @@ export default function HomeStoryCards() {
       const homeCardsCacheInvalidated = sessionStorage.getItem('homeCardsCacheInvalidated');
       const now = Date.now();
       
-      // 강제로 캐시 무효화 (임시 디버깅용)
-      console.log('홈카드 캐시 강제 무효화 - 서버에서 새로 가져오기');
-      sessionStorage.removeItem('homeCards');
-      sessionStorage.removeItem('lastHomeCardsUpdate');
-      sessionStorage.removeItem('homeCardsCacheInvalidated');
+      // 캐시 무효화 플래그 확인
+      if (homeCardsCacheInvalidated) {
+        console.log('홈카드 캐시 무효화됨, 서버에서 새로 가져오기');
+        sessionStorage.removeItem('homeCardsCacheInvalidated');
+      }
       
       // 캐시 무효화 플래그가 있거나 캐시가 없으면 서버에서 새로 가져오기
       if (homeCardsCacheInvalidated || !cachedHomeCards || !lastHomeCardsUpdate) {
@@ -87,7 +87,7 @@ export default function HomeStoryCards() {
         if (homeCardsCacheInvalidated) {
           sessionStorage.removeItem('homeCardsCacheInvalidated');
         }
-      } else if (cachedHomeCards && lastHomeCardsUpdate && (now - parseInt(lastHomeCardsUpdate)) < 300000) { // 5분 캐시
+      } else if (cachedHomeCards && lastHomeCardsUpdate && (now - parseInt(lastHomeCardsUpdate)) < 600000) { // 10분 캐시
         const allHomeCards = JSON.parse(cachedHomeCards);
         // 캐시된 데이터 사용 (로깅 제거로 성능 향상)
         
@@ -117,35 +117,42 @@ export default function HomeStoryCards() {
         return;
       }
       
-      // homeCards 컬렉션 서버사이드 필터링 및 최소 데이터만 로드
-      // Firestore는 != 필터를 하나만 사용할 수 있으므로 기본 필터만 적용
+      // 최초 로딩을 위한 단순화된 쿼리
       const homeCardsQuery = await getDocs(
         query(
           collection(db, 'homeCards'),
           where('showOnHome', '==', true),
           where('isPublished', '==', true),
           orderBy('homeOrder', 'asc'),
-          orderBy('createdAt', 'desc'),
           limit(6)
         )
       );
       
-      // homeCards 데이터 변환 및 클라이언트 필터링/정렬
-      const allHomeCards = homeCardsQuery.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        source: doc.data().source || 'homeCards'
-      })) as (StoryArticle & { source: string })[];
-      
-      // 클라이언트에서 빈 제목/설명 필터링 및 중복 제거
-      const filteredHomeCards = allHomeCards
-        .filter(article =>
-          article.cardTitle && article.cardTitle.trim() &&
-          article.cardDescription && article.cardDescription.trim()
-        )
-        .filter((article, index, self) => 
-          // ID 기준으로 중복 제거
-          index === self.findIndex(a => a.id === article.id)
+      // 최소한의 데이터만 변환하여 성능 최적화
+      const filteredHomeCards = homeCardsQuery.docs
+        .map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            title: data.title,
+            cardTitle: data.cardTitle,
+            cardDescription: data.cardDescription,
+            cardThumbnail: data.cardThumbnail,
+            url: data.url,
+            openInNewTab: data.openInNewTab,
+            titleColor: data.titleColor,
+            descriptionColor: data.descriptionColor,
+            textPosition: data.textPosition,
+            backgroundColor: data.backgroundColor,
+            homeCardBackgroundColor: data.homeCardBackgroundColor,
+            homeOrder: data.homeOrder,
+            createdAt: data.createdAt?.toDate?.() || new Date(),
+            source: 'homeCards'
+          };
+        })
+        .filter(article => 
+          // 필수 필드만 빠르게 체크
+          article.cardTitle?.trim() && article.cardDescription?.trim()
         );
       
       // 홈카드 데이터를 세션 스토리지에 캐싱(필터/정렬된 결과 저장)
@@ -234,10 +241,10 @@ export default function HomeStoryCards() {
   }
 
   if (loading) {
-    // 스켈레톤 로더 표시
+    // 빠른 스켈레톤 로더 (3개만 표시)
     return (
       <>
-        {Array.from({ length: 6 }).map((_, index) => (
+        {Array.from({ length: 3 }).map((_, index) => (
           <Card key={`skeleton-${index}`} className="border-0 border-purple-300/50 shadow-2xl relative overflow-hidden bg-transparent min-h-[480px] flex flex-col justify-end">
             <div className="absolute inset-0 bg-gradient-to-br from-gray-200 to-gray-300 animate-pulse" />
             <div className="text-center pt-1 pb-2 relative z-10 absolute bottom-4 left-1/2 transform -translate-x-1/2 w-full">
@@ -256,7 +263,7 @@ export default function HomeStoryCards() {
 
   return (
     <>
-      {homeCards.map((article) => {
+      {homeCards.map((article, index) => {
         // 링크가 있는 경우에만 Link 컴포넌트 사용, 없으면 div로 렌더링
         const hasLink = article.url && article.url.trim();
         
@@ -270,9 +277,10 @@ export default function HomeStoryCards() {
                   alt={article.cardTitle || article.title}
                   fill
                   className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-                  loading="lazy"
+                  loading="eager"
+                  priority={index < 3}
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  quality={75}
+                  quality={85}
                 />
               </div>
             ) : (
