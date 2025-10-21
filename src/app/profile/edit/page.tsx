@@ -98,7 +98,7 @@ export default function EditProfilePage() {
             const userData = userSnap.data();
             setProfileData({
               originalName: userData.author || user.displayName || '',
-              displayName: userData.authorNickname || userData.displayName || user.displayName || '',
+              displayName: userData.authorNickname || userData.displayName || user.displayName || (user.email ? user.email.split('@')[0] : ''),
               photoURL: userData.customPhotoURL || userData.photoURL || user.photoURL || '',
               email: userData.email || user.email || ''
             });
@@ -242,9 +242,10 @@ export default function EditProfilePage() {
 
     try {
       const userRef = doc(db, 'users', user.uid);
+      const finalDisplayName = profileData.displayName || (user.email ? user.email.split('@')[0] : '');
       await updateDoc(userRef, {
-        displayName: profileData.displayName,
-        authorNickname: profileData.displayName,
+        displayName: finalDisplayName,
+        authorNickname: finalDisplayName,
         photoURL: tempImage || profileData.photoURL, // 임시 이미지가 있으면 사용
         customPhotoURL: tempImage || profileData.photoURL, // 임시 이미지가 있으면 사용
         updatedAt: new Date().toISOString()
@@ -256,7 +257,7 @@ export default function EditProfilePage() {
         const userDesignsSnapshot = await getDocs(userDesignsQuery);
         
         const updatePromises = userDesignsSnapshot.docs.map(doc => 
-          updateDoc(doc.ref, { authorNickname: profileData.displayName })
+          updateDoc(doc.ref, { authorNickname: finalDisplayName })
         );
         
         await Promise.all(updatePromises);
@@ -270,7 +271,7 @@ export default function EditProfilePage() {
         const userCommentsSnapshot = await getDocs(userCommentsQuery);
         
         const commentUpdatePromises = userCommentsSnapshot.docs.map(doc => 
-          updateDoc(doc.ref, { authorNickname: profileData.displayName })
+          updateDoc(doc.ref, { authorNickname: finalDisplayName })
         );
         
         await Promise.all(commentUpdatePromises);
