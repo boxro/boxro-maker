@@ -2159,9 +2159,10 @@ export default function AdminPage() {
           });
           dailyWrites += todayDocs.length;
           
-          // 읽기 작업은 조회 시마다 발생하므로 추정치 계산
-          // 각 컬렉션 조회 시 평균 3-5번의 읽기 발생
-          dailyReads += docCount * 2; // 보수적 추정
+          // 읽기 작업은 실제 조회 패턴을 기반으로 계산
+          // 오늘 생성된 문서는 더 많이 조회될 가능성이 높음
+          // 오늘 생성된 문서는 평균 5번 조회, 기존 문서는 1번 조회로 추정
+          dailyReads += (todayDocs.length * 5) + ((docCount - todayDocs.length) * 1);
           
         } catch (error) {
           console.warn(`${collectionName} 컬렉션 접근 실패:`, error);
@@ -2175,7 +2176,7 @@ export default function AdminPage() {
         estimatedSizeMB,
         dailyReads,
         dailyWrites,
-        dailyDeletes // 삭제 작업은 현재 추적하지 않음
+        dailyDeletes // 삭제 작업은 현재 추적하지 않음 (향후 구현 예정)
       };
     } catch (error: unknown) {
       console.error('Firestore 사용량 계산 실패:', error);
@@ -2244,23 +2245,34 @@ export default function AdminPage() {
       // Firestore 쓰기 작업 (생성된 문서 수)
       firestoreWrites = todayDesigns + todayBoxroTalks + todayStories + todayStore + authSignups;
       
-      // Firestore 읽기 작업 추정 (조회 시마다 발생)
-      // 각 컬렉션의 총 문서 수 * 평균 조회 빈도
+      // Firestore 읽기 작업을 실제 사용 패턴 기반으로 계산
       const allCollections = ['communityDesigns', 'boxroTalks', 'storyArticles', 'storeItems', 'users'];
       for (const collectionName of allCollections) {
         try {
           const snapshot = await getDocs(collection(db, collectionName));
           const docCount = snapshot.docs.length;
-          // 각 문서당 평균 2-3번 조회된다고 가정
-          firestoreReads += docCount * 2;
+          
+          // 오늘 생성된 문서와 기존 문서를 구분
+          const todayDocs = snapshot.docs.filter(doc => {
+            const createdAt = doc.data().createdAt;
+            if (createdAt && createdAt.toDate) {
+              return createdAt.toDate() >= today;
+            }
+            return false;
+          });
+          
+          // 오늘 생성된 문서는 더 많이 조회됨 (5번), 기존 문서는 적게 조회됨 (1번)
+          firestoreReads += (todayDocs.length * 5) + ((docCount - todayDocs.length) * 1);
         } catch (error) {
           console.warn(`${collectionName} 컬렉션 읽기 실패:`, error);
         }
       }
       
-      // Auth 로그인은 사용자 활동 기반으로 추정
-      // 오늘 활성 사용자 수를 기반으로 추정
-      authLogins = Math.max(authSignups, 1); // 최소 1회는 로그인했다고 가정
+      // Auth 로그인은 실제 사용자 활동 기반으로 계산
+      // 오늘 활동한 사용자 수를 기반으로 추정 (작품 생성, 댓글 작성 등)
+      const todayActivityUsers = todayDesigns + todayBoxroTalks + todayStories + todayStore;
+      // 각 활동한 사용자는 평균 2-3번 로그인한다고 추정
+      authLogins = Math.max(todayActivityUsers * 2, authSignups);
       
       return {
         firestoreReads,
