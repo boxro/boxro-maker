@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
@@ -45,6 +45,7 @@ interface HomeCardManagementProps {
   isEditMode: boolean;
   addingCard: boolean;
   deletingCard: string | null;
+  editingCard: string | null;
   
   // Functions
   addHomeCard: () => Promise<void>;
@@ -88,6 +89,7 @@ const HomeCardManagement: React.FC<HomeCardManagementProps> = ({
   isEditMode,
   addingCard,
   deletingCard,
+  editingCard,
   addHomeCard,
   saveEditCard,
   startEditCard,
@@ -104,6 +106,22 @@ const HomeCardManagement: React.FC<HomeCardManagementProps> = ({
   setHomeCardFilterSearch,
   resetHomeCardFilters,
 }) => {
+  // 파일 입력 필드 ref
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // 썸네일 상태 디버깅
+  useEffect(() => {
+    console.log('홈카드 썸네일 상태 변경:', homeCardThumbnail);
+  }, [homeCardThumbnail]);
+
+  // 썸네일이 초기화될 때 파일 입력 필드도 초기화
+  useEffect(() => {
+    if (!homeCardThumbnail && fileInputRef.current) {
+      fileInputRef.current.value = '';
+      console.log('파일 입력 필드 초기화됨');
+    }
+  }, [homeCardThumbnail]);
+
   // 홈카드 썸네일 압축 함수 (450px, 800KB)
   const compressHomeCardThumbnail = (file: File, maxWidth: number = 450, quality: number = 0.8): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -288,6 +306,7 @@ const HomeCardManagement: React.FC<HomeCardManagementProps> = ({
                 <label className="block text-sm font-medium text-gray-800 mb-2">카드 썸네일 (홈카드 배경 이미지)</label>
                 <div className="flex gap-2">
                   <input 
+                    ref={fileInputRef}
                     type="file" 
                     accept="image/*"
                     onChange={async (e) => {
@@ -308,7 +327,12 @@ const HomeCardManagement: React.FC<HomeCardManagementProps> = ({
                   {homeCardThumbnail && (
                     <button
                       type="button"
-                      onClick={() => setHomeCardThumbnail('')}
+                      onClick={() => {
+                        setHomeCardThumbnail('');
+                        if (fileInputRef.current) {
+                          fileInputRef.current.value = '';
+                        }
+                      }}
                       className="px-3 py-2 bg-sky-500 hover:bg-sky-600 text-white text-sm rounded-md transition-colors whitespace-nowrap"
                     >
                       삭제
@@ -502,7 +526,7 @@ const HomeCardManagement: React.FC<HomeCardManagementProps> = ({
                       size="sm" 
                       className="bg-blue-500 hover:bg-blue-600 text-white rounded-full flex-1 md:flex-none"
                       onClick={() => startEditCard(card)}
-                      disabled={isEditMode}
+                      disabled={editingCard === card.id}
                     >
                       수정
                     </Button>
@@ -510,7 +534,7 @@ const HomeCardManagement: React.FC<HomeCardManagementProps> = ({
                       size="sm" 
                       className="bg-red-500 hover:bg-red-600 text-white rounded-full flex-1 md:flex-none"
                       onClick={() => deleteHomeCard(card.id)}
-                      disabled={deletingCard === card.id || isEditMode}
+                      disabled={deletingCard === card.id || editingCard === card.id}
                     >
                       {deletingCard === card.id ? '삭제 중...' : '삭제'}
                     </Button>

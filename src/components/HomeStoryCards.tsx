@@ -26,6 +26,13 @@ interface StoryArticle {
   cardDescription?: string;
   cardThumbnail?: string;
   openInNewTab?: boolean;
+  url?: string;
+  titleColor?: string;
+  descriptionColor?: string;
+  textPosition?: number;
+  backgroundColor?: string;
+  homeCardBackgroundColor?: string;
+  homeOrder?: number;
   createdAt: any;
   updatedAt: any;
 }
@@ -67,6 +74,12 @@ export default function HomeStoryCards() {
       const homeCardsCacheInvalidated = sessionStorage.getItem('homeCardsCacheInvalidated');
       const now = Date.now();
       
+      // 강제로 캐시 무효화 (임시 디버깅용)
+      console.log('홈카드 캐시 강제 무효화 - 서버에서 새로 가져오기');
+      sessionStorage.removeItem('homeCards');
+      sessionStorage.removeItem('lastHomeCardsUpdate');
+      sessionStorage.removeItem('homeCardsCacheInvalidated');
+      
       // 캐시 무효화 플래그가 있거나 캐시가 없으면 서버에서 새로 가져오기
       if (homeCardsCacheInvalidated || !cachedHomeCards || !lastHomeCardsUpdate) {
         console.log('홈카드 캐시 무효화됨 또는 캐시 없음, 서버에서 새로 가져오기');
@@ -78,7 +91,7 @@ export default function HomeStoryCards() {
         const allHomeCards = JSON.parse(cachedHomeCards);
         // 캐시된 데이터 사용 (로깅 제거로 성능 향상)
         
-        // 클라이언트에서 홈 표시 조건 필터링
+        // 클라이언트에서 홈 표시 조건 필터링 및 중복 제거
         const filteredHomeCards = allHomeCards
           .filter(article => 
             article.showOnHome === true && 
@@ -87,6 +100,10 @@ export default function HomeStoryCards() {
             article.cardTitle.trim() && 
             article.cardDescription && 
             article.cardDescription.trim()
+          )
+          .filter((article, index, self) => 
+            // ID 기준으로 중복 제거
+            index === self.findIndex(a => a.id === article.id)
           )
           .sort((a, b) => {
             const aOrder = a.homeOrder || 999999;
@@ -101,14 +118,12 @@ export default function HomeStoryCards() {
       }
       
       // homeCards 컬렉션 서버사이드 필터링 및 최소 데이터만 로드
-      // 필수 필드만 선택하여 네트워크 전송량 최소화
+      // Firestore는 != 필터를 하나만 사용할 수 있으므로 기본 필터만 적용
       const homeCardsQuery = await getDocs(
         query(
           collection(db, 'homeCards'),
           where('showOnHome', '==', true),
           where('isPublished', '==', true),
-          where('cardTitle', '!=', ''),
-          where('cardDescription', '!=', ''),
           orderBy('homeOrder', 'asc'),
           orderBy('createdAt', 'desc'),
           limit(6)
@@ -122,8 +137,16 @@ export default function HomeStoryCards() {
         source: doc.data().source || 'homeCards'
       })) as (StoryArticle & { source: string })[];
       
-      // 서버에서 이미 필터링되었으므로 클라이언트 필터링 최소화
-      const filteredHomeCards = allHomeCards;
+      // 클라이언트에서 빈 제목/설명 필터링 및 중복 제거
+      const filteredHomeCards = allHomeCards
+        .filter(article =>
+          article.cardTitle && article.cardTitle.trim() &&
+          article.cardDescription && article.cardDescription.trim()
+        )
+        .filter((article, index, self) => 
+          // ID 기준으로 중복 제거
+          index === self.findIndex(a => a.id === article.id)
+        );
       
       // 홈카드 데이터를 세션 스토리지에 캐싱(필터/정렬된 결과 저장)
       sessionStorage.setItem('homeCards', JSON.stringify(filteredHomeCards));
@@ -159,8 +182,6 @@ export default function HomeStoryCards() {
         collection(db, 'homeCards'),
         where('showOnHome', '==', true),
         where('isPublished', '==', true),
-        where('cardTitle', '!=', ''),
-        where('cardDescription', '!=', ''),
         orderBy('homeOrder', 'asc'),
         orderBy('createdAt', 'desc'),
         startAfter(lastDoc),
@@ -173,10 +194,23 @@ export default function HomeStoryCards() {
         ...doc.data()
       })) as StoryArticle[];
       
-      // 서버에서 이미 필터링되었으므로 클라이언트 필터링 최소화
-      const newHomeCards = newArticles;
+      // 클라이언트에서 빈 제목/설명 필터링 및 중복 제거
+      const newHomeCards = newArticles
+        .filter(article =>
+          article.cardTitle && article.cardTitle.trim() &&
+          article.cardDescription && article.cardDescription.trim()
+        )
+        .filter((article, index, self) => 
+          // ID 기준으로 중복 제거
+          index === self.findIndex(a => a.id === article.id)
+        );
       
-      setHomeCards(prev => [...prev, ...newHomeCards]);
+      setHomeCards(prev => {
+        // 기존 카드와 새 카드 간의 중복 제거
+        const existingIds = new Set(prev.map(card => card.id));
+        const uniqueNewCards = newHomeCards.filter(card => !existingIds.has(card.id));
+        return [...prev, ...uniqueNewCards];
+      });
       
       // 마지막 문서 업데이트
       if (articlesSnapshot.docs.length > 0) {
@@ -222,15 +256,12 @@ export default function HomeStoryCards() {
 
   return (
     <>
-      {homeCards.map((article) => (
-        <Link 
-          key={article.id} 
-          href={article.url || (article.source === 'storeItems' ? `/store/${article.id}` : `/story/${article.id}`)} 
-          className="block w-full"
-          target={article.openInNewTab ? '_blank' : undefined}
-          rel={article.openInNewTab ? 'noopener noreferrer' : undefined}
-        >
-          <Card className="group hover:shadow-xl transition-all duration-300 border-0 border-purple-300/50 shadow-2xl relative overflow-hidden bg-transparent min-h-[480px] flex flex-col justify-end cursor-pointer">
+      {homeCards.map((article) => {
+        // 링크가 있는 경우에만 Link 컴포넌트 사용, 없으면 div로 렌더링
+        const hasLink = article.url && article.url.trim();
+        
+        const cardContent = (
+          <Card className={`group transition-all duration-300 border-0 border-purple-300/50 shadow-2xl relative overflow-hidden bg-transparent min-h-[480px] flex flex-col justify-end hover:shadow-xl ${hasLink ? 'cursor-pointer' : ''}`}>
             {/* 배경 이미지 */}
             {article.cardThumbnail ? (
               <div className="absolute inset-0 overflow-hidden">
@@ -276,8 +307,28 @@ export default function HomeStoryCards() {
               />
             </CardHeader>
           </Card>
-        </Link>
-      ))}
+        );
+
+        if (hasLink) {
+          return (
+            <Link 
+              key={article.id} 
+              href={article.url} 
+              className="block w-full"
+              target={article.openInNewTab ? '_blank' : undefined}
+              rel={article.openInNewTab ? 'noopener noreferrer' : undefined}
+            >
+              {cardContent}
+            </Link>
+          );
+        } else {
+          return (
+            <div key={article.id} className="block w-full">
+              {cardContent}
+            </div>
+          );
+        }
+      })}
       
       {/* 더 많은 데이터 로딩 중 - UI 표시 없음 */}
       {loadingMore && null}

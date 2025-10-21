@@ -461,6 +461,7 @@ export default function AdminPage() {
 
   // 폼 초기화 함수
   const resetForm = () => {
+    console.log('resetForm 호출됨 - 썸네일 초기화');
     setHomeCardTitle("");
     setHomeCardDescription("");
     setHomeCardThumbnail("");
@@ -470,6 +471,12 @@ export default function AdminPage() {
     setHomeCardDescriptionColor("#ffffff");
     setHomeCardTextPosition(4);
     setHomeCardBackgroundColor('#3b82f6');
+    
+    // 추가 상태 초기화 (혹시 누락된 필드들)
+    setEditingCard(null);
+    setIsEditMode(false);
+    setAddingCard(false);
+    setDeletingCard(null);
   };
 
   // 홈카드 목록 불러오기 함수 (homeCards 컬렉션만)
@@ -1218,9 +1225,21 @@ export default function AdminPage() {
       return;
     }
 
+    console.log('홈카드 삭제 시작:', cardId);
     setDeletingCard(cardId);
     try {
+      // homeCards 컬렉션에서 삭제
       await deleteDoc(doc(db, 'homeCards', cardId));
+      console.log('homeCards 컬렉션에서 삭제 완료:', cardId);
+      
+      // storyArticles 컬렉션에서도 삭제 (혹시 있을 경우)
+      try {
+        await deleteDoc(doc(db, 'storyArticles', cardId));
+        console.log('storyArticles 컬렉션에서도 삭제 완료:', cardId);
+      } catch (storyError) {
+        console.log('storyArticles 컬렉션에 해당 카드 없음:', cardId);
+      }
+      
       setHomeCardList(prev => prev.filter(card => card.id !== cardId));
       
       // 홈페이지 캐시 무효화
@@ -1228,6 +1247,7 @@ export default function AdminPage() {
         sessionStorage.removeItem('homeCards');
         sessionStorage.removeItem('lastHomeCardsUpdate');
         sessionStorage.setItem('homeCardsCacheInvalidated', 'true');
+        console.log('홈페이지 캐시 무효화 완료');
       }
       
       alert('홈카드가 삭제되었습니다.');
@@ -1257,11 +1277,7 @@ export default function AdminPage() {
 
   // 홈카드 수정 취소 함수
   const cancelEdit = () => {
-    // 모든 수정 관련 상태 초기화
-    setEditingCard(null);
-    setIsEditMode(false);
-    setAddingCard(false);
-    setDeletingCard(null);
+    // 폼 초기화 (모든 상태 포함)
     resetForm();
     
     // 강제 리렌더링을 위해 setTimeout 사용
@@ -5169,6 +5185,7 @@ export default function AdminPage() {
             isEditMode={isEditMode}
             addingCard={addingCard}
             deletingCard={deletingCard}
+            editingCard={editingCard}
             addHomeCard={addHomeCard}
             saveEditCard={saveEditCard}
             startEditCard={startEditCard}
