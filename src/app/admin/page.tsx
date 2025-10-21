@@ -2867,8 +2867,8 @@ export default function AdminPage() {
         if (!userStatsMap.has(email)) {
           userStatsMap.set(email, {
             email,
-            displayName: design.author || (email !== 'unknown' ? email.split('@')[0] : '익명'),
-            authorNickname: design.authorNickname || design.author || (email !== 'unknown' ? email.split('@')[0] : '익명'),
+            displayName: (design.author && !design.author.includes('@')) ? design.author : (email !== 'unknown' ? email.split('@')[0] : '익명'),
+            authorNickname: (design.authorNickname && !design.authorNickname.includes('@')) ? design.authorNickname : (design.author && !design.author.includes('@')) ? design.author : (email !== 'unknown' ? email.split('@')[0] : '익명'),
             photoURL: '',
             createdAt: design.createdAt || '',
             lastSignIn: '',
@@ -2896,8 +2896,8 @@ export default function AdminPage() {
         if (!userStatsMap.has(email)) {
           userStatsMap.set(email, {
             email,
-            displayName: story.author || (email !== 'unknown' ? email.split('@')[0] : '익명'),
-            authorNickname: story.authorNickname || story.author || (email !== 'unknown' ? email.split('@')[0] : '익명'),
+            displayName: (story.author && !story.author.includes('@')) ? story.author : (email !== 'unknown' ? email.split('@')[0] : '익명'),
+            authorNickname: (story.authorNickname && !story.authorNickname.includes('@')) ? story.authorNickname : (story.author && !story.author.includes('@')) ? story.author : (email !== 'unknown' ? email.split('@')[0] : '익명'),
             photoURL: '',
             createdAt: story.createdAt || '',
             lastSignIn: '',
@@ -2927,8 +2927,8 @@ export default function AdminPage() {
         if (!userStatsMap.has(email)) {
           userStatsMap.set(email, {
             email,
-            displayName: boxroTalk.author || (email !== 'unknown' ? email.split('@')[0] : '익명'),
-            authorNickname: boxroTalk.authorNickname || boxroTalk.author || (email !== 'unknown' ? email.split('@')[0] : '익명'),
+            displayName: (boxroTalk.author && !boxroTalk.author.includes('@')) ? boxroTalk.author : (email !== 'unknown' ? email.split('@')[0] : '익명'),
+            authorNickname: (boxroTalk.authorNickname && !boxroTalk.authorNickname.includes('@')) ? boxroTalk.authorNickname : (boxroTalk.author && !boxroTalk.author.includes('@')) ? boxroTalk.author : (email !== 'unknown' ? email.split('@')[0] : '익명'),
             photoURL: '',
             createdAt: boxroTalk.createdAt || '',
             lastSignIn: '',
@@ -2961,8 +2961,8 @@ export default function AdminPage() {
         if (!userStatsMap.has(email)) {
           userStatsMap.set(email, {
             email,
-            displayName: boxroTalk.author || (email !== 'unknown' ? email.split('@')[0] : '익명'),
-            authorNickname: boxroTalk.authorNickname || boxroTalk.author || (email !== 'unknown' ? email.split('@')[0] : '익명'),
+            displayName: (boxroTalk.author && !boxroTalk.author.includes('@')) ? boxroTalk.author : (email !== 'unknown' ? email.split('@')[0] : '익명'),
+            authorNickname: (boxroTalk.authorNickname && !boxroTalk.authorNickname.includes('@')) ? boxroTalk.authorNickname : (boxroTalk.author && !boxroTalk.author.includes('@')) ? boxroTalk.author : (email !== 'unknown' ? email.split('@')[0] : '익명'),
             photoURL: '',
             createdAt: boxroTalk.createdAt || '',
             lastSignIn: '',
@@ -2992,8 +2992,8 @@ export default function AdminPage() {
         if (!userStatsMap.has(email)) {
           userStatsMap.set(email, {
             email,
-            displayName: storeItem.author || (email !== 'unknown' ? email.split('@')[0] : '익명'),
-            authorNickname: storeItem.authorNickname || storeItem.author || (email !== 'unknown' ? email.split('@')[0] : '익명'),
+            displayName: (storeItem.author && !storeItem.author.includes('@')) ? storeItem.author : (email !== 'unknown' ? email.split('@')[0] : '익명'),
+            authorNickname: (storeItem.authorNickname && !storeItem.authorNickname.includes('@')) ? storeItem.authorNickname : (storeItem.author && !storeItem.author.includes('@')) ? storeItem.author : (email !== 'unknown' ? email.split('@')[0] : '익명'),
             photoURL: '',
             createdAt: storeItem.createdAt || '',
             lastSignIn: '',
@@ -3112,8 +3112,8 @@ export default function AdminPage() {
         if (!userStatsMap.has(email)) {
           userStatsMap.set(email, {
             email,
-            displayName: boxroTalk.author || (email !== 'unknown' ? email.split('@')[0] : '익명'),
-            authorNickname: boxroTalk.authorNickname || boxroTalk.author || (email !== 'unknown' ? email.split('@')[0] : '익명'),
+            displayName: (boxroTalk.author && !boxroTalk.author.includes('@')) ? boxroTalk.author : (email !== 'unknown' ? email.split('@')[0] : '익명'),
+            authorNickname: (boxroTalk.authorNickname && !boxroTalk.authorNickname.includes('@')) ? boxroTalk.authorNickname : (boxroTalk.author && !boxroTalk.author.includes('@')) ? boxroTalk.author : (email !== 'unknown' ? email.split('@')[0] : '익명'),
             photoURL: '',
             createdAt: boxroTalk.createdAt || '',
             lastSignIn: '',
@@ -3195,8 +3195,8 @@ export default function AdminPage() {
             if (!userStatsMap.has(email)) {
               userStatsMap.set(email, {
                 email,
-                displayName: user.displayName || (user.email ? user.email.split('@')[0] : '익명'),
-                authorNickname: user.authorNickname || user.displayName || (user.email ? user.email.split('@')[0] : '익명'),
+                displayName: (user.displayName && !user.displayName.includes('@')) ? user.displayName : (user.email ? user.email.split('@')[0] : '익명'),
+                authorNickname: (user.authorNickname && !user.authorNickname.includes('@')) ? user.authorNickname : (user.displayName && !user.displayName.includes('@')) ? user.displayName : (user.email ? user.email.split('@')[0] : '익명'),
                 photoURL: user.photoURL || '',
                 createdAt: user.createdAt || '',
                 lastSignIn: user.lastSignIn || '',
@@ -3222,8 +3222,8 @@ export default function AdminPage() {
             if (!userStatsMap.has(email)) {
               userStatsMap.set(email, {
                 email,
-                displayName: user.displayName || (user.email ? user.email.split('@')[0] : '익명'),
-                authorNickname: user.authorNickname || user.displayName || (user.email ? user.email.split('@')[0] : '익명'),
+                displayName: (user.displayName && !user.displayName.includes('@')) ? user.displayName : (user.email ? user.email.split('@')[0] : '익명'),
+                authorNickname: (user.authorNickname && !user.authorNickname.includes('@')) ? user.authorNickname : (user.displayName && !user.displayName.includes('@')) ? user.displayName : (user.email ? user.email.split('@')[0] : '익명'),
                 photoURL: user.photoURL || '',
                 createdAt: user.createdAt || '',
                 lastSignIn: user.lastSignIn || '',
@@ -3280,8 +3280,8 @@ export default function AdminPage() {
             if (!userStatsMap.has(email)) {
               userStatsMap.set(email, {
                 email,
-                displayName: user.displayName || (user.email ? user.email.split('@')[0] : '익명'),
-                authorNickname: user.authorNickname || user.displayName || (user.email ? user.email.split('@')[0] : '익명'),
+                displayName: (user.displayName && !user.displayName.includes('@')) ? user.displayName : (user.email ? user.email.split('@')[0] : '익명'),
+                authorNickname: (user.authorNickname && !user.authorNickname.includes('@')) ? user.authorNickname : (user.displayName && !user.displayName.includes('@')) ? user.displayName : (user.email ? user.email.split('@')[0] : '익명'),
                 photoURL: user.photoURL || '',
                 createdAt: user.createdAt || '',
                 lastSignIn: user.lastSignIn || '',
@@ -3315,8 +3315,8 @@ export default function AdminPage() {
             if (!userStatsMap.has(email)) {
               userStatsMap.set(email, {
                 email,
-                displayName: user.displayName || (user.email ? user.email.split('@')[0] : '익명'),
-                authorNickname: user.authorNickname || user.displayName || (user.email ? user.email.split('@')[0] : '익명'),
+                displayName: (user.displayName && !user.displayName.includes('@')) ? user.displayName : (user.email ? user.email.split('@')[0] : '익명'),
+                authorNickname: (user.authorNickname && !user.authorNickname.includes('@')) ? user.authorNickname : (user.displayName && !user.displayName.includes('@')) ? user.displayName : (user.email ? user.email.split('@')[0] : '익명'),
                 photoURL: user.photoURL || '',
                 createdAt: user.createdAt || '',
                 lastSignIn: user.lastSignIn || '',
@@ -3373,8 +3373,8 @@ export default function AdminPage() {
             if (!userStatsMap.has(email)) {
               userStatsMap.set(email, {
                 email,
-                displayName: user.displayName || (user.email ? user.email.split('@')[0] : '익명'),
-                authorNickname: user.authorNickname || user.displayName || (user.email ? user.email.split('@')[0] : '익명'),
+                displayName: (user.displayName && !user.displayName.includes('@')) ? user.displayName : (user.email ? user.email.split('@')[0] : '익명'),
+                authorNickname: (user.authorNickname && !user.authorNickname.includes('@')) ? user.authorNickname : (user.displayName && !user.displayName.includes('@')) ? user.displayName : (user.email ? user.email.split('@')[0] : '익명'),
                 photoURL: user.photoURL || '',
                 createdAt: user.createdAt || '',
                 lastSignIn: user.lastSignIn || '',
@@ -3408,8 +3408,8 @@ export default function AdminPage() {
             if (!userStatsMap.has(email)) {
               userStatsMap.set(email, {
                 email,
-                displayName: user.displayName || (user.email ? user.email.split('@')[0] : '익명'),
-                authorNickname: user.authorNickname || user.displayName || (user.email ? user.email.split('@')[0] : '익명'),
+                displayName: (user.displayName && !user.displayName.includes('@')) ? user.displayName : (user.email ? user.email.split('@')[0] : '익명'),
+                authorNickname: (user.authorNickname && !user.authorNickname.includes('@')) ? user.authorNickname : (user.displayName && !user.displayName.includes('@')) ? user.displayName : (user.email ? user.email.split('@')[0] : '익명'),
                 photoURL: user.photoURL || '',
                 createdAt: user.createdAt || '',
                 lastSignIn: user.lastSignIn || '',
@@ -3466,8 +3466,8 @@ export default function AdminPage() {
             if (!userStatsMap.has(email)) {
               userStatsMap.set(email, {
                 email,
-                displayName: user.displayName || (user.email ? user.email.split('@')[0] : '익명'),
-                authorNickname: user.authorNickname || user.displayName || (user.email ? user.email.split('@')[0] : '익명'),
+                displayName: (user.displayName && !user.displayName.includes('@')) ? user.displayName : (user.email ? user.email.split('@')[0] : '익명'),
+                authorNickname: (user.authorNickname && !user.authorNickname.includes('@')) ? user.authorNickname : (user.displayName && !user.displayName.includes('@')) ? user.displayName : (user.email ? user.email.split('@')[0] : '익명'),
                 photoURL: user.photoURL || '',
                 createdAt: user.createdAt || '',
                 lastSignIn: user.lastSignIn || '',
