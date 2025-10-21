@@ -599,7 +599,7 @@ export default function EditProfilePage() {
                     value={deleteConfirmText}
                     onChange={(e) => setDeleteConfirmText(e.target.value)}
                     placeholder="탈퇴"
-                    className="text-center border-red-300 focus:border-red-500 focus:ring-red-500"
+                    className="text-center border-red-300 focus:border-red-500 focus:ring-red-500 placeholder:text-gray-400"
                   />
                 </div>
               </div>
