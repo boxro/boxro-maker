@@ -572,34 +572,34 @@ export default function EditProfilePage() {
 
       {/* 회원 탈퇴 확인 모달 */}
       {showDeleteModal && (
-        <div className="fixed inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl shadow-2xl border border-white/20 w-full max-w-md">
+        <div className="fixed inset-0 bg-gradient-to-br from-purple-900/20 via-blue-900/20 to-pink-900/20 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 w-full max-w-md">
             <div className="p-6">
               <div className="text-center mb-6">
                 <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
                   <Trash2 className="w-8 h-8 text-red-600" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">회원 탈퇴</h3>
+                <h3 className="text-lg font-bold text-gray-900 mb-2" style={{ fontSize: '18px' }}>회원 탈퇴</h3>
                 <p className="text-sm text-gray-600 mb-4">
                   정말 떠나시겠어요? 😢<br />
-                  <strong className="text-red-600">탈퇴하시면 모든 데이터가 영구적으로 삭제</strong>되며, 다시 복구할 수 없습니다.
+                  <strong className="text-red-600">모든 데이터가 영구적으로 삭제</strong>되며 복구할 수 없습니다.
                 </p>
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
                   <p className="text-xs text-red-700">
                     • 갤러리에 올린 모든 작품<br />
-                    • 친구들과 나눈 톡<br />
-                    • 프로필 정보 및 기타 활동 기록
+                    • 친구들과 이야기 나눈 톡<br />
+                    • 프로필 정보 및 활동 기록
                   </p>
                 </div>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    탈퇴를 원하신다면 아래에 <strong>"탈퇴"</strong>라고 입력해주세요
+                    아래에 <strong>"탈퇴"</strong>라고 입력해주세요
                   </label>
                   <Input
                     value={deleteConfirmText}
                     onChange={(e) => setDeleteConfirmText(e.target.value)}
                     placeholder="탈퇴"
-                    className="text-center border-red-300 focus:border-red-500 focus:ring-red-500 placeholder:text-gray-400"
+                    className="text-center border-red-300 focus:border-red-500 focus:ring-red-500 placeholder:text-gray-300"
                   />
                 </div>
               </div>
