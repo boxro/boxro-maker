@@ -117,6 +117,8 @@ export default function AdminPage() {
   const [tableSortField, setTableSortField] = useState('');
   const [tableSortDirection, setTableSortDirection] = useState<'asc' | 'desc'>('asc');
   const [activeTab, setActiveTab] = useState('overall-stats');
+  const [migrating, setMigrating] = useState(false);
+  const [migrationResult, setMigrationResult] = useState<string>('');
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [userActivities, setUserActivities] = useState<any>({});
   const [showUserModal, setShowUserModal] = useState(false);
@@ -1811,6 +1813,131 @@ export default function AdminPage() {
 
   const handleUserStatsPageChange = (page: number) => {
     setUserStatsCurrentPage(page);
+  };
+
+  // 마이그레이션 함수
+  const migrateAuthorNames = async () => {
+    if (!user || !isAdmin(user.email)) {
+      alert('관리자만 실행할 수 있습니다.');
+      return;
+    }
+
+    setMigrating(true);
+    setMigrationResult('');
+
+    try {
+      const { collection, getDocs, updateDoc, doc, query, where } = await import('firebase/firestore');
+      const { db } = await import('@/lib/firebase');
+
+      let totalUpdated = 0;
+      const results: string[] = [];
+
+      // 1. 갤러리 작품 데이터 수정
+      console.log('📸 갤러리 작품 데이터 수정 중...');
+      const galleryRef = collection(db, 'communityDesigns');
+      const gallerySnapshot = await getDocs(galleryRef);
+      
+      let galleryUpdated = 0;
+      for (const docSnapshot of gallerySnapshot.docs) {
+        const data = docSnapshot.data();
+        if (data.author && data.author.includes('@')) {
+          const newAuthor = data.author.split('@')[0];
+          await updateDoc(doc(db, 'communityDesigns', docSnapshot.id), {
+            author: newAuthor
+          });
+          galleryUpdated++;
+        }
+      }
+      results.push(`갤러리 작품: ${galleryUpdated}개 수정`);
+      totalUpdated += galleryUpdated;
+
+      // 2. 스토리 작품 데이터 수정
+      console.log('📖 스토리 작품 데이터 수정 중...');
+      const storyRef = collection(db, 'stories');
+      const storySnapshot = await getDocs(storyRef);
+      
+      let storyUpdated = 0;
+      for (const docSnapshot of storySnapshot.docs) {
+        const data = docSnapshot.data();
+        if (data.author && data.author.includes('@')) {
+          const newAuthor = data.author.split('@')[0];
+          await updateDoc(doc(db, 'stories', docSnapshot.id), {
+            author: newAuthor
+          });
+          storyUpdated++;
+        }
+      }
+      results.push(`스토리 작품: ${storyUpdated}개 수정`);
+      totalUpdated += storyUpdated;
+
+      // 3. 유튜브 작품 데이터 수정
+      console.log('📺 유튜브 작품 데이터 수정 중...');
+      const youtubeRef = collection(db, 'youtubeArticles');
+      const youtubeSnapshot = await getDocs(youtubeRef);
+      
+      let youtubeUpdated = 0;
+      for (const docSnapshot of youtubeSnapshot.docs) {
+        const data = docSnapshot.data();
+        if (data.author && data.author.includes('@')) {
+          const newAuthor = data.author.split('@')[0];
+          await updateDoc(doc(db, 'youtubeArticles', docSnapshot.id), {
+            author: newAuthor
+          });
+          youtubeUpdated++;
+        }
+      }
+      results.push(`유튜브 작품: ${youtubeUpdated}개 수정`);
+      totalUpdated += youtubeUpdated;
+
+      // 4. 스토어 아이템 데이터 수정
+      console.log('🏪 스토어 아이템 데이터 수정 중...');
+      const storeRef = collection(db, 'storeItems');
+      const storeSnapshot = await getDocs(storeRef);
+      
+      let storeUpdated = 0;
+      for (const docSnapshot of storeSnapshot.docs) {
+        const data = docSnapshot.data();
+        if (data.author && data.author.includes('@')) {
+          const newAuthor = data.author.split('@')[0];
+          await updateDoc(doc(db, 'storeItems', docSnapshot.id), {
+            author: newAuthor
+          });
+          storeUpdated++;
+        }
+      }
+      results.push(`스토어 아이템: ${storeUpdated}개 수정`);
+      totalUpdated += storeUpdated;
+
+      // 5. 박스로톡 데이터 수정
+      console.log('💬 박스로톡 데이터 수정 중...');
+      const boxroTalkRef = collection(db, 'boxroTalks');
+      const boxroTalkSnapshot = await getDocs(boxroTalkRef);
+      
+      let boxroTalkUpdated = 0;
+      for (const docSnapshot of boxroTalkSnapshot.docs) {
+        const data = docSnapshot.data();
+        if (data.author && data.author.includes('@')) {
+          const newAuthor = data.author.split('@')[0];
+          await updateDoc(doc(db, 'boxroTalks', docSnapshot.id), {
+            author: newAuthor
+          });
+          boxroTalkUpdated++;
+        }
+      }
+      results.push(`박스로톡: ${boxroTalkUpdated}개 수정`);
+      totalUpdated += boxroTalkUpdated;
+
+      setMigrationResult(`✅ 마이그레이션 완료!\n총 ${totalUpdated}개 데이터 수정\n\n${results.join('\n')}`);
+      
+      // 데이터 새로고침
+      await loadAdminData();
+      
+    } catch (error) {
+      console.error('❌ 마이그레이션 실패:', error);
+      setMigrationResult(`❌ 마이그레이션 실패: ${error}`);
+    } finally {
+      setMigrating(false);
+    }
   };
 
   // 검색/필터/테이블 정렬 변경 시 실행
@@ -3882,9 +4009,26 @@ export default function AdminPage() {
 
         {/* 회원 리스트 */}
         <div className="bg-white/95 backdrop-blur-sm border border-white/20 rounded-lg p-6 mb-4">
-          <h3 className="text-lg font-semibold mb-4">
-            회원 통계
-          </h3>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold">
+              회원 통계
+            </h3>
+            <div className="flex gap-2">
+              <button
+                onClick={migrateAuthorNames}
+                disabled={migrating}
+                className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+              >
+                {migrating ? '마이그레이션 중...' : '이름 데이터 수정'}
+              </button>
+            </div>
+          </div>
+          
+          {migrationResult && (
+            <div className="mb-4 p-3 bg-gray-100 rounded-lg">
+              <pre className="text-sm text-gray-700 whitespace-pre-wrap">{migrationResult}</pre>
+            </div>
+          )}
 
         {/* 검색 및 필터 */}
         <div className="flex flex-col lg:flex-row gap-3 mb-4">
