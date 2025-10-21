@@ -130,8 +130,6 @@ export default function AdminPage() {
   const [tableSortField, setTableSortField] = useState('');
   const [tableSortDirection, setTableSortDirection] = useState<'asc' | 'desc'>('asc');
   const [activeTab, setActiveTab] = useState('overall-stats');
-  const [migrating, setMigrating] = useState(false);
-  const [migrationResult, setMigrationResult] = useState<string>('');
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [userActivities, setUserActivities] = useState<any>({});
   const [showUserModal, setShowUserModal] = useState(false);
@@ -1825,130 +1823,6 @@ export default function AdminPage() {
     setUserStatsCurrentPage(page);
   };
 
-  // 마이그레이션 함수
-  const migrateAuthorNames = async () => {
-    if (!user || !isAdmin(user.email)) {
-      alert('관리자만 실행할 수 있습니다.');
-      return;
-    }
-
-    setMigrating(true);
-    setMigrationResult('');
-
-    try {
-      const { collection, getDocs, updateDoc, doc, query, where } = await import('firebase/firestore');
-      const { db } = await import('@/lib/firebase');
-
-      let totalUpdated = 0;
-      const results: string[] = [];
-
-      // 1. 갤러리 작품 데이터 수정
-      console.log('📸 갤러리 작품 데이터 수정 중...');
-      const galleryRef = collection(db, 'communityDesigns');
-      const gallerySnapshot = await getDocs(galleryRef);
-      
-      let galleryUpdated = 0;
-      for (const docSnapshot of gallerySnapshot.docs) {
-        const data = docSnapshot.data();
-        if (data.author && data.author.includes('@')) {
-          const newAuthor = data.author.split('@')[0];
-          await updateDoc(doc(db, 'communityDesigns', docSnapshot.id), {
-            author: newAuthor
-          });
-          galleryUpdated++;
-        }
-      }
-      results.push(`갤러리 작품: ${galleryUpdated}개 수정`);
-      totalUpdated += galleryUpdated;
-
-      // 2. 스토리 작품 데이터 수정
-      console.log('📖 스토리 작품 데이터 수정 중...');
-      const storyRef = collection(db, 'storyArticles');
-      const storySnapshot = await getDocs(storyRef);
-      
-      let storyUpdated = 0;
-      for (const docSnapshot of storySnapshot.docs) {
-        const data = docSnapshot.data();
-        if (data.author && data.author.includes('@')) {
-          const newAuthor = data.author.split('@')[0];
-          await updateDoc(doc(db, 'storyArticles', docSnapshot.id), {
-            author: newAuthor
-          });
-          storyUpdated++;
-        }
-      }
-      results.push(`스토리 작품: ${storyUpdated}개 수정`);
-      totalUpdated += storyUpdated;
-
-      // 3. 유튜브 작품 데이터 수정
-      console.log('📺 유튜브 작품 데이터 수정 중...');
-      const youtubeRef = collection(db, 'youtubeArticles');
-      const youtubeSnapshot = await getDocs(youtubeRef);
-      
-      let youtubeUpdated = 0;
-      for (const docSnapshot of youtubeSnapshot.docs) {
-        const data = docSnapshot.data();
-        if (data.author && data.author.includes('@')) {
-          const newAuthor = data.author.split('@')[0];
-          await updateDoc(doc(db, 'youtubeArticles', docSnapshot.id), {
-            author: newAuthor
-          });
-          youtubeUpdated++;
-        }
-      }
-      results.push(`유튜브 작품: ${youtubeUpdated}개 수정`);
-      totalUpdated += youtubeUpdated;
-
-      // 4. 스토어 아이템 데이터 수정
-      console.log('🏪 스토어 아이템 데이터 수정 중...');
-      const storeRef = collection(db, 'storeItems');
-      const storeSnapshot = await getDocs(storeRef);
-      
-      let storeUpdated = 0;
-      for (const docSnapshot of storeSnapshot.docs) {
-        const data = docSnapshot.data();
-        if (data.author && data.author.includes('@')) {
-          const newAuthor = data.author.split('@')[0];
-          await updateDoc(doc(db, 'storeItems', docSnapshot.id), {
-            author: newAuthor
-          });
-          storeUpdated++;
-        }
-      }
-      results.push(`스토어 아이템: ${storeUpdated}개 수정`);
-      totalUpdated += storeUpdated;
-
-      // 5. 박스로톡 데이터 수정
-      console.log('💬 박스로톡 데이터 수정 중...');
-      const boxroTalkRef = collection(db, 'boxroTalks');
-      const boxroTalkSnapshot = await getDocs(boxroTalkRef);
-      
-      let boxroTalkUpdated = 0;
-      for (const docSnapshot of boxroTalkSnapshot.docs) {
-        const data = docSnapshot.data();
-        if (data.author && data.author.includes('@')) {
-          const newAuthor = data.author.split('@')[0];
-          await updateDoc(doc(db, 'boxroTalks', docSnapshot.id), {
-            author: newAuthor
-          });
-          boxroTalkUpdated++;
-        }
-      }
-      results.push(`박스로톡: ${boxroTalkUpdated}개 수정`);
-      totalUpdated += boxroTalkUpdated;
-
-      setMigrationResult(`✅ 마이그레이션 완료!\n총 ${totalUpdated}개 데이터 수정\n\n${results.join('\n')}`);
-      
-      // 데이터 새로고침
-      await loadAdminData();
-      
-    } catch (error) {
-      console.error('❌ 마이그레이션 실패:', error);
-      setMigrationResult(`❌ 마이그레이션 실패: ${error}`);
-    } finally {
-      setMigrating(false);
-    }
-  };
 
   // 검색/필터/테이블 정렬 변경 시 실행
   useEffect(() => {
@@ -3000,6 +2874,23 @@ export default function AdminPage() {
         }
       });
 
+      // 이메일 주소에서 계정 부분만 추출하는 헬퍼 함수
+      const getDisplayName = (author: string, authorNickname: string, email: string) => {
+        // authorNickname이 있고 이메일이 아닌 경우
+        if (authorNickname && !authorNickname.includes('@')) {
+          return authorNickname;
+        }
+        // author가 있고 이메일이 아닌 경우
+        if (author && !author.includes('@')) {
+          return author;
+        }
+        // 이메일 계정 부분 사용
+        if (email !== 'unknown') {
+          return email.split('@')[0];
+        }
+        return '익명';
+      };
+
       // 사용자별 통계 계산
       const userStatsMap = new Map<string, UserStats>();
       
@@ -3009,8 +2900,8 @@ export default function AdminPage() {
         if (!userStatsMap.has(email)) {
           userStatsMap.set(email, {
             email,
-            displayName: (design.author && !design.author.includes('@')) ? design.author : (email !== 'unknown' ? email.split('@')[0] : '익명'),
-            authorNickname: (design.authorNickname && !design.authorNickname.includes('@')) ? design.authorNickname : (design.author && !design.author.includes('@')) ? design.author : (email !== 'unknown' ? email.split('@')[0] : '익명'),
+            displayName: getDisplayName(design.author || '', design.authorNickname || '', email),
+            authorNickname: getDisplayName(design.author || '', design.authorNickname || '', email),
             photoURL: '',
             createdAt: design.createdAt || '',
             lastSignIn: '',
@@ -3038,8 +2929,8 @@ export default function AdminPage() {
         if (!userStatsMap.has(email)) {
           userStatsMap.set(email, {
             email,
-            displayName: (story.author && !story.author.includes('@')) ? story.author : (email !== 'unknown' ? email.split('@')[0] : '익명'),
-            authorNickname: (story.authorNickname && !story.authorNickname.includes('@')) ? story.authorNickname : (story.author && !story.author.includes('@')) ? story.author : (email !== 'unknown' ? email.split('@')[0] : '익명'),
+            displayName: getDisplayName(story.author || '', story.authorNickname || '', email),
+            authorNickname: getDisplayName(story.author || '', story.authorNickname || '', email),
             photoURL: '',
             createdAt: story.createdAt || '',
             lastSignIn: '',
@@ -3069,8 +2960,8 @@ export default function AdminPage() {
         if (!userStatsMap.has(email)) {
           userStatsMap.set(email, {
             email,
-            displayName: (boxroTalk.author && !boxroTalk.author.includes('@')) ? boxroTalk.author : (email !== 'unknown' ? email.split('@')[0] : '익명'),
-            authorNickname: (boxroTalk.authorNickname && !boxroTalk.authorNickname.includes('@')) ? boxroTalk.authorNickname : (boxroTalk.author && !boxroTalk.author.includes('@')) ? boxroTalk.author : (email !== 'unknown' ? email.split('@')[0] : '익명'),
+            displayName: getDisplayName(boxroTalk.author || '', boxroTalk.authorNickname || '', email),
+            authorNickname: getDisplayName(boxroTalk.author || '', boxroTalk.authorNickname || '', email),
             photoURL: '',
             createdAt: boxroTalk.createdAt || '',
             lastSignIn: '',
@@ -3103,8 +2994,8 @@ export default function AdminPage() {
         if (!userStatsMap.has(email)) {
           userStatsMap.set(email, {
             email,
-            displayName: (boxroTalk.author && !boxroTalk.author.includes('@')) ? boxroTalk.author : (email !== 'unknown' ? email.split('@')[0] : '익명'),
-            authorNickname: (boxroTalk.authorNickname && !boxroTalk.authorNickname.includes('@')) ? boxroTalk.authorNickname : (boxroTalk.author && !boxroTalk.author.includes('@')) ? boxroTalk.author : (email !== 'unknown' ? email.split('@')[0] : '익명'),
+            displayName: getDisplayName(boxroTalk.author || '', boxroTalk.authorNickname || '', email),
+            authorNickname: getDisplayName(boxroTalk.author || '', boxroTalk.authorNickname || '', email),
             photoURL: '',
             createdAt: boxroTalk.createdAt || '',
             lastSignIn: '',
@@ -3259,8 +3150,8 @@ export default function AdminPage() {
         if (!userStatsMap.has(email)) {
           userStatsMap.set(email, {
             email,
-            displayName: (boxroTalk.author && !boxroTalk.author.includes('@')) ? boxroTalk.author : (email !== 'unknown' ? email.split('@')[0] : '익명'),
-            authorNickname: (boxroTalk.authorNickname && !boxroTalk.authorNickname.includes('@')) ? boxroTalk.authorNickname : (boxroTalk.author && !boxroTalk.author.includes('@')) ? boxroTalk.author : (email !== 'unknown' ? email.split('@')[0] : '익명'),
+            displayName: getDisplayName(boxroTalk.author || '', boxroTalk.authorNickname || '', email),
+            authorNickname: getDisplayName(boxroTalk.author || '', boxroTalk.authorNickname || '', email),
             photoURL: '',
             createdAt: boxroTalk.createdAt || '',
             lastSignIn: '',
@@ -4033,22 +3924,8 @@ export default function AdminPage() {
             <h3 className="text-lg font-semibold">
               회원 통계
             </h3>
-            <div className="flex gap-2">
-              <button
-                onClick={migrateAuthorNames}
-                disabled={migrating}
-                className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
-              >
-                {migrating ? '마이그레이션 중...' : '이름 데이터 수정'}
-              </button>
-            </div>
           </div>
           
-          {migrationResult && (
-            <div className="mb-4 p-3 bg-gray-100 rounded-lg">
-              <pre className="text-sm text-gray-700 whitespace-pre-wrap">{migrationResult}</pre>
-            </div>
-          )}
 
         {/* 검색 및 필터 */}
         <div className="flex flex-col lg:flex-row gap-3 mb-4">
