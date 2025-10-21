@@ -857,7 +857,7 @@ export default function StorePageClient() {
                 )}
                 
                 {/* 수정/삭제 버튼 */}
-                {user && (user.uid === article.authorId || user.email === article.authorEmail || isAdmin()) && (
+                {user && (user.uid === article.authorId || user.email === article.authorEmail) && (
                   <div className="absolute top-2 right-2 flex gap-1 z-10">
                     <Button
                       variant="outline"
