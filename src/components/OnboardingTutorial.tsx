@@ -84,54 +84,96 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete, showDo
     try {
       const { doc, setDoc, getDoc } = await import('firebase/firestore');
       const { db } = await import('@/lib/firebase');
+      const { auth } = await import('@/lib/firebase');
+      const { onAuthStateChanged } = await import('firebase/auth');
       
-      const userId = localStorage.getItem('current_user_id');
-      if (userId) {
-        try {
-          // 먼저 기존 사용자 문서 확인
-          const userRef = doc(db, 'users', userId);
-          const userSnap = await getDoc(userRef);
-          
-          if (userSnap.exists()) {
-            // 기존 문서가 있으면 업데이트
-            await setDoc(userRef, {
-              onboardingSkipped: true,
-              onboardingSkippedAt: new Date().toISOString()
-            }, { merge: true });
-            console.log('✅ 기존 문서에 온보딩 스킵 상태 업데이트 완료');
-          } else {
-            // 기존 문서가 없으면 새로 생성
-            await setDoc(userRef, {
-              uid: userId,
-              onboardingSkipped: true,
-              onboardingSkippedAt: new Date().toISOString(),
-              createdAt: new Date().toISOString()
+      // 항상 현재 로그인된 사용자 ID를 가져오기
+      return new Promise((resolve) => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+          unsubscribe();
+          if (user) {
+            const userId = user.uid;
+            console.log('🔍 무료로 시작하기 버튼 클릭 - 현재 로그인된 사용자 ID:', userId);
+            console.log('🔍 사용자 정보 상세:', { 
+              uid: user.uid, 
+              email: user.email, 
+              displayName: user.displayName 
             });
-            console.log('✅ 새 사용자 문서에 온보딩 스킵 상태 저장 완료');
+            
+            // localStorage에 사용자 ID 저장
+            localStorage.setItem('current_user_id', userId);
+            console.log('✅ localStorage에 사용자 ID 저장 완료');
+            
+            // Firestore에 온보딩 스킵 상태 저장 (영구적)
+            console.log('🔄 Firestore에 온보딩 스킵 상태 저장 시작:', userId);
+            try {
+              // 먼저 기존 사용자 문서 확인
+              const userRef = doc(db, 'users', userId);
+              const userSnap = await getDoc(userRef);
+              
+              if (userSnap.exists()) {
+                // 기존 문서가 있으면 업데이트
+                await setDoc(userRef, {
+                  onboardingSkipped: true,
+                  onboardingSkippedAt: new Date().toISOString()
+                }, { merge: true });
+                console.log('✅ 기존 문서에 온보딩 스킵 상태 업데이트 완료');
+              } else {
+                // 기존 문서가 없으면 새로 생성
+                await setDoc(userRef, {
+                  uid: userId,
+                  email: user.email,
+                  displayName: user.displayName,
+                  onboardingSkipped: true,
+                  onboardingSkippedAt: new Date().toISOString(),
+                  createdAt: new Date().toISOString()
+                });
+                console.log('✅ 새 사용자 문서에 온보딩 스킵 상태 저장 완료');
+              }
+              
+              console.log('✅ 온보딩 스킵 상태 Firestore에 저장됨 (영구적):', userId);
+            } catch (firestoreError) {
+              console.error('❌ Firestore 저장 실패:', firestoreError);
+              // Firestore 실패 시 localStorage로 폴백
+              try {
+                localStorage.setItem(`onboarding_skipped_${userId}`, 'true');
+                console.log('✅ localStorage 폴백 저장 완료');
+              } catch (localStorageError) {
+                console.error('❌ localStorage 폴백 저장도 실패:', localStorageError);
+              }
+            }
+            
+            // localStorage에도 백업 저장
+            try {
+              localStorage.setItem(`onboarding_skipped_${userId}`, 'true');
+              console.log('✅ localStorage 백업 저장 완료');
+            } catch (localStorageError) {
+              console.warn('⚠️ localStorage 백업 저장 실패:', localStorageError);
+            }
+            
+            onComplete();
+            onClose();
+            
+            // 리다이렉트가 지정된 경우 해당 페이지로 이동
+            if (redirectTo) {
+              window.location.href = redirectTo;
+            }
+            
+            resolve(undefined);
+          } else {
+            console.warn('⚠️ 사용자가 로그인되지 않아서 온보딩 스킵 상태를 저장할 수 없음');
+            onComplete();
+            onClose();
+            
+            // 리다이렉트가 지정된 경우 해당 페이지로 이동
+            if (redirectTo) {
+              window.location.href = redirectTo;
+            }
+            
+            resolve(undefined);
           }
-          
-          console.log('✅ 온보딩 스킵 상태 Firestore에 저장됨 (영구적):', userId);
-        } catch (firestoreError) {
-          console.error('❌ Firestore 저장 실패:', firestoreError);
-          // Firestore 실패 시 localStorage로 폴백
-          try {
-            localStorage.setItem(`onboarding_skipped_${userId}`, 'true');
-            console.log('✅ localStorage 폴백 저장 완료');
-          } catch (localStorageError) {
-            console.error('❌ localStorage 폴백 저장도 실패:', localStorageError);
-          }
-        }
-        
-        // localStorage에도 백업 저장
-        try {
-          localStorage.setItem(`onboarding_skipped_${userId}`, 'true');
-          console.log('✅ localStorage 백업 저장 완료');
-        } catch (localStorageError) {
-          console.warn('⚠️ localStorage 백업 저장 실패:', localStorageError);
-        }
-      } else {
-        console.warn('⚠️ current_user_id가 없어서 온보딩 스킵 상태를 저장할 수 없음');
-      }
+        });
+      });
     } catch (error) {
       console.error('❌ 전체 저장 프로세스 실패:', error);
       
@@ -145,14 +187,14 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete, showDo
       } catch (localStorageError) {
         console.error('❌ localStorage 폴백 저장도 실패:', localStorageError);
       }
-    }
-    
-    onComplete();
-    onClose();
-    
-    // 리다이렉트가 지정된 경우 해당 페이지로 이동
-    if (redirectTo) {
-      window.location.href = redirectTo;
+      
+      onComplete();
+      onClose();
+      
+      // 리다이렉트가 지정된 경우 해당 페이지로 이동
+      if (redirectTo) {
+        window.location.href = redirectTo;
+      }
     }
   };
 
@@ -161,140 +203,84 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete, showDo
     try {
       const { doc, setDoc, getDoc } = await import('firebase/firestore');
       const { db } = await import('@/lib/firebase');
+      const { auth } = await import('@/lib/firebase');
+      const { onAuthStateChanged } = await import('firebase/auth');
       
-      // 사용자 ID를 여러 방법으로 시도
-      let userId = localStorage.getItem('current_user_id');
-      console.log('🔍 X 버튼 클릭 - 사용자 ID 확인:', { userId, hasUserId: !!userId });
-      
-      // current_user_id가 없으면 AuthContext에서 사용자 정보 가져오기
-      if (!userId) {
-        console.log('🔄 localStorage에 사용자 ID 없음, AuthContext에서 가져오기 시도');
-        const { auth } = await import('@/lib/firebase');
-        const { onAuthStateChanged } = await import('firebase/auth');
-        
-        return new Promise((resolve) => {
-          const unsubscribe = onAuthStateChanged(auth, async (user) => {
-            unsubscribe();
-            if (user) {
-              userId = user.uid;
-              console.log('🔍 AuthContext에서 사용자 ID 가져옴:', userId);
-              console.log('🔍 사용자 정보 상세:', { 
-                uid: user.uid, 
-                email: user.email, 
-                displayName: user.displayName 
-              });
+      // 항상 현재 로그인된 사용자 ID를 가져오기
+      return new Promise((resolve) => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+          unsubscribe();
+          if (user) {
+            const userId = user.uid;
+            console.log('🔍 X 버튼 클릭 - 현재 로그인된 사용자 ID:', userId);
+            console.log('🔍 사용자 정보 상세:', { 
+              uid: user.uid, 
+              email: user.email, 
+              displayName: user.displayName 
+            });
+            
+            // localStorage에 사용자 ID 저장
+            localStorage.setItem('current_user_id', userId);
+            console.log('✅ localStorage에 사용자 ID 저장 완료');
+            
+            // Firestore에 임시 스킵 상태 저장
+            console.log('🔄 Firestore에 임시 스킵 상태 저장 시작:', userId);
+            try {
+              // 먼저 기존 사용자 문서 확인
+              const userRef = doc(db, 'users', userId);
+              const userSnap = await getDoc(userRef);
               
-              // localStorage에 사용자 ID 저장
-              localStorage.setItem('current_user_id', userId);
-              console.log('✅ localStorage에 사용자 ID 저장 완료');
-              
-              // Firestore에 임시 스킵 상태 저장
-              console.log('🔄 Firestore에 임시 스킵 상태 저장 시작:', userId);
-              try {
-                // 먼저 기존 사용자 문서 확인
-                const userRef = doc(db, 'users', userId);
-                const userSnap = await getDoc(userRef);
-                
-                if (userSnap.exists()) {
-                  // 기존 문서가 있으면 업데이트
-                  await setDoc(userRef, {
-                    onboardingTemporarilySkipped: true,
-                    onboardingTemporarilySkippedAt: new Date().toISOString()
-                  }, { merge: true });
-                  console.log('✅ 기존 문서에 임시 스킵 상태 업데이트 완료');
-                } else {
-                  // 기존 문서가 없으면 새로 생성
-                  await setDoc(userRef, {
-                    uid: userId,
-                    email: user.email,
-                    displayName: user.displayName,
-                    onboardingTemporarilySkipped: true,
-                    onboardingTemporarilySkippedAt: new Date().toISOString(),
-                    createdAt: new Date().toISOString()
-                  });
-                  console.log('✅ 새 사용자 문서에 임시 스킵 상태 저장 완료');
-                }
-                
-                console.log('✅ 온보딩 임시 스킵 상태 Firestore에 저장됨 (다음 로그인 시 다시 표시):', userId);
-              } catch (firestoreError) {
-                console.error('❌ Firestore 저장 실패:', firestoreError);
-                // Firestore 실패 시 localStorage로 폴백
-                try {
-                  localStorage.setItem(`onboarding_temporarily_skipped_${userId}`, 'true');
-                  console.log('✅ localStorage 폴백 저장 완료');
-                } catch (localStorageError) {
-                  console.error('❌ localStorage 폴백 저장도 실패:', localStorageError);
-                }
+              if (userSnap.exists()) {
+                // 기존 문서가 있으면 업데이트
+                await setDoc(userRef, {
+                  onboardingTemporarilySkipped: true,
+                  onboardingTemporarilySkippedAt: new Date().toISOString()
+                }, { merge: true });
+                console.log('✅ 기존 문서에 임시 스킵 상태 업데이트 완료');
+              } else {
+                // 기존 문서가 없으면 새로 생성
+                await setDoc(userRef, {
+                  uid: userId,
+                  email: user.email,
+                  displayName: user.displayName,
+                  onboardingTemporarilySkipped: true,
+                  onboardingTemporarilySkippedAt: new Date().toISOString(),
+                  createdAt: new Date().toISOString()
+                });
+                console.log('✅ 새 사용자 문서에 임시 스킵 상태 저장 완료');
               }
               
-              // localStorage에도 백업 저장
+              console.log('✅ 온보딩 임시 스킵 상태 Firestore에 저장됨 (다음 로그인 시 다시 표시):', userId);
+            } catch (firestoreError) {
+              console.error('❌ Firestore 저장 실패:', firestoreError);
+              // Firestore 실패 시 localStorage로 폴백
               try {
                 localStorage.setItem(`onboarding_temporarily_skipped_${userId}`, 'true');
-                console.log('✅ localStorage 백업 저장 완료');
+                console.log('✅ localStorage 폴백 저장 완료');
               } catch (localStorageError) {
-                console.warn('⚠️ localStorage 백업 저장 실패:', localStorageError);
+                console.error('❌ localStorage 폴백 저장도 실패:', localStorageError);
               }
-              
-              console.log('⏭️ 온보딩 스플래시 닫기 (다음 로그인 시 다시 표시)');
-              onClose();
-              resolve(undefined);
-            } else {
-              console.warn('⚠️ 사용자가 로그인되지 않아서 온보딩 임시 스킵 상태를 저장할 수 없음');
-              console.log('⏭️ 온보딩 스플래시 닫기 (다음 로그인 시 다시 표시)');
-              onClose();
-              resolve(undefined);
             }
-          });
-        });
-      }
-      
-      if (userId) {
-        // Firestore에 임시 스킵 상태 저장 (다음 로그인 시에만 다시 표시)
-        try {
-          // 먼저 기존 사용자 문서 확인
-          const userRef = doc(db, 'users', userId);
-          const userSnap = await getDoc(userRef);
-          
-          if (userSnap.exists()) {
-            // 기존 문서가 있으면 업데이트
-            await setDoc(userRef, {
-              onboardingTemporarilySkipped: true,
-              onboardingTemporarilySkippedAt: new Date().toISOString()
-            }, { merge: true });
-            console.log('✅ 기존 문서에 임시 스킵 상태 업데이트 완료');
+            
+            // localStorage에도 백업 저장
+            try {
+              localStorage.setItem(`onboarding_temporarily_skipped_${userId}`, 'true');
+              console.log('✅ localStorage 백업 저장 완료');
+            } catch (localStorageError) {
+              console.warn('⚠️ localStorage 백업 저장 실패:', localStorageError);
+            }
+            
+            console.log('⏭️ 온보딩 스플래시 닫기 (다음 로그인 시 다시 표시)');
+            onClose();
+            resolve(undefined);
           } else {
-            // 기존 문서가 없으면 새로 생성
-            await setDoc(userRef, {
-              uid: userId,
-              onboardingTemporarilySkipped: true,
-              onboardingTemporarilySkippedAt: new Date().toISOString(),
-              createdAt: new Date().toISOString()
-            });
-            console.log('✅ 새 사용자 문서에 임시 스킵 상태 저장 완료');
+            console.warn('⚠️ 사용자가 로그인되지 않아서 온보딩 임시 스킵 상태를 저장할 수 없음');
+            console.log('⏭️ 온보딩 스플래시 닫기 (다음 로그인 시 다시 표시)');
+            onClose();
+            resolve(undefined);
           }
-          
-          console.log('✅ 온보딩 임시 스킵 상태 Firestore에 저장됨 (다음 로그인 시 다시 표시):', userId);
-        } catch (firestoreError) {
-          console.error('❌ Firestore 저장 실패:', firestoreError);
-          // Firestore 실패 시 localStorage로 폴백
-          try {
-            localStorage.setItem(`onboarding_temporarily_skipped_${userId}`, 'true');
-            console.log('✅ localStorage 폴백 저장 완료');
-          } catch (localStorageError) {
-            console.error('❌ localStorage 폴백 저장도 실패:', localStorageError);
-          }
-        }
-        
-        // localStorage에도 백업 저장
-        try {
-          localStorage.setItem(`onboarding_temporarily_skipped_${userId}`, 'true');
-          console.log('✅ localStorage 백업 저장 완료');
-        } catch (localStorageError) {
-          console.warn('⚠️ localStorage 백업 저장 실패:', localStorageError);
-        }
-      } else {
-        console.warn('⚠️ current_user_id가 없어서 온보딩 임시 스킵 상태를 저장할 수 없음');
-      }
+        });
+      });
     } catch (error) {
       console.error('❌ 전체 저장 프로세스 실패:', error);
       
@@ -308,10 +294,10 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete, showDo
       } catch (localStorageError) {
         console.error('❌ localStorage 폴백 저장도 실패:', localStorageError);
       }
+      
+      console.log('⏭️ 온보딩 스플래시 닫기 (다음 로그인 시 다시 표시)');
+      onClose();
     }
-    
-    console.log('⏭️ 온보딩 스플래시 닫기 (다음 로그인 시 다시 표시)');
-    onClose();
   };
 
   if (!isOpen) return null;
