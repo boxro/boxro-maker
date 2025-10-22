@@ -118,8 +118,7 @@ function zoomToFit(camera: THREE.PerspectiveCamera, controls: OrbitControls, obj
   const maxDim = Math.max(size.x, size.y, size.z);
   const fov = (camera.fov * Math.PI) / 180;
   const dist = maxDim / 2 / Math.tan(fov / 2);
-  const isMobile = window.innerWidth <= 768;
-  const d = dist * (isMobile ? 1.0 : 1.25); // 모바일: 더 가깝게
+  const d = dist * 1.25;
   camera.position.set(center.x + d, center.y + d * 0.8, center.z + d);
   camera.lookAt(center);
   controls.target.copy(center);
