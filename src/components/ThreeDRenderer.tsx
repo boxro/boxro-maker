@@ -166,6 +166,7 @@ const ThreeDRenderer = forwardRef<{ getRenderer: () => THREE.WebGLRenderer | nul
     });
     
     // 모바일 해상도 개선 (2배 해상도 적용)
+    const isMobileDevice = window.innerWidth <= 768;
     const pixelRatio = isMobileDevice ? 2 : Math.min(window.devicePixelRatio || 1, 2);
     renderer.setPixelRatio(pixelRatio);
     renderer.setSize(renderWidth, renderHeight);
@@ -1822,6 +1823,7 @@ const ThreeDRenderer = forwardRef<{ getRenderer: () => THREE.WebGLRenderer | nul
         
         if (newWidth > 0 && newHeight > 0) {
           // 모바일 해상도 제한
+          const isMobileDevice = window.innerWidth <= 768;
           const pixelRatio = isMobileDevice ? 1 : Math.min(window.devicePixelRatio || 1, 2);
           renderer.setPixelRatio(pixelRatio);
           renderer.setSize(newWidth, newHeight);
