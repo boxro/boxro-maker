@@ -3206,8 +3206,8 @@ export default function AdminPage() {
         if (!userStatsMap.has(email)) {
           userStatsMap.set(email, {
             email,
-            displayName: (storeItem.author && !storeItem.author.includes('@')) ? storeItem.author : (email !== 'unknown' ? email.split('@')[0] : '익명'),
-            authorNickname: (storeItem.authorNickname && !storeItem.authorNickname.includes('@')) ? storeItem.authorNickname : (storeItem.author && !storeItem.author.includes('@')) ? storeItem.author : (email !== 'unknown' ? email.split('@')[0] : '익명'),
+            displayName: getDisplayName(storeItem.author || '', storeItem.authorNickname || '', email),
+            authorNickname: getDisplayName(storeItem.author || '', storeItem.authorNickname || '', email),
             photoURL: '',
             createdAt: storeItem.createdAt || '',
             lastSignIn: '',
@@ -3414,8 +3414,8 @@ export default function AdminPage() {
             if (!userStatsMap.has(email)) {
               userStatsMap.set(email, {
                 email,
-                displayName: (user.displayName && !user.displayName.includes('@')) ? user.displayName : (user.email ? user.email.split('@')[0] : '익명'),
-                authorNickname: (user.authorNickname && !user.authorNickname.includes('@')) ? user.authorNickname : (user.displayName && !user.displayName.includes('@')) ? user.displayName : (user.email ? user.email.split('@')[0] : '익명'),
+                displayName: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
+                authorNickname: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
                 photoURL: user.photoURL || '',
                 createdAt: user.createdAt || '',
                 lastSignIn: user.lastSignIn || '',
@@ -3441,8 +3441,8 @@ export default function AdminPage() {
             if (!userStatsMap.has(email)) {
               userStatsMap.set(email, {
                 email,
-                displayName: (user.displayName && !user.displayName.includes('@')) ? user.displayName : (user.email ? user.email.split('@')[0] : '익명'),
-                authorNickname: (user.authorNickname && !user.authorNickname.includes('@')) ? user.authorNickname : (user.displayName && !user.displayName.includes('@')) ? user.displayName : (user.email ? user.email.split('@')[0] : '익명'),
+                displayName: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
+                authorNickname: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
                 photoURL: user.photoURL || '',
                 createdAt: user.createdAt || '',
                 lastSignIn: user.lastSignIn || '',
@@ -3499,8 +3499,8 @@ export default function AdminPage() {
             if (!userStatsMap.has(email)) {
               userStatsMap.set(email, {
                 email,
-                displayName: (user.displayName && !user.displayName.includes('@')) ? user.displayName : (user.email ? user.email.split('@')[0] : '익명'),
-                authorNickname: (user.authorNickname && !user.authorNickname.includes('@')) ? user.authorNickname : (user.displayName && !user.displayName.includes('@')) ? user.displayName : (user.email ? user.email.split('@')[0] : '익명'),
+                displayName: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
+                authorNickname: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
                 photoURL: user.photoURL || '',
                 createdAt: user.createdAt || '',
                 lastSignIn: user.lastSignIn || '',
@@ -3534,8 +3534,8 @@ export default function AdminPage() {
             if (!userStatsMap.has(email)) {
               userStatsMap.set(email, {
                 email,
-                displayName: (user.displayName && !user.displayName.includes('@')) ? user.displayName : (user.email ? user.email.split('@')[0] : '익명'),
-                authorNickname: (user.authorNickname && !user.authorNickname.includes('@')) ? user.authorNickname : (user.displayName && !user.displayName.includes('@')) ? user.displayName : (user.email ? user.email.split('@')[0] : '익명'),
+                displayName: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
+                authorNickname: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
                 photoURL: user.photoURL || '',
                 createdAt: user.createdAt || '',
                 lastSignIn: user.lastSignIn || '',
@@ -3592,8 +3592,8 @@ export default function AdminPage() {
             if (!userStatsMap.has(email)) {
               userStatsMap.set(email, {
                 email,
-                displayName: (user.displayName && !user.displayName.includes('@')) ? user.displayName : (user.email ? user.email.split('@')[0] : '익명'),
-                authorNickname: (user.authorNickname && !user.authorNickname.includes('@')) ? user.authorNickname : (user.displayName && !user.displayName.includes('@')) ? user.displayName : (user.email ? user.email.split('@')[0] : '익명'),
+                displayName: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
+                authorNickname: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
                 photoURL: user.photoURL || '',
                 createdAt: user.createdAt || '',
                 lastSignIn: user.lastSignIn || '',
@@ -3627,8 +3627,8 @@ export default function AdminPage() {
             if (!userStatsMap.has(email)) {
               userStatsMap.set(email, {
                 email,
-                displayName: (user.displayName && !user.displayName.includes('@')) ? user.displayName : (user.email ? user.email.split('@')[0] : '익명'),
-                authorNickname: (user.authorNickname && !user.authorNickname.includes('@')) ? user.authorNickname : (user.displayName && !user.displayName.includes('@')) ? user.displayName : (user.email ? user.email.split('@')[0] : '익명'),
+                displayName: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
+                authorNickname: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
                 photoURL: user.photoURL || '',
                 createdAt: user.createdAt || '',
                 lastSignIn: user.lastSignIn || '',
@@ -3685,8 +3685,8 @@ export default function AdminPage() {
             if (!userStatsMap.has(email)) {
               userStatsMap.set(email, {
                 email,
-                displayName: (user.displayName && !user.displayName.includes('@')) ? user.displayName : (user.email ? user.email.split('@')[0] : '익명'),
-                authorNickname: (user.authorNickname && !user.authorNickname.includes('@')) ? user.authorNickname : (user.displayName && !user.displayName.includes('@')) ? user.displayName : (user.email ? user.email.split('@')[0] : '익명'),
+                displayName: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
+                authorNickname: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
                 photoURL: user.photoURL || '',
                 createdAt: user.createdAt || '',
                 lastSignIn: user.lastSignIn || '',
@@ -3713,8 +3713,8 @@ export default function AdminPage() {
         
         if (existingStats) {
           // 기존 통계에 프로필 정보 업데이트
-          existingStats.displayName = userData.displayName || userData.email || '';
-          existingStats.authorNickname = userData.authorNickname || '';
+          existingStats.displayName = getDisplayName(userData.displayName || '', userData.authorNickname || '', userData.email || 'unknown');
+          existingStats.authorNickname = getDisplayName(userData.displayName || '', userData.authorNickname || '', userData.email || 'unknown');
           existingStats.photoURL = userData.photoURL || '';
           existingStats.createdAt = userData.createdAt || '';
           existingStats.lastSignIn = userData.lastSignIn || '';
