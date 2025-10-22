@@ -4719,7 +4719,7 @@ export default function DrawPage() {
                       })()} 
                       drawingAnalysis={drawingAnalysis}
                       fill={true}
-                      scale={isMobile ? 1.5 : 1.0}
+                      scale={1.5}
                       isMobile={isMobile}
                       carColor={carColor}
                       roofColor={roofColor}
@@ -4834,7 +4834,7 @@ export default function DrawPage() {
               })()} 
               drawingAnalysis={drawingAnalysis}
               fill={true}
-              scale={isMobile ? 1.5 : 1.0}
+              scale={1.5}
               isMobile={isMobile}
               carColor={carColor}
               roofColor={roofColor}
@@ -5544,7 +5544,7 @@ export default function DrawPage() {
           fill={false}
           width={1200}
           height={800}
-          scale={isMobile ? 1.5 : 1.0}
+          scale={1.5}
           isMobile={isMobile}
           carColor={carColor}
           roofColor={roofColor}
@@ -5572,7 +5572,7 @@ export default function DrawPage() {
           fill={false}
           width={1200}
           height={800}
-          scale={isMobile ? 1.5 : 1.0}
+          scale={1.5}
           isMobile={isMobile}
           carColor={carColor}
           roofColor={roofColor}
