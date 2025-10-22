@@ -2642,7 +2642,7 @@ export default function AdminPage() {
             id: doc.id,
             title: `도안 다운로드 (${downloadData.downloadType})`,
             thumbnail: null,
-            author: user.authorNickname || user.displayName || '사용자',
+            author: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
             downloads: 1,
             fileName: downloadData.fileName,
             carType: downloadData.carType,
