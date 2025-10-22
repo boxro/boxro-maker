@@ -305,16 +305,13 @@ export default function DrawPage() {
           return;
         }
 
-        // 모바일 여부 확인
-        const isMobile = window.innerWidth <= 768;
-        
-        // 모바일에서 크롭 사이즈 확대 (3D 렌더링 크기에 맞춤)
+        // 기본 크롭 사이즈 (4:3 비율)
         const baseCropWidth = 650;
         const baseCropHeight = 488; // 4:3 비율
         
-        // 모바일에서 2배 해상도에 맞춰 크롭 사이즈 확대 (2배 해상도에 맞춤)
-        const cropWidth = isMobile ? baseCropWidth * 2 : baseCropWidth; // 모바일: 1300
-        const cropHeight = isMobile ? baseCropHeight * 2 : baseCropHeight; // 모바일: 976
+        // 데스크톱과 모바일 모두 2배 크롭 사이즈 사용
+        const cropWidth = baseCropWidth * 2; // 1300
+        const cropHeight = baseCropHeight * 2; // 976
         
         // 스냅샷의 크기에 맞춰 크롭 사이즈 조정
         const maxCropWidth = Math.min(cropWidth, img.width);
@@ -326,16 +323,16 @@ export default function DrawPage() {
         const centerX = (img.width - actualCropWidth) / 2;
         const centerY = (img.height - actualCropHeight) / 2;
         
-        // 모바일에서 2배 해상도인 경우 오프셋도 2배로 조정
-        const offsetX = isMobile ? 40 * 2 : 40; // 모바일: 80px, 데스크톱: 40px
-        const offsetY = isMobile ? 100 * 2 : 100; // 모바일: 200px, 데스크톱: 100px
+        // 데스크톱과 모바일 모두 2배 오프셋 사용
+        const offsetX = 40 * 2; // 80px
+        const offsetY = 100 * 2; // 200px
         
         const cropX = centerX - offsetX;
         const cropY = centerY - offsetY;
         
-        // 모바일에서 2배 해상도인 경우 리사이징 적용
-        if (isMobile && img.width > 1000) {
-          // 모바일 2배 해상도 스냅샷을 기본 크기로 리사이징
+        // 데스크톱과 모바일 모두 2배 크롭 후 리사이징 적용
+        if (img.width > 1000) {
+          // 고해상도 스냅샷을 기본 크기로 리사이징
           const targetWidth = baseCropWidth; // 650
           const targetHeight = baseCropHeight; // 488
           
@@ -349,7 +346,7 @@ export default function DrawPage() {
             0, 0, targetWidth, targetHeight  // 타겟 크기 (기본 크기로 리사이징)
           );
         } else {
-          // 데스크톱 또는 일반 해상도는 원본 크기 유지
+          // 저해상도는 원본 크기 유지
           canvas.width = actualCropWidth;
           canvas.height = actualCropHeight;
           
