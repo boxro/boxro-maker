@@ -45,6 +45,7 @@ interface PopularityManagementProps {
   popularityTotalPages: number;
   popularityCurrentPage: number;
   popularityAllItems: PopularityItem[];
+  popularityTotalItems: number;
 }
 
 const PopularityManagement: React.FC<PopularityManagementProps> = ({
@@ -66,6 +67,7 @@ const PopularityManagement: React.FC<PopularityManagementProps> = ({
   popularityTotalPages,
   popularityCurrentPage,
   popularityAllItems,
+  popularityTotalItems,
 }) => {
   return (
     <>
@@ -73,7 +75,7 @@ const PopularityManagement: React.FC<PopularityManagementProps> = ({
         <div className="bg-white/95 backdrop-blur-sm border border-white/20 rounded-lg p-6">
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
             <h3 className="text-lg font-semibold text-gray-900">
-              인기도 관리 ({popularityItems.length}개)
+              인기도 관리 ({popularityTotalItems}개)
             </h3>
             
             {/* 필터링 및 정렬 UI */}
@@ -88,6 +90,7 @@ const PopularityManagement: React.FC<PopularityManagementProps> = ({
                 <option value="community">갤러리</option>
                 <option value="story">이야기</option>
                 <option value="store">스토어</option>
+                <option value="youtube">유튜브</option>
               </select>
               
               {/* 정렬 기준 */}
@@ -115,7 +118,10 @@ const PopularityManagement: React.FC<PopularityManagementProps> = ({
               {/* 페이지 크기 선택 */}
               <select
                 value={popularityPageSize}
-                onChange={(e) => handlePageSizeChange(parseInt(e.target.value))}
+                onChange={(e) => {
+                  console.log('페이지 크기 선택 변경:', e.target.value);
+                  handlePageSizeChange(parseInt(e.target.value));
+                }}
                 className="px-3 py-2 border border-gray-300 rounded-md text-sm"
               >
                 <option value="20">20개씩</option>
@@ -233,7 +239,7 @@ const PopularityManagement: React.FC<PopularityManagementProps> = ({
                   </tr>
                 </thead>
                 <tbody>
-                  {getSortedPopularityItems().map((item) => (
+                  {popularityItems.map((item) => (
                     <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50">
                       <td className="py-2 px-2 w-20">
                         <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
@@ -257,7 +263,8 @@ const PopularityManagement: React.FC<PopularityManagementProps> = ({
                             href={
                               item.type === 'community' ? `/community` :
                               item.type === 'story' ? `/story` :
-                              item.type === 'store' ? `/store` : '#'
+                              item.type === 'store' ? `/store` :
+                              item.type === 'youtube' ? `/youtube` : '#'
                             }
                             target="_blank"
                             rel="noopener noreferrer"
@@ -272,7 +279,8 @@ const PopularityManagement: React.FC<PopularityManagementProps> = ({
                       <td className="py-2 px-2 w-20">
                         <span className="inline-flex items-center px-1 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                           {item.type === 'community' ? '갤러리' : 
-                           item.type === 'story' ? '이야기' : '스토어'}
+                           item.type === 'story' ? '이야기' : 
+                           item.type === 'youtube' ? '유튜브' : '스토어'}
                         </span>
                       </td>
                       
@@ -305,7 +313,7 @@ const PopularityManagement: React.FC<PopularityManagementProps> = ({
                       </td>
                       
                       <td className="py-2 px-2 w-20">
-                        {(item.type === 'story' || item.type === 'store') ? (
+                        {(item.type === 'story' || item.type === 'store' || item.type === 'youtube') ? (
                           <div className="text-center">
                             <div className="text-base font-bold text-purple-600">
                               {(item.views || 0) + (popularityBoosts[item.id]?.views || 0)}
@@ -375,9 +383,9 @@ const PopularityManagement: React.FC<PopularityManagementProps> = ({
                                 views: parseInt(e.target.value) || 0
                               }
                             }))}
-                            className={`w-[58px] px-1 py-1 border border-gray-300 rounded text-xs text-center [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] ${(item.type !== 'story' && item.type !== 'store') ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : ''}`}
+                            className={`w-[58px] px-1 py-1 border border-gray-300 rounded text-xs text-center [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] ${(item.type !== 'story' && item.type !== 'store' && item.type !== 'youtube') ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : ''}`}
                             placeholder="조회"
-                            disabled={item.type !== 'story' && item.type !== 'store'}
+                            disabled={item.type !== 'story' && item.type !== 'store' && item.type !== 'youtube'}
                           />
                           <input
                             type="number"
@@ -421,7 +429,10 @@ const PopularityManagement: React.FC<PopularityManagementProps> = ({
                   
                   <div className="flex items-center justify-center gap-2">
                     <button
-                      onClick={() => handlePageChange(popularityCurrentPage - 1)}
+                      onClick={() => {
+                        console.log('이전 페이지 클릭:', popularityCurrentPage - 1);
+                        handlePageChange(popularityCurrentPage - 1);
+                      }}
                       disabled={popularityCurrentPage === 1}
                       className="px-3 py-2 bg-white/80 border border-gray-300 rounded-lg hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                     >
@@ -438,7 +449,10 @@ const PopularityManagement: React.FC<PopularityManagementProps> = ({
                         return (
                           <button
                             key={pageNum}
-                            onClick={() => handlePageChange(pageNum)}
+                            onClick={() => {
+                              console.log('페이지 번호 클릭:', pageNum);
+                              handlePageChange(pageNum);
+                            }}
                             className={`w-8 h-8 rounded-lg text-sm font-medium transition-all duration-200 ${
                               pageNum === popularityCurrentPage
                                 ? 'bg-blue-500 text-white'
@@ -452,7 +466,10 @@ const PopularityManagement: React.FC<PopularityManagementProps> = ({
                     </div>
                     
                     <button
-                      onClick={() => handlePageChange(popularityCurrentPage + 1)}
+                      onClick={() => {
+                        console.log('다음 페이지 클릭:', popularityCurrentPage + 1);
+                        handlePageChange(popularityCurrentPage + 1);
+                      }}
                       disabled={popularityCurrentPage === popularityTotalPages}
                       className="px-3 py-2 bg-white/80 border border-gray-300 rounded-lg hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                     >

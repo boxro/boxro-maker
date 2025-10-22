@@ -131,8 +131,6 @@ export default function AdminPage() {
   
   // 관리자 이메일 목록
   const ADMIN_EMAILS = [
-    'admin@boxro.com',
-    'dongwoo@boxro.com',
     'beagle3651@gmail.com',
     'boxro.crafts@gmail.com'
   ];
@@ -944,11 +942,18 @@ export default function AdminPage() {
       setPopularityLoading(true);
       console.log('인기도 관리 데이터 불러오기 시작...');
       
-      const [communityQuery, storyQuery, storeQuery] = await Promise.all([
+      const [communityQuery, storyQuery, storeQuery, youtubeQuery] = await Promise.all([
         getDocs(query(collection(db, 'communityDesigns'), orderBy('createdAt', 'desc'))),
         getDocs(query(collection(db, 'storyArticles'), orderBy('createdAt', 'desc'))),
-        getDocs(query(collection(db, 'storeItems'), orderBy('createdAt', 'desc')))
+        getDocs(query(collection(db, 'storeItems'), orderBy('createdAt', 'desc'))),
+        getDocs(query(collection(db, 'youtubeItems'), orderBy('createdAt', 'desc')))
       ]);
+
+      console.log('각 컬렉션별 문서 개수:');
+      console.log('- communityDesigns:', communityQuery.docs.length);
+      console.log('- storyArticles:', storyQuery.docs.length);
+      console.log('- storeItems:', storeQuery.docs.length);
+      console.log('- youtubeItems:', youtubeQuery.docs.length);
 
       const communityItems = communityQuery.docs.map(doc => {
         const data = doc.data();
@@ -980,7 +985,20 @@ export default function AdminPage() {
         };
       });
 
-      const allItems = [...communityItems, ...storyItems, ...storeItems];
+      const youtubeItems = youtubeQuery.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          type: 'youtube',
+          createdAt: data.createdAt?.toDate?.() || new Date()
+        };
+      });
+
+      console.log('유튜브 아이템 개수:', youtubeItems.length);
+      console.log('유튜브 아이템 데이터:', youtubeItems);
+
+      const allItems = [...communityItems, ...storyItems, ...storeItems, ...youtubeItems];
       
       // 전체 데이터 저장
       setPopularityAllItems(allItems);
@@ -1006,12 +1024,14 @@ export default function AdminPage() {
 
   // 페이지 크기 변경 핸들러
   const handlePageSizeChange = (newPageSize: number) => {
+    console.log('페이지 크기 변경:', newPageSize);
     setPopularityPageSize(newPageSize);
     setPopularityCurrentPage(1);
   };
 
   // 페이지 변경 핸들러
   const handlePageChange = (page: number) => {
+    console.log('페이지 변경:', page);
     setPopularityCurrentPage(page);
   };
 
@@ -1019,31 +1039,78 @@ export default function AdminPage() {
   const updateCurrentPageItems = () => {
     if (popularityAllItems.length === 0) return;
     
+    // 필터링된 아이템들을 먼저 가져오기
+    const filteredItems = popularityAllItems.filter(item => 
+      popularityFilter === 'all' || item.type === popularityFilter
+    );
+    
+    // 정렬 적용
+    const sortedItems = filteredItems.sort((a, b) => {
+      let aValue, bValue;
+      
+      switch (popularitySortBy) {
+        case 'likes':
+          aValue = (a.likes || 0) + (popularityBoosts[a.id]?.likes || 0);
+          bValue = (b.likes || 0) + (popularityBoosts[b.id]?.likes || 0);
+          break;
+        case 'shares':
+          aValue = (a.shares || 0) + (popularityBoosts[a.id]?.shares || 0);
+          bValue = (b.shares || 0) + (popularityBoosts[b.id]?.shares || 0);
+          break;
+        case 'views':
+          aValue = (a.views || 0) + (popularityBoosts[a.id]?.views || 0);
+          bValue = (b.views || 0) + (popularityBoosts[b.id]?.views || 0);
+          break;
+        default:
+          aValue = new Date(a.createdAt).getTime();
+          bValue = new Date(b.createdAt).getTime();
+          break;
+      }
+      
+      return popularitySortOrder === 'asc' ? aValue - bValue : bValue - aValue;
+    });
+    
     const startIndex = (popularityCurrentPage - 1) * popularityPageSize;
     const endIndex = startIndex + popularityPageSize;
-    const currentPageItems = popularityAllItems.slice(startIndex, endIndex);
+    const currentPageItems = sortedItems.slice(startIndex, endIndex);
     
     console.log('페이지 업데이트:', {
       currentPage: popularityCurrentPage,
       pageSize: popularityPageSize,
       totalItems: popularityAllItems.length,
+      filteredItems: filteredItems.length,
+      filter: popularityFilter,
       startIndex,
       endIndex,
       itemsCount: currentPageItems.length
     });
     
     setPopularityItems(currentPageItems);
-    setPopularityTotalPages(Math.ceil(popularityAllItems.length / popularityPageSize));
+    setPopularityTotalPages(Math.ceil(sortedItems.length / popularityPageSize));
   };
 
   // 페이지 변경 시 아이템 업데이트
   useEffect(() => {
     updateCurrentPageItems();
-  }, [popularityCurrentPage, popularityPageSize, popularityAllItems]);
+  }, [popularityCurrentPage, popularityPageSize, popularityAllItems, popularityFilter, popularitySortBy, popularitySortOrder, popularityBoosts]);
+
+  // 필터 또는 정렬 변경 시 첫 페이지로 이동
+  useEffect(() => {
+    setPopularityCurrentPage(1);
+  }, [popularityFilter, popularitySortBy, popularitySortOrder]);
 
   // 인기도 데이터 정렬 함수
   const getSortedPopularityItems = () => {
-    const filtered = popularityItems.filter(item => popularityFilter === 'all' || item.type === popularityFilter);
+    console.log('필터링 시작 - 현재 필터:', popularityFilter);
+    console.log('전체 아이템 개수:', popularityAllItems.length);
+    const filtered = popularityAllItems.filter(item => {
+      const shouldInclude = popularityFilter === 'all' || item.type === popularityFilter;
+      if (popularityFilter === 'youtube') {
+        console.log('유튜브 아이템 체크:', item.id, item.type, shouldInclude);
+      }
+      return shouldInclude;
+    });
+    console.log('필터링 후 아이템 개수:', filtered.length);
     
     return filtered.sort((a, b) => {
       let aValue, bValue;
@@ -1082,7 +1149,8 @@ export default function AdminPage() {
       console.log('인기도 가산점 업데이트 시작:', { itemId, type, boosts });
       
       const collectionName = type === 'community' ? 'communityDesigns' : 
-                           type === 'story' ? 'storyArticles' : 'storeItems';
+                           type === 'story' ? 'storyArticles' : 
+                           type === 'youtube' ? 'youtubeItems' : 'storeItems';
       
       console.log('업데이트할 컬렉션:', collectionName);
       console.log('업데이트할 데이터:', { popularityBoost: boosts });
@@ -1407,6 +1475,8 @@ export default function AdminPage() {
 
   // 디버깅용: 현재 사용자 정보 로그
   console.log('현재 사용자:', user?.email, '관리자 여부:', isAdminUser);
+  console.log('사용자 객체:', user);
+  console.log('관리자 이메일 목록:', ADMIN_EMAILS);
 
   // 홈카드 관리 함수들
   const fetchHomeCards = async () => {
@@ -2127,8 +2197,8 @@ export default function AdminPage() {
     try {
       const collections = [
         'users', 'communityDesigns', 'storyArticles', 
-        'storeItems', 'boxroTalks', 'storyBoxroTalks', 
-        'storeBoxroTalks', 'pwaInstalls', 'homeCards', 'banners'
+        'storeItems', 'youtubeItems', 'boxroTalks', 'storyBoxroTalks', 
+        'storeBoxroTalks', 'youtubeBoxroTalks', 'pwaInstalls', 'homeCards', 'banners'
       ];
       
       let totalDocs = 0;
@@ -2242,6 +2312,14 @@ export default function AdminPage() {
       const todayStoreSnapshot = await getDocs(todayStoreQuery);
       const todayStore = todayStoreSnapshot.docs.length;
       
+      // 오늘 생성된 유튜브 아이템 수
+      const todayYoutubeQuery = query(
+        collection(db, 'youtubeItems'),
+        where('createdAt', '>=', today)
+      );
+      const todayYoutubeSnapshot = await getDocs(todayYoutubeQuery);
+      const todayYoutube = todayYoutubeSnapshot.docs.length;
+      
       // 오늘 생성된 사용자 수 (회원가입)
       const todayUsersQuery = query(
         collection(db, 'users'),
@@ -2251,10 +2329,10 @@ export default function AdminPage() {
       authSignups = todayUsersSnapshot.docs.length;
       
       // Firestore 쓰기 작업 (생성된 문서 수)
-      firestoreWrites = todayDesigns + todayBoxroTalks + todayStories + todayStore + authSignups;
+      firestoreWrites = todayDesigns + todayBoxroTalks + todayStories + todayStore + todayYoutube + authSignups;
       
       // Firestore 읽기 작업을 실제 사용 패턴 기반으로 계산
-      const allCollections = ['communityDesigns', 'boxroTalks', 'storyArticles', 'storeItems', 'users'];
+      const allCollections = ['communityDesigns', 'boxroTalks', 'storyArticles', 'storeItems', 'youtubeItems', 'users'];
       for (const collectionName of allCollections) {
         try {
           const snapshot = await getDocs(collection(db, collectionName));
@@ -5519,6 +5597,7 @@ export default function AdminPage() {
             popularityTotalPages={popularityTotalPages}
             popularityCurrentPage={popularityCurrentPage}
             popularityAllItems={popularityAllItems}
+            popularityTotalItems={popularityAllItems.filter(item => popularityFilter === 'all' || item.type === popularityFilter).length}
           />
         )}
 

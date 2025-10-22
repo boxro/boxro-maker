@@ -33,9 +33,7 @@ export default function CommonHeader({ className = "" }: CommonHeaderProps) {
   const { user, logout, setShowOnboarding } = useAuth();
 
   // 관리자 권한 체크
-  const isAdmin = user?.email === "admin@boxro.com" || 
-                  user?.email === "dongwoo.kang@boxro.com" || 
-                  user?.email === "beagle3651@gmail.com" || 
+  const isAdmin = user?.email === "beagle3651@gmail.com" || 
                   user?.email === "boxro.crafts@gmail.com";
 
   const toggleMenu = () => {

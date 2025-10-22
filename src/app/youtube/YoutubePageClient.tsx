@@ -257,9 +257,8 @@ export default function YoutubePageClient() {
 
   // 관리자 이메일 목록
   const adminEmails = [
-    "admin@boxro.com",
-    "dongwoo.kang@boxro.com",
-    "beagle3651@gmail.com"
+    "beagle3651@gmail.com",
+    "boxro.crafts@gmail.com"
   ];
 
   // 관리자 권한 확인
@@ -298,6 +297,9 @@ export default function YoutubePageClient() {
           isViewed: user ? (data.viewedBy?.includes(user.uid) || false) : false
         } as StoryArticle);
       });
+      
+      console.log('유튜브 페이지에서 가져온 데이터 개수:', articlesData.length);
+      console.log('유튜브 데이터:', articlesData);
       
       setArticles(articlesData);
       

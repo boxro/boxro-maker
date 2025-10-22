@@ -105,8 +105,6 @@ export default function WriteYoutubePage() {
 
   // 관리자 이메일 목록
   const adminEmails = [
-    "admin@boxro.com",
-    "dongwoo.kang@boxro.com",
     "beagle3651@gmail.com",
     "boxro.crafts@gmail.com"
   ];

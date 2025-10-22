@@ -357,8 +357,6 @@ export default function GalleryPage() {
   const isAdmin = () => {
     if (!user) return false;
     const adminEmails = [
-      "admin@boxro.com", 
-      "dongwoo.kang@boxro.com", 
       "beagle3651@gmail.com", 
       "boxro.crafts@gmail.com"
     ];
