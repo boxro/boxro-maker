@@ -3731,8 +3731,8 @@ export default function AdminPage() {
           // 새로운 사용자 추가 (활동이 없는 사용자)
           userStatsMap.set(email, {
             email: email,
-            displayName: userData.displayName || userData.email || '',
-            authorNickname: userData.authorNickname || '',
+            displayName: getDisplayName(userData.displayName || '', userData.authorNickname || '', userData.email || 'unknown'),
+            authorNickname: getDisplayName(userData.displayName || '', userData.authorNickname || '', userData.email || 'unknown'),
             photoURL: userData.photoURL || '',
             createdAt: userData.createdAt || '',
             lastSignIn: userData.lastSignIn || '',
