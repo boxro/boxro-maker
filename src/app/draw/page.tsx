@@ -5632,7 +5632,7 @@ export default function DrawPage() {
           </CardTitle>
           {/* 안내 문구 */}
           <p className="text-xs text-gray-600 mt-0 mb-0 text-left">
-            나만의 박스카를 완성해보세요. 친구들과 함께 만들면 더 즐겁고, 자랑하면 더 뿌듯해요.
+            나만의 박스카를 완성해보세요. 친구들과 함께 만들면 더 즐거워요.
           </p>
         </CardHeader>
         <CardContent className="px-4 md:px-8 pt-0 pb-0 -mt-3">
