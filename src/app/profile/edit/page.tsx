@@ -537,14 +537,14 @@ export default function EditProfilePage() {
                     maxLength={20}
                     className="text-[14px] bg-white border-gray-300 focus:border-purple-500 focus:ring-purple-500"
                   />
-                  <div className="text-left mt-4">
+                  <div className="text-left" style={{ marginTop: '24px' }}>
                     <button
                       onClick={() => setShowDeleteModal(true)}
                       className="text-gray-500 hover:text-red-600 underline"
                     >
                       <span style={{ fontSize: '14px' }}>회원탈퇴</span>
-                      <span style={{ fontSize: '12px' }}> (탈퇴 시 모든 데이터가 완전히 삭제됩니다)</span>
                     </button>
+                    <span style={{ fontSize: '12px', color: '#6b7280' }}> (탈퇴 시 모든 데이터가 완전히 삭제됩니다)</span>
                   </div>
                 </div>
 
