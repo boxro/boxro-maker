@@ -154,8 +154,8 @@ const ThreeDRenderer = forwardRef<{ getRenderer: () => THREE.WebGLRenderer | nul
     // Camera 설정 - 3D 프리뷰와 동일하게
     const camera = new THREE.PerspectiveCamera(fov, aspectRatio, 0.1, 1000);
     
-      // 모바일과 데스크톱 카메라 위치 구분 (10% 차이)
-      const baseDistance = isMobileDevice ? 5.4 : 6; // 모바일: 10% 더 가깝게
+      // 데스크톱과 모바일 모두 10% 가깝게 조정
+      const baseDistance = 5.4; // 데스크톱과 모바일 모두 10% 더 가깝게
       camera.position.set(-baseDistance * 1.1, 2.5, baseDistance * 0.8);
     camera.lookAt(0, 0, 0);
     cameraRef.current = camera;
