@@ -3472,7 +3472,8 @@ export default function AdminPage() {
               if (!userStatsMap.has(email)) {
                 userStatsMap.set(email, {
                   email,
-                  displayName: user.displayName || '익명',
+                  displayName: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
+                  authorNickname: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
                   photoURL: user.photoURL || '',
                   createdAt: user.createdAt || '',
                   lastSignIn: user.lastSignIn || '',
@@ -3565,7 +3566,8 @@ export default function AdminPage() {
               if (!userStatsMap.has(email)) {
                 userStatsMap.set(email, {
                   email,
-                  displayName: user.displayName || '익명',
+                  displayName: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
+                  authorNickname: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
                   photoURL: user.photoURL || '',
                   createdAt: user.createdAt || '',
                   lastSignIn: user.lastSignIn || '',
@@ -3658,7 +3660,8 @@ export default function AdminPage() {
               if (!userStatsMap.has(email)) {
                 userStatsMap.set(email, {
                   email,
-                  displayName: user.displayName || '익명',
+                  displayName: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
+                  authorNickname: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
                   photoURL: user.photoURL || '',
                   createdAt: user.createdAt || '',
                   lastSignIn: user.lastSignIn || '',
@@ -3808,7 +3811,8 @@ export default function AdminPage() {
           if (!userStatsMap.has(email)) {
             userStatsMap.set(email, {
               email,
-              displayName: user.displayName || '익명',
+              displayName: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
+              authorNickname: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
               photoURL: user.photoURL || '',
               createdAt: user.createdAt || '',
               lastSignIn: user.lastSignIn || '',
