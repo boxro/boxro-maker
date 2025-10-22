@@ -35,6 +35,9 @@ const ThreeDRenderer = forwardRef<{ getRenderer: () => THREE.WebGLRenderer | nul
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
+  
+  // 모바일 디바이스 감지 (컴포넌트 최상위에서 정의)
+  const isMobileDevice = window.innerWidth <= 768;
 
 
   // 부모 컴포넌트에서 렌더러에 접근할 수 있도록 노출
@@ -152,7 +155,6 @@ const ThreeDRenderer = forwardRef<{ getRenderer: () => THREE.WebGLRenderer | nul
     const camera = new THREE.PerspectiveCamera(fov, aspectRatio, 0.1, 1000);
     
       // 모바일과 데스크톱 카메라 위치 구분 (10% 차이)
-      const isMobileDevice = window.innerWidth <= 768;
       const baseDistance = isMobileDevice ? 5.4 : 6; // 모바일: 10% 더 가깝게
       camera.position.set(-baseDistance * 1.1, 2.5, baseDistance * 0.8);
     camera.lookAt(0, 0, 0);
