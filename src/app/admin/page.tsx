@@ -2600,79 +2600,64 @@ export default function AdminPage() {
       // 고아 박스로톡 필터링 (삭제된 게시글의 박스로톡 제외)
       const validBoxroTalks = boxroTalksWithDesignInfo.filter((boxroTalk: any) => !boxroTalk.isOrphaned);
 
-      // 사용자의 좋아요 가져오기 (갤러리 작품 + 박스카 이야기)
+      // 사용자 UID 찾기
+      const currentUser = users.find(u => u.email === userEmail);
+      const currentUserUid = currentUser?.uid;
+
+      // 모든 갤러리 작품 가져오기
+      const allDesignsSnapshot = await getDocs(designsQuery);
+      const allDesigns = allDesignsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      // 모든 박스카 이야기 가져오기
+      const allStoriesSnapshot = await getDocs(storiesQuery);
+      const allStories = allStoriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      // 모든 스토어 아이템 가져오기
+      const allStoreItemsSnapshot = await getDocs(storeItemsQuery);
+      const allStoreItems = allStoreItemsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      // 사용자가 좋아요한 콘텐츠 가져오기 (사용자가 다른 사람 콘텐츠에 누른 좋아요)
       const userLikes = [
-        // 갤러리 작품 좋아요
-        ...userDesigns.reduce((likes: any[], design: any) => {
-          if (design.likes > 0) {
-            console.log('좋아요 작품 데이터:', design);
-            console.log('작가 정보:', {
-              author: design.author,
-              authorNickname: design.authorNickname,
-              authorName: design.authorName,
-              creator: design.creator,
-              userId: design.userId
-            });
-            
-            likes.push({
-              type: 'design',
-              id: design.id,
-              title: design.title || design.name || '제목 없음',
-              thumbnail: design.thumbnail || design.thumbnailUrl,
-              author: design.authorNickname || design.author || design.authorName || design.creator || design.userId || '작가 정보 없음',
-              likes: design.likes,
-              createdAt: design.createdAt
-            });
-          }
-          return likes;
-        }, []),
-        // 박스카 이야기 좋아요
-        ...resolvedUserStories.reduce((likes: any[], story: any) => {
-          if (story.likes > 0) {
-            console.log('박스카 이야기 전체 데이터:', story);
-            console.log('박스카 이야기 전체 필드 확인:', Object.keys(story));
-            console.log('박스카 이야기 작가 정보 상세:', {
-              // 현재 사용 중인 필드들
-              authorNickname: story.authorNickname,
-              author: story.author,
-              authorName: story.authorName,
-              creator: story.creator,
-              userId: story.userId,
-              displayName: story.displayName,
-              nickname: story.nickname,
-              userNickname: story.userNickname,
-              userDisplayName: story.userDisplayName,
-              userNick: story.userNick
-            });
-            
-            likes.push({
-              type: 'story',
-              id: story.id,
-              title: story.title || '제목 없음',
-              thumbnail: story.thumbnail || story.cardThumbnail,
-              author: story.actualNickname || story.authorNickname || story.authorName || story.author || story.creator || story.userId || '작가 정보 없음',
-              likes: story.likes,
-              createdAt: story.createdAt
-            });
-          }
-          return likes;
-        }, []),
-        // 스토어 작품 좋아요
-        ...userStoreItems.reduce((likes: any[], storeItem: any) => {
-          if (storeItem.likes > 0) {
-            likes.push({
-              type: 'store',
-              id: storeItem.id,
-              title: storeItem.title || '제목 없음',
-              thumbnail: storeItem.thumbnail || storeItem.cardThumbnail,
-              author: storeItem.authorNickname || storeItem.author || storeItem.authorName || storeItem.creator || storeItem.userId || '작가 정보 없음',
-              likes: storeItem.likes,
-              createdAt: storeItem.createdAt
-            });
-          }
-          return likes;
-        }, [])
-      ].sort((a, b) => {
+        // 갤러리 작품에서 사용자가 좋아요한 것들
+        ...allDesigns.filter((design: any) => {
+          const likedBy = design.likedBy || [];
+          return currentUserUid && likedBy.includes(currentUserUid);
+        }).map((design: any) => ({
+          type: 'gallery',
+          id: design.id,
+          title: design.title || design.name || '제목 없음',
+          thumbnail: design.thumbnail || design.thumbnailUrl,
+          author: design.authorNickname || design.author || design.authorName || design.creator || design.userId || '작가 정보 없음',
+          likes: design.likes || 0,
+          createdAt: design.createdAt
+        })),
+        // 박스카 이야기에서 사용자가 좋아요한 것들
+        ...allStories.filter((story: any) => {
+          const likedBy = story.likedBy || [];
+          return currentUserUid && likedBy.includes(currentUserUid);
+        }).map((story: any) => ({
+          type: 'story',
+          id: story.id,
+          title: story.title || '제목 없음',
+          thumbnail: story.thumbnail || story.cardThumbnail,
+          author: story.authorNickname || story.author || story.authorName || story.creator || story.userId || '작가 정보 없음',
+          likes: story.likes || 0,
+          createdAt: story.createdAt
+        })),
+        // 스토어 아이템에서 사용자가 좋아요한 것들
+        ...allStoreItems.filter((storeItem: any) => {
+          const likedBy = storeItem.likedBy || [];
+          return currentUserUid && likedBy.includes(currentUserUid);
+        }).map((storeItem: any) => ({
+          type: 'store',
+          id: storeItem.id,
+          title: storeItem.title || '제목 없음',
+          thumbnail: storeItem.thumbnail || storeItem.cardThumbnail,
+          author: storeItem.authorNickname || storeItem.author || storeItem.authorName || storeItem.creator || storeItem.userId || '작가 정보 없음',
+          likes: storeItem.likes || 0,
+          createdAt: storeItem.createdAt
+        }))
+      ].sort((a: any, b: any) => {
         // Firestore Timestamp 객체 처리
         const getTimestamp = (date: any) => {
           if (!date) return 0;
@@ -2690,18 +2675,246 @@ export default function AdminPage() {
         return dateB - dateA; // 최신순 (내림차순)
       });
 
-      // 사용자의 다운로드 가져오기 (갤러리 작품 + 도안 다운로드)
-      const userDownloads = [
-        // 갤러리 작품 다운로드 (downloadedBy 배열 사용)
-        ...userDesigns.reduce((downloads: any[], design: any) => {
-          const downloadedBy = design.downloadedBy || [];
-          console.log('🔍 갤러리 작품 다운로드 디버깅:', {
-            designId: design.id,
-            designTitle: design.title || design.name,
-            downloadedBy: downloadedBy,
-            downloadedByLength: downloadedBy.length,
-            downloads: design.downloads
-          });
+      // 사용자가 다운로드한 도안 가져오기 (사용자가 다른 사람 작품을 다운로드한 것)
+      const allUserDownloads = allDesigns.filter((design: any) => {
+        const downloadedBy = design.downloadedBy || [];
+        return currentUserUid && downloadedBy.includes(currentUserUid);
+      }).map((design: any) => ({
+        type: 'design',
+        id: design.id,
+        title: design.title || design.name || '제목 없음',
+        thumbnail: design.thumbnail || design.thumbnailUrl,
+        author: design.authorNickname || design.author || design.authorName || design.creator || design.userId || '작가 정보 없음',
+        downloads: design.downloads || 0,
+        createdAt: design.createdAt
+      })).sort((a: any, b: any) => {
+        // Firestore Timestamp 객체 처리
+        const getTimestamp = (date: any) => {
+          if (!date) return 0;
+          if (date.toDate && typeof date.toDate === 'function') {
+            return date.toDate().getTime();
+          }
+          if (date.seconds) {
+            return date.seconds * 1000 + (date.nanoseconds || 0) / 1000000;
+          }
+          return new Date(date).getTime();
+        };
+        
+        const dateA = getTimestamp(a.createdAt);
+        const dateB = getTimestamp(b.createdAt);
+        return dateB - dateA; // 최신순 (내림차순)
+      });
+
+      // 사용자가 공유한 콘텐츠 가져오기 (사용자가 다른 사람 콘텐츠를 공유한 것)
+      const userShares = [
+        // 갤러리 작품에서 사용자가 공유한 것들
+        ...allDesigns.filter((design: any) => {
+          const sharedBy = design.sharedBy || [];
+          return currentUserUid && sharedBy.includes(currentUserUid);
+        }).map((design: any) => ({
+          type: 'design',
+          id: design.id,
+          title: design.title || design.name || '제목 없음',
+          thumbnail: design.thumbnail || design.thumbnailUrl,
+          author: design.authorNickname || design.author || design.authorName || design.creator || design.userId || '작가 정보 없음',
+          shares: design.shares || 0,
+          createdAt: design.createdAt
+        })),
+        // 박스카 이야기에서 사용자가 공유한 것들
+        ...allStories.filter((story: any) => {
+          const sharedBy = story.sharedBy || [];
+          return currentUserUid && sharedBy.includes(currentUserUid);
+        }).map((story: any) => ({
+          type: 'story',
+          id: story.id,
+          title: story.title || '제목 없음',
+          thumbnail: story.thumbnail || story.cardThumbnail,
+          author: story.authorNickname || story.author || story.authorName || story.creator || story.userId || '작가 정보 없음',
+          shares: story.shares || 0,
+          createdAt: story.createdAt
+        })),
+        // 스토어 아이템에서 사용자가 공유한 것들
+        ...allStoreItems.filter((storeItem: any) => {
+          const sharedBy = storeItem.sharedBy || [];
+          return currentUserUid && sharedBy.includes(currentUserUid);
+        }).map((storeItem: any) => ({
+          type: 'store',
+          id: storeItem.id,
+          title: storeItem.title || '제목 없음',
+          thumbnail: storeItem.thumbnail || storeItem.cardThumbnail,
+          author: storeItem.authorNickname || storeItem.author || storeItem.authorName || storeItem.creator || storeItem.userId || '작가 정보 없음',
+          shares: storeItem.shares || 0,
+          createdAt: storeItem.createdAt
+        }))
+      ].sort((a: any, b: any) => {
+        // Firestore Timestamp 객체 처리
+        const getTimestamp = (date: any) => {
+          if (!date) return 0;
+          if (date.toDate && typeof date.toDate === 'function') {
+            return date.toDate().getTime();
+          }
+          if (date.seconds) {
+            return date.seconds * 1000 + (date.nanoseconds || 0) / 1000000;
+          }
+          return new Date(date).getTime();
+        };
+        
+        const dateA = getTimestamp(a.createdAt);
+        const dateB = getTimestamp(b.createdAt);
+        return dateB - dateA; // 최신순 (내림차순)
+      });
+
+      // 사용자가 조회한 콘텐츠 가져오기 (사용자가 다른 사람 콘텐츠를 조회한 것)
+      const userViews = [
+        // 갤러리 작품에서 사용자가 조회한 것들
+        ...allDesigns.filter((design: any) => {
+          const viewedBy = design.viewedBy || [];
+          return currentUserUid && viewedBy.includes(currentUserUid);
+        }).map((design: any) => ({
+          type: 'gallery',
+          id: design.id,
+          title: design.title || design.name || '제목 없음',
+          thumbnail: design.thumbnail || design.imageUrl,
+          author: design.authorNickname || design.author || design.authorName || design.creator || design.userId || '작가 정보 없음',
+          views: design.views || 0,
+          createdAt: design.createdAt
+        })),
+        
+        // 박스카 이야기에서 사용자가 조회한 것들
+        ...allStories.filter((story: any) => {
+          const viewedBy = story.viewedBy || [];
+          return currentUserUid && viewedBy.includes(currentUserUid);
+        }).map((story: any) => ({
+          type: 'story',
+          id: story.id,
+          title: story.title || '제목 없음',
+          thumbnail: story.thumbnail || story.cardThumbnail,
+          author: story.authorNickname || story.author || story.authorName || story.creator || story.userId || '작가 정보 없음',
+          views: story.views || 0,
+          createdAt: story.createdAt
+        })),
+        
+        // 스토어 아이템에서 사용자가 조회한 것들
+        ...allStoreItems.filter((storeItem: any) => {
+          const viewedBy = storeItem.viewedBy || [];
+          return currentUserUid && viewedBy.includes(currentUserUid);
+        }).map((storeItem: any) => ({
+          type: 'store',
+          id: storeItem.id,
+          title: storeItem.title || '제목 없음',
+          thumbnail: storeItem.thumbnail || storeItem.cardThumbnail,
+          author: storeItem.authorNickname || storeItem.author || storeItem.authorName || storeItem.creator || storeItem.userId || '작가 정보 없음',
+          views: storeItem.views || 0,
+          createdAt: storeItem.createdAt
+        }))
+      ].sort((a: any, b: any) => {
+        // Firestore Timestamp 객체 처리
+        const getTimestamp = (date: any) => {
+          if (!date) return 0;
+          if (date.toDate && typeof date.toDate === 'function') {
+            return date.toDate().getTime();
+          }
+          if (date.seconds) {
+            return date.seconds * 1000 + (date.nanoseconds || 0) / 1000000;
+          }
+          return new Date(date).getTime();
+        };
+        
+        const dateA = getTimestamp(a.createdAt);
+        const dateB = getTimestamp(b.createdAt);
+        return dateB - dateA; // 최신순 (내림차순)
+      });
+
+      // 사용자의 스토어 바로가기 가져오기 (사용자가 스토어 아이템으로 리디렉션한 것)
+      const userStoreRedirects = allStoreItems.filter((storeItem: any) => {
+        const redirectedBy = storeItem.storeRedirectedBy || [];
+        return currentUserUid && redirectedBy.includes(currentUserUid);
+      }).map((storeItem: any) => ({
+        type: 'store',
+        id: storeItem.id,
+        title: storeItem.title || '제목 없음',
+        thumbnail: storeItem.thumbnail || storeItem.cardThumbnail,
+        author: storeItem.authorNickname || storeItem.author || storeItem.authorName || storeItem.creator || storeItem.userId || '작가 정보 없음',
+        storeRedirects: storeItem.storeRedirects || 0,
+        createdAt: storeItem.createdAt,
+        redirectedAt: storeItem.createdAt // 실제 리다이렉트 날짜를 추적하려면 별도 컬렉션이 필요하므로 임시로 생성일 사용
+      })).sort((a: any, b: any) => {
+        // Firestore Timestamp 객체 처리
+        const getTimestamp = (date: any) => {
+          if (!date) return 0;
+          if (date.toDate && typeof date.toDate === 'function') {
+            return date.toDate().getTime();
+          }
+          if (date.seconds) {
+            return date.seconds * 1000 + (date.nanoseconds || 0) / 1000000;
+          }
+          return new Date(date).getTime();
+        };
+        
+        const dateA = getTimestamp(a.createdAt);
+        const dateB = getTimestamp(b.createdAt);
+        return dateB - dateA; // 최신순 (내림차순)
+      });
+
+      return {
+        designs: userDesigns,
+        boxroTalks: validBoxroTalks,
+        likes: userLikes,
+        downloads: allUserDownloads,
+        shares: userShares,
+        views: userViews,
+        storeRedirects: userStoreRedirects
+      };
+    } catch (error: unknown) {
+      console.error('사용자 활동 데이터 로드 실패:', error);
+      return {
+        designs: [],
+        boxroTalks: [],
+        likes: [],
+        downloads: [],
+        shares: [],
+        views: [],
+        storeRedirects: []
+      };
+    }
+  };
+
+  // 고아 박스로톡 필터링 함수 (삭제된 게시글의 박스로톡 제외)
+  const filterOrphanedBoxroTalks = async (boxroTalks: any[], source: 'gallery' | 'story' | 'store') => {
+    const validBoxroTalks = [];
+    
+    for (const boxroTalk of boxroTalks) {
+      let isOrphaned = false;
+      
+      try {
+        if (source === 'gallery' && boxroTalk.designId) {
+          const designDoc = await getDoc(doc(db, 'communityDesigns', boxroTalk.designId));
+          if (!designDoc.exists()) {
+            isOrphaned = true;
+          }
+        } else if (source === 'story' && boxroTalk.articleId) {
+          const articleDoc = await getDoc(doc(db, 'storyArticles', boxroTalk.articleId));
+          if (!articleDoc.exists()) {
+            isOrphaned = true;
+          }
+        } else if (source === 'store' && boxroTalk.storeItemId) {
+          const storeDoc = await getDoc(doc(db, 'storeItems', boxroTalk.storeItemId));
+          if (!storeDoc.exists()) {
+            isOrphaned = true;
+          }
+        }
+      } catch (error) {
+        console.error(`Error checking ${source} document:`, error);
+        isOrphaned = true;
+      }
+      
+      if (!isOrphaned) {
+        validBoxroTalks.push(boxroTalk);
+      }
+    }
+    
+    return validBoxroTalks;
+  };
           if (downloadedBy.length > 0) {
             downloads.push({
               type: 'design',
