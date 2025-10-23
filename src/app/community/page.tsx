@@ -358,8 +358,7 @@ export default function GalleryPage() {
     if (!user) return false;
     const adminEmails = [
       "beagle3651@gmail.com", 
-      "boxro.crafts@gmail.com",
-      "dongwoo0313@nate.com"
+      "boxro.crafts@gmail.com"
     ];
     return adminEmails.includes(user.email || '');
   };
