@@ -18,6 +18,16 @@ export default function PWAInstallPrompt() {
   const shouldShowPrompt = () => {
     if (typeof window === 'undefined') return false;
     
+    // PWA가 삭제된 경우 거부 기록도 초기화
+    const wasInstalled = localStorage.getItem('pwa-was-installed');
+    const currentlyInstalled = window.matchMedia('(display-mode: standalone)').matches;
+    
+    if (wasInstalled === 'true' && !currentlyInstalled) {
+      console.log('🔄 PWA 삭제 감지 - 거부 기록 초기화');
+      localStorage.removeItem('pwa-prompt-dismissed');
+      localStorage.removeItem('pwa-was-installed');
+    }
+    
     // 거부한 경우 1시간간 다시 보지 않음
     const dismissedAt = localStorage.getItem('pwa-prompt-dismissed');
     if (dismissedAt) {
@@ -46,8 +56,11 @@ export default function PWAInstallPrompt() {
     }
 
     // Check if app is already installed
-    if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
+    const currentlyInstalled = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
+    if (currentlyInstalled) {
       setIsInstalled(true);
+      // PWA 설치 상태를 localStorage에 기록
+      localStorage.setItem('pwa-was-installed', 'true');
       return;
     }
 
@@ -68,14 +81,40 @@ export default function PWAInstallPrompt() {
       setIsInstalled(true);
       setShowInstallPrompt(false);
       setDeferredPrompt(null);
+      // PWA 설치 상태를 localStorage에 기록
+      localStorage.setItem('pwa-was-installed', 'true');
+      console.log('✅ PWA 설치 완료 - 상태 기록됨');
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleAppInstalled);
 
+    // PWA 삭제 감지를 위한 주기적 체크 (30초마다)
+    const checkPWAStatus = () => {
+      const wasInstalled = localStorage.getItem('pwa-was-installed') === 'true';
+      const currentlyInstalled = window.matchMedia('(display-mode: standalone)').matches;
+      
+      if (wasInstalled && !currentlyInstalled) {
+        console.log('🗑️ PWA 삭제 감지됨 - 프롬프트 재활성화');
+        setIsInstalled(false);
+        localStorage.removeItem('pwa-was-installed');
+        localStorage.removeItem('pwa-prompt-dismissed');
+        
+        // 삭제 후 잠시 대기 후 프롬프트 재표시 가능하도록 설정
+        setTimeout(() => {
+          if (!window.matchMedia('(display-mode: standalone)').matches) {
+            console.log('🔄 PWA 재설치 프롬프트 준비 완료');
+          }
+        }, 5000); // 5초 후
+      }
+    };
+
+    const statusCheckInterval = setInterval(checkPWAStatus, 30000); // 30초마다 체크
+
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
+      clearInterval(statusCheckInterval);
     };
   }, []);
 
