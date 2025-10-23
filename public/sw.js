@@ -1,6 +1,6 @@
 // PWA Service Worker - 자동 버전 관리 + 업데이트 알림 + 강제 새로고침
-const CACHE_NAME = 'boxro-maker-v' + Date.now(); // 자동 버전 관리
-const OLD_CACHE_NAMES = ['boxro-maker-v', 'boxro-maker', 'boxro-cache']; // 이전 캐시 이름들
+const CACHE_NAME = 'boxro-v' + Date.now(); // 자동 버전 관리
+const OLD_CACHE_NAMES = ['boxro-maker-v', 'boxro-maker', 'boxro-v', 'boxro-cache']; // 이전 캐시 이름들
 const urlsToCache = [
   '/',
   '/draw',
