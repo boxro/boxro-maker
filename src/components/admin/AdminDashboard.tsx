@@ -104,7 +104,7 @@ export default function AdminDashboard({ adminStats, loading }: AdminDashboardPr
                 비활성: {adminStats.inactiveUsers || 0}<br/>
                 활동 사용자 수: {adminStats.todayActiveUsers || 0}<br/>
                 활동량: {adminStats.recent24hActivity || 0}<br/>
-                PWA 설치수: {adminStats.pwaInstallCount || 0}개
+                PWA 누적 설치수: {adminStats.pwaInstallCount || 0}개
               </div>
             </div>
           </div>
