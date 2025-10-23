@@ -72,7 +72,7 @@ export default function AdminDashboard({ adminStats, loading }: AdminDashboardPr
       <div className="bg-white/95 backdrop-blur-sm border border-white/20 rounded-lg p-6 mb-4">
         <div className="animate-pulse">
           <div className="h-6 bg-gray-200 rounded mb-4"></div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
             {[...Array(6)].map((_, i) => ( // 로딩 스켈레톤 카드 수
               <div key={i} className="bg-gray-100 rounded-lg p-6">
                 <div className="h-4 bg-gray-200 rounded mb-2"></div>
@@ -89,7 +89,7 @@ export default function AdminDashboard({ adminStats, loading }: AdminDashboardPr
   return (
     <div className="bg-white/95 backdrop-blur-sm border border-white/20 rounded-lg p-6 mb-4">
       <h3 className="text-lg font-semibold mb-4">전체 통계</h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
         {/* 전체 회원 수 */}
         <div className="bg-white text-gray-900 py-2 gap-2 border border-gray-200 rounded-lg px-8 py-6">
           <div className="flex flex-row items-center justify-between space-y-0 pb-2 border-b border-gray-200">
@@ -281,7 +281,6 @@ export default function AdminDashboard({ adminStats, loading }: AdminDashboardPr
             &nbsp;&nbsp;- <strong>비활성 회원:</strong> 회원가입만 하고 아직 활동이 없는 회원<br/>
             &nbsp;&nbsp;- <strong>활동 사용자 수(최근 24시간):</strong> 작품을 만들거나 박스로톡을 작성한 사용자만 카운트(단순히 로그인만 한 사용자는 카운트 안 됨)<br/>
             &nbsp;&nbsp;- <strong>활동량(최근 24시간):</strong> 최근 24시간 동안의 작품 생성 + 박스로톡 작성 수(같은 사용자가 여러 번 활동하면 모두 카운트됨)<br/>
-            &nbsp;&nbsp;- <strong>피크 시간(최근 30일):</strong> 최근 30일간의 활동 데이터를 시간대별로 분석<br/>
           • <strong>통계 계산 기준:</strong><br/>
             &nbsp;&nbsp;- <strong>조회수:</strong> 로그인한 사용자만 카운트 (여러 번 조회해도 매번 카운트)<br/>
             &nbsp;&nbsp;- <strong>좋아요:</strong> 로그인한 사용자만 카운트 (1회만 카운트)<br/>
