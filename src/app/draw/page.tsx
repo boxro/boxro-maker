@@ -309,9 +309,10 @@ export default function DrawPage() {
         const baseCropWidth = 650;
         const baseCropHeight = 488; // 4:3 비율
         
-        // 데스크톱과 모바일 모두 2배 크롭 사이즈 사용
-        const cropWidth = baseCropWidth * 2; // 1300
-        const cropHeight = baseCropHeight * 2; // 976
+        // 모바일은 2배, 데스크톱은 1배 크롭 사이즈 사용
+        const isMobile = window.innerWidth < 768;
+        const cropWidth = isMobile ? baseCropWidth * 2 : baseCropWidth; // 모바일: 1300, 데스크톱: 650
+        const cropHeight = isMobile ? baseCropHeight * 2 : baseCropHeight; // 모바일: 976, 데스크톱: 488
         
         // 스냅샷의 크기에 맞춰 크롭 사이즈 조정
         const maxCropWidth = Math.min(cropWidth, img.width);
@@ -323,9 +324,9 @@ export default function DrawPage() {
         const centerX = (img.width - actualCropWidth) / 2;
         const centerY = (img.height - actualCropHeight) / 2;
         
-        // 데스크톱과 모바일 모두 2배 오프셋 사용
-        const offsetX = 40 * 2; // 80px
-        const offsetY = 100 * 2; // 200px
+        // 모바일은 2배, 데스크톱은 1배 오프셋 사용
+        const offsetX = isMobile ? 40 * 2 : 40; // 모바일: 80px, 데스크톱: 40px
+        const offsetY = isMobile ? 100 * 2 : 100; // 모바일: 200px, 데스크톱: 100px
         
         const cropX = centerX - offsetX;
         const cropY = centerY - offsetY;
@@ -652,17 +653,17 @@ export default function DrawPage() {
       // 텍스트는 스냅샷 위치와 무관하게 고정값 사용
       // 모바일과 데스크톱 도면은 동일해야 함
       // 
-      // 스냅샷 위치: 모바일/데스크톱 Y=330px (동일)
-      // 스냅샷 크기: 모바일 1.00배, 데스크톱 1.93배
+      // 스냅샷 위치: 모바일/데스크톱 Y=440px (동일)
+      // 스냅샷 크기: 원본 크기 그대로 사용
       // 텍스트 위치: Y=1000px, Y=1030px (고정값)
       // 3D 렌더러 카메라: camera.position.set(-6.6, 2.5, 4.8) 고정
       // 그리드 색상: 0xF0F0F0, 0xF5F5F5 (연한 회색)
       // 
       // 나중에 다시 조정할 때 이 설정을 참고할 것!
       
-      // 3D 렌더링 스냅샷 영역 (중앙) - 원본 크기 그대로 (테스트용)
+      // 3D 렌더링 스냅샷 영역 (중앙) - 원본 크기 그대로 사용
       const isMobile = window.innerWidth < 768;
-      // 스냅샷 원본 크기 그대로 사용 (사이즈 조정 없음)
+      // 스냅샷 원본 크기 그대로 사용
       const snapshotWidth = snapshotImg.naturalWidth;
       const snapshotHeight = snapshotImg.naturalHeight;
       const snapshotX = (a4Width - snapshotWidth) / 2;

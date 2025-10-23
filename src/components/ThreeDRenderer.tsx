@@ -1824,8 +1824,8 @@ const ThreeDRenderer = forwardRef<{ getRenderer: () => THREE.WebGLRenderer | nul
         });
         
         if (newWidth > 0 && newHeight > 0) {
-          // 모바일 해상도 제한
-          const pixelRatio = isMobileDevice ? 1 : Math.min(window.devicePixelRatio || 1, 2);
+          // 모바일과 데스크톱 동일한 픽셀 비율 적용 (스냅샷 일관성을 위해)
+          const pixelRatio = isMobileDevice ? 2 : Math.min(window.devicePixelRatio || 1, 2);
           renderer.setPixelRatio(pixelRatio);
           renderer.setSize(newWidth, newHeight);
         camera.aspect = newWidth / newHeight;
