@@ -2705,58 +2705,40 @@ export default function AdminPage() {
         return dateB - dateA; // 최신순 (내림차순)
       });
 
-      // 사용자의 다운로드 가져오기 (갤러리 작품 + 도안 다운로드)
-      const userDownloads = [
-        // 갤러리 작품 다운로드 (downloadedBy 배열 사용)
-        ...userDesigns.reduce((downloads: any[], design: any) => {
-          const downloadedBy = design.downloadedBy || [];
-          console.log('🔍 갤러리 작품 다운로드 디버깅:', {
-            designId: design.id,
-            designTitle: design.title || design.name,
-            downloadedBy: downloadedBy,
-            downloadedByLength: downloadedBy.length,
-            downloads: design.downloads
+      // 사용자가 다운로드한 콘텐츠 찾기 (다른 사람 콘텐츠를 다운로드한 것)
+      const userDownloads = [];
+      
+      // 갤러리 작품에서 사용자가 다운로드한 것들
+      allDesigns.forEach((design: any) => {
+        const downloadedBy = design.downloadedBy || [];
+        if (downloadedBy.includes(currentUserUid)) {
+          userDownloads.push({
+            type: 'design',
+            id: design.id,
+            title: design.title || design.name || '제목 없음',
+            thumbnail: design.thumbnail || design.thumbnailUrl,
+            author: design.authorNickname || design.author || design.authorName || design.creator || design.userId || '작가 정보 없음',
+            downloads: design.downloads || 0,
+            createdAt: design.createdAt
           });
-          if (downloadedBy.length > 0) {
-            downloads.push({
-              type: 'design',
-              id: design.id,
-              title: design.title || design.name || '제목 없음',
-              thumbnail: design.thumbnail || design.thumbnailUrl,
-              author: design.authorNickname || design.author || design.authorName || design.creator || design.userId || '작가 정보 없음',
-              downloads: downloadedBy.length,
-              createdAt: design.createdAt
-            });
-          }
-          return downloads;
-        }, [])
-      ];
+        }
+      });
 
-      // 도안 다운로드 가져오기 (테이블과 동일한 방식으로 계산)
+      // 도안 다운로드 가져오기 (사용자가 다운로드한 도안)
       const blueprintDownloadsQuery = query(collection(db, 'blueprintDownloads'));
       const blueprintDownloadsSnapshot = await getDocs(blueprintDownloadsQuery);
       
       // 현재 사용자의 도안 다운로드만 필터링
       const userBlueprintDownloads = [];
-      console.log('🔍 도안 다운로드 디버깅 - 전체 문서 수:', blueprintDownloadsSnapshot.docs.length);
       blueprintDownloadsSnapshot.docs.forEach((doc) => {
         const downloadData = doc.data();
-        const userId = downloadData.userId;
-        const user = users.find(u => u.uid === userId);
-        console.log('🔍 도안 다운로드 디버깅:', {
-          docId: doc.id,
-          userId: userId,
-          userEmail: user?.email,
-          targetUserEmail: userEmail,
-          isMatch: user && user.email === userEmail
-        });
-        if (user && user.email === userEmail) {
+        if (downloadData.userId === currentUserUid) {
           userBlueprintDownloads.push({
             type: 'blueprint',
             id: doc.id,
             title: `도안 다운로드 (${downloadData.downloadType})`,
             thumbnail: null,
-            author: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
+            author: getDisplayName(downloadData.userDisplayName || '', downloadData.userNickname || '', userEmail),
             downloads: 1,
             fileName: downloadData.fileName,
             carType: downloadData.carType,
@@ -2765,7 +2747,6 @@ export default function AdminPage() {
           });
         }
       });
-      console.log('🔍 사용자 도안 다운로드 수:', userBlueprintDownloads.length);
 
       // 모든 다운로드 합치기 (최신순 정렬)
       const allUserDownloads = [...userDownloads, ...userBlueprintDownloads].sort((a, b) => {
@@ -2933,13 +2914,13 @@ export default function AdminPage() {
         return dateB - dateA; // 최신순 (내림차순)
       });
 
-      // 사용자의 스토어 바로가기 가져오기
-      const userStoreRedirects = userStoreItems.reduce((redirects: any[], storeItem: any) => {
-        const redirectedBy = storeItem.storeRedirectedBy || [];
-        const userRedirectCount = redirectedBy.filter((uid: string) => uid === user.uid).length;
-        
-        if (userRedirectCount > 0) {
-          redirects.push({
+      // 사용자가 스토어 바로가기한 콘텐츠 찾기 (다른 사람 스토어 아이템을 바로가기한 것)
+      const userStoreRedirects = [];
+      
+      allStoreItems.forEach((storeItem: any) => {
+        const storeRedirectedBy = storeItem.storeRedirectedBy || [];
+        if (storeRedirectedBy.includes(currentUserUid)) {
+          userStoreRedirects.push({
             type: 'store',
             id: storeItem.id,
             title: storeItem.title || '제목 없음',
@@ -2950,8 +2931,10 @@ export default function AdminPage() {
             redirectedAt: storeItem.createdAt // 실제 리다이렉트 날짜를 추적하려면 별도 컬렉션이 필요하므로 임시로 생성일 사용
           });
         }
-        return redirects;
-      }, []).sort((a: any, b: any) => {
+      });
+
+      // 최신순 정렬
+      userStoreRedirects.sort((a: any, b: any) => {
         // Firestore Timestamp 객체 처리
         const getTimestamp = (date: any) => {
           if (!date) return 0;
