@@ -3,8 +3,11 @@
 import { useEffect } from 'react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function ConditionalPWA() {
+  const { user } = useAuth();
+  
   useEffect(() => {
     // 모든 주요 인앱 브라우저 감지
     const isInAppBrowser = /KAKAOTALK|NAVER|LINE|FBAN|FBAV|Instagram|WeChat|QQ|SamsungBrowser|wv/i.test(navigator.userAgent);
@@ -49,18 +52,26 @@ export default function ConditionalPWA() {
         });
     }
 
-    // PWA 설치 감지 및 추적
+    // PWA 설치 감지 및 추적 (사용자 정보 포함)
     const trackPWAInstall = async (eventType: string, details?: any) => {
       try {
-        await addDoc(collection(db, 'pwaInstalls'), {
+        const pwaData = {
           eventType, // 'install_prompt', 'install_complete', 'install_deferred'
           userAgent: navigator.userAgent,
           platform: navigator.platform,
           language: navigator.language,
           timestamp: serverTimestamp(),
-          details: details || {}
-        });
-        console.log('📊 PWA 설치 이벤트 추적:', eventType);
+          details: details || {},
+          // 사용자 정보 추가 (로그인된 경우에만)
+          ...(user && {
+            userId: user.uid,
+            userEmail: user.email,
+            userDisplayName: user.displayName || user.email?.split('@')[0] || 'Unknown'
+          })
+        };
+        
+        await addDoc(collection(db, 'pwaInstalls'), pwaData);
+        console.log('📊 PWA 설치 이벤트 추적:', eventType, user ? `(사용자: ${user.email})` : '(익명)');
       } catch (error) {
         // 권한 오류인 경우 조용히 무시 (개발 중에는 로그 출력)
         if (error instanceof Error && error.message.includes('permissions')) {
@@ -118,7 +129,7 @@ export default function ConditionalPWA() {
       }
     });
 
-  }, []);
+  }, [user]); // user 변경 시에도 PWA 추적 재설정
 
   return null;
 }

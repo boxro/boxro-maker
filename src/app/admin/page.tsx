@@ -3115,21 +3115,27 @@ export default function AdminPage() {
         pwaInstalls = [];
       }
 
-      // PWA 설치 데이터를 사용자별로 정리
+      // PWA 설치 데이터를 사용자별로 정리 (실제 사용자 ID 기반)
       const pwaInstallMap = new Map<string, { installed: boolean; installDate: string }>();
       pwaInstalls.forEach((pwaInstall: any) => {
         if (pwaInstall.eventType === 'install_complete' || pwaInstall.eventType === 'already_installed' || pwaInstall.eventType === 'install_detected') {
-          // User Agent에서 이메일을 추출하거나, 다른 방법으로 사용자 식별
-          // 여기서는 User Agent를 기반으로 추정하거나, 별도의 사용자 식별 방법이 필요할 수 있습니다
-          const userAgent = pwaInstall.userAgent || '';
           const installDate = pwaInstall.timestamp?.toDate?.()?.toISOString() || pwaInstall.timestamp || '';
           
-          // User Agent 기반으로 임시 키 생성 (실제로는 더 정확한 사용자 식별이 필요)
-          const tempKey = userAgent.substring(0, 50); // User Agent의 일부를 키로 사용
-          pwaInstallMap.set(tempKey, {
-            installed: true,
-            installDate: installDate
-          });
+          // 사용자 ID 또는 이메일로 정확한 매칭
+          if (pwaInstall.userId) {
+            // 사용자 ID가 있는 경우 (로그인된 사용자)
+            pwaInstallMap.set(pwaInstall.userId, {
+              installed: true,
+              installDate: installDate
+            });
+          } else if (pwaInstall.userEmail) {
+            // 이메일이 있는 경우
+            pwaInstallMap.set(pwaInstall.userEmail, {
+              installed: true,
+              installDate: installDate
+            });
+          }
+          // User Agent 기반 매칭은 제거 (부정확하므로)
         }
       });
 
@@ -3829,18 +3835,27 @@ export default function AdminPage() {
         }
       });
 
-      // PWA 설치 정보 업데이트
+      // PWA 설치 정보 업데이트 (정확한 사용자 매칭)
       for (const [email, userStat] of userStatsMap.entries()) {
-        // User Agent 기반으로 PWA 설치 정보 매칭 (임시 방법)
-        for (const [tempKey, pwaInfo] of pwaInstallMap.entries()) {
-          // 실제로는 더 정확한 사용자 식별이 필요하지만, 
-          // 현재는 User Agent의 일부를 기반으로 추정
-          if (pwaInfo.installed) {
-            userStat.pwaInstalled = true;
-            userStat.pwaInstallDate = pwaInfo.installDate;
-            break; // 첫 번째 매칭되는 PWA 설치 정보만 사용
-          }
+        // 사용자 ID 기반 매칭 시도
+        const pwaInfoByUserId = pwaInstallMap.get(userStat.uid);
+        if (pwaInfoByUserId) {
+          userStat.pwaInstalled = pwaInfoByUserId.installed;
+          userStat.pwaInstallDate = pwaInfoByUserId.installDate;
+          continue;
         }
+        
+        // 이메일 기반 매칭 시도
+        const pwaInfoByEmail = pwaInstallMap.get(email);
+        if (pwaInfoByEmail) {
+          userStat.pwaInstalled = pwaInfoByEmail.installed;
+          userStat.pwaInstallDate = pwaInfoByEmail.installDate;
+          continue;
+        }
+        
+        // 매칭되는 PWA 설치 정보가 없으면 기본값 유지 (false)
+        userStat.pwaInstalled = false;
+        userStat.pwaInstallDate = '';
       }
 
       const finalUserStats = Array.from(userStatsMap.values());
