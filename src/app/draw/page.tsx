@@ -11,7 +11,6 @@ import CommonBackground from "@/components/CommonBackground";
 import PageHeader from "@/components/PageHeader";
 import DrawSplashScreen from "@/components/DrawSplashScreen";
 import ErrorModal from "@/components/ErrorModal";
-import DownloadConfirmModal from "@/components/DownloadConfirmModal";
 import { 
   ArrowLeft, 
   ArrowRight,
@@ -6229,14 +6228,42 @@ export default function DrawPage() {
       )}
 
       {/* 다운로드 확인 모달 */}
-      <DownloadConfirmModal
-        isOpen={showDownloadConfirmModal}
-        onClose={() => setShowDownloadConfirmModal(false)}
-        onConfirm={() => {
-          setShowDownloadConfirmModal(false);
-          downloadAllPagesAsPDF();
-        }}
-      />
+      {showDownloadConfirmModal && (
+        <div className="fixed inset-0 bg-gradient-to-br from-purple-900/20 via-blue-900/20 to-pink-900/20 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 max-w-sm w-full mx-6">
+            <div className="p-6">
+              <div className="text-center">
+                <div className="flex justify-center mb-4">
+                  <div className="text-[40px]">🚗✨</div>
+                </div>
+                <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-3">
+                  도안을 다운로드하시겠어요?
+                </h3>
+                <p className="text-gray-800 text-sm mb-6 leading-relaxed">
+                  이제 이 멋진 박스카가 현실로 태어날 차례예요! 🚗✨
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowDownloadConfirmModal(false)}
+                    className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-full font-medium transition-colors"
+                  >
+                    취소
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowDownloadConfirmModal(false);
+                      downloadAllPagesAsPDF();
+                    }}
+                    className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-full font-medium transition-all"
+                  >
+                    다운로드
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 에러 모달 */}
       <ErrorModal
