@@ -123,7 +123,6 @@ export default function AdminDashboard({ adminStats, loading }: AdminDashboardPr
                 좋아요: {adminStats.galleryLikes||0}<br/>
                 공유: {adminStats.galleryShares||0}<br/>
                 박스로 톡: {adminStats.galleryBoxroTalks||0}<br/>
-                다운로드: {adminStats.galleryDownloads||0}<br/>
                 조회: {adminStats.galleryViews||0}
               </div>
             </div>

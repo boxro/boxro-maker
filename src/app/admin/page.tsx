@@ -2705,24 +2705,10 @@ export default function AdminPage() {
         return dateB - dateA; // 최신순 (내림차순)
       });
 
-      // 사용자가 다운로드한 콘텐츠 찾기 (다른 사람 콘텐츠를 다운로드한 것)
+      // 사용자가 다운로드한 콘텐츠 찾기 (도안 다운로드만)
       const userDownloads = [];
       
-      // 갤러리 작품에서 사용자가 다운로드한 것들
-      allDesigns.forEach((design: any) => {
-        const downloadedBy = design.downloadedBy || [];
-        if (downloadedBy.includes(currentUserUid)) {
-          userDownloads.push({
-            type: 'design',
-            id: design.id,
-            title: design.title || design.name || '제목 없음',
-            thumbnail: design.thumbnail || design.thumbnailUrl,
-            author: design.authorNickname || design.author || design.authorName || design.creator || design.userId || '작가 정보 없음',
-            downloads: design.downloads || 0,
-            createdAt: design.createdAt
-          });
-        }
-      });
+      // 갤러리 작품 다운로드 로직 제거됨 - 도안 다운로드만 추적
 
       // 도안 다운로드 가져오기 (사용자가 다운로드한 도안)
       const blueprintDownloadsQuery = query(collection(db, 'blueprintDownloads'));
@@ -3480,32 +3466,7 @@ export default function AdminPage() {
           }
         });
         
-        downloadedBy.forEach((userId: string) => {
-          const user = users.find(u => u.uid === userId);
-          if (user) {
-            const email = user.email || 'unknown';
-            if (!userStatsMap.has(email)) {
-              userStatsMap.set(email, {
-                email,
-                displayName: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
-                authorNickname: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
-                photoURL: user.photoURL || '',
-                createdAt: user.createdAt || '',
-                lastSignIn: user.lastSignIn || '',
-                designsCount: 0,
-                boxroTalksCount: 0,
-                likesCount: 0,
-                downloadsCount: 0,
-                sharesCount: 0,
-                viewsCount: 0,
-                storeRedirectsCount: 0,
-                uid: user.uid || ''
-              });
-            }
-            const userStat = userStatsMap.get(email)!;
-            userStat.downloadsCount++;
-          }
-        });
+        // 갤러리 다운로드 로직 제거됨 - 도안 다운로드만 추적
         
         sharedBy.forEach((userId: string) => {
           const user = users.find(u => u.uid === userId);
@@ -3813,12 +3774,11 @@ export default function AdminPage() {
       const activeUsers = finalUserStats.filter(user => user.designsCount > 0 || user.boxroTalksCount > 0).length;
       const inactiveUsers = finalUserStats.length - activeUsers;
       
-      // 갤러리 통계
+      // 갤러리 통계 (다운로드 제외)
       const galleryViews = designs.reduce((sum, design: any) => sum + (design.views || 0), 0);
       const galleryBoxroTalks = activeGalleryBoxroTalks.length;
       const galleryLikes = designs.reduce((sum, design: any) => sum + (design.likes || 0), 0);
       const galleryShares = designs.reduce((sum, design: any) => sum + (design.shares || 0), 0);
-      const galleryDownloads = designs.reduce((sum, design: any) => sum + (design.downloads || 0), 0);
       
       // 스토리 통계 (스토어 관련 박스로 톡 제외)
       const storyViews = stories.reduce((sum, story: any) => sum + (story.views || 0), 0);
@@ -3880,7 +3840,7 @@ export default function AdminPage() {
         totalDesigns: designs.length,
         totalBoxroTalks: totalBoxroTalks, // 갤러리 + 스토리 + 스토어 박스로 톡
         totalLikes: galleryLikes + storyLikes + storeLikes, // 갤러리 + 스토리 + 스토어 좋아요
-        totalDownloads: galleryDownloads + blueprintDownloads, // 갤러리 + 도안 다운로드
+        totalDownloads: blueprintDownloads, // 도안 다운로드만
         totalShares: galleryShares + storyShares + storeShares, // 갤러리 + 스토리 + 스토어 공유
         totalViews: galleryViews + storyViews + storeViews, // 갤러리 + 스토리 + 스토어 조회
         activeUsers: activeUsers,
@@ -3891,7 +3851,6 @@ export default function AdminPage() {
         galleryBoxroTalks: galleryBoxroTalks,
         galleryLikes: galleryLikes,
         galleryShares: galleryShares,
-        galleryDownloads: galleryDownloads,
         storyViews: storyViews,
         storyBoxroTalks: storyBoxroTalksCount,
         storyLikes: storyLikes,

@@ -637,71 +637,27 @@ export default function GalleryPage() {
       );
 
 
-      // 실제 다운로드 로직
+      // 도안 다운로드 기능 제거됨 - 3D 스냅샷 이미지만 다운로드
       try {
-        if (design.blueprintImages && design.blueprintImages.length > 0) {
-          // PDF 다운로드 (my-designs와 동일한 방식)
-          const { default: jsPDF } = await import('jspdf');
-          
-          const pdf = new jsPDF({
-            orientation: 'landscape',
-            unit: 'mm',
-            format: 'a4'
-          });
-          
-          // 각 blueprint 이미지를 PDF에 추가
-          for (let i = 0; i < (design.blueprintImages?.length || 0); i++) {
-            if (i > 0) {
-              pdf.addPage();
-            }
-            
-            const img = new Image();
-            img.crossOrigin = 'anonymous';
-            
-            await new Promise((resolve, reject) => {
-              img.onload = () => {
-                pdf.addImage(img, 'PNG', 0, 0, 297, 210);
-                resolve(true);
-              };
-              img.onerror = reject;
-              img.src = design.blueprintImages![i];
-            });
-          }
-          
-          // PDF 다운로드 - 파일명 규칙: boxro_pattern_release_yyyymmddhhmm
-          const now = new Date();
-          const year = now.getFullYear();
-          const month = String(now.getMonth() + 1).padStart(2, '0');
-          const day = String(now.getDate()).padStart(2, '0');
-          const hours = String(now.getHours()).padStart(2, '0');
-          const minutes = String(now.getMinutes()).padStart(2, '0');
-          const timestamp = `${year}${month}${day}${hours}${minutes}`;
-          
-          pdf.save(`boxro_pattern_release_${timestamp}.pdf`);
-        } else {
-          // blueprintImages가 없는 경우 JSON으로 다운로드
-          const designData = {
-            name: design.name,
-            type: design.type,
-            author: design.author,
-            tags: design.tags,
-            createdAt: design.createdAt
-          };
-          
-          const dataStr = JSON.stringify(designData, null, 2);
-          const dataBlob = new Blob([dataStr], { type: 'application/json' });
-          const url = URL.createObjectURL(dataBlob);
-          
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = `${design.name}_${design.type}.json`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          URL.revokeObjectURL(url);
-          
-          alert('JSON 파일 다운로드가 완료되었습니다!');
-        }
+        // 썸네일 이미지를 PNG로 다운로드
+        const link = document.createElement('a');
+        link.href = design.thumbnail;
+        
+        // 파일명 규칙: boxro_snapshot_yyyymmddhhmm
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const timestamp = `${year}${month}${day}${hours}${minutes}`;
+        
+        link.download = `boxro_snapshot_${timestamp}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        alert('3D 스냅샷 이미지 다운로드가 완료되었습니다!');
       } catch (downloadError) {
         console.error('파일 다운로드 실패:', downloadError);
         setErrorMessage('파일 다운로드 중 오류가 발생했습니다.');
