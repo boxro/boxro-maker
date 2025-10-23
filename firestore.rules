@@ -22,7 +22,7 @@ service cloud.firestore {
       allow delete: if request.auth != null && 
         (resource.data.authorId == request.auth.uid || 
          (resource.data.authorId == null && resource.data.authorEmail == request.auth.token.email) ||
-         request.auth.token.email in ["beagle3651@gmail.com", "boxro.crafts@gmail.com"]);
+         request.auth.token.email in ["beagle3651@gmail.com", "boxro.crafts@gmail.com", "dongwoo0313@nate.com"]);
     }
     
     // 사용자 개인 디자인
