@@ -2794,79 +2794,59 @@ export default function AdminPage() {
         userBlueprintDownloadsDetails: userBlueprintDownloads.map(d => ({ type: d.type, downloads: d.downloads }))
       });
 
-      // 사용자의 공유 가져오기 (갤러리 작품 + 박스카 이야기)
-      const userShares = [
-        // 갤러리 작품 공유 (sharedBy 배열 사용)
-        ...userDesigns.reduce((shares: any[], design: any) => {
-          const sharedBy = design.sharedBy || [];
-          console.log('🔍 갤러리 작품 공유 디버깅:', {
-            designId: design.id,
-            designTitle: design.title || design.name,
-            sharedBy: sharedBy,
-            sharedByLength: sharedBy.length,
-            shares: design.shares
+      // 사용자가 공유한 콘텐츠 찾기 (다른 사람 콘텐츠를 공유한 것)
+      const userShares = [];
+      
+      // 갤러리 작품에서 사용자가 공유한 것들
+      allDesigns.forEach((design: any) => {
+        const sharedBy = design.sharedBy || [];
+        if (sharedBy.includes(currentUserUid)) {
+          userShares.push({
+            type: 'design',
+            id: design.id,
+            title: design.title || design.name || '제목 없음',
+            thumbnail: design.thumbnail || design.thumbnailUrl,
+            author: design.authorNickname || design.author || design.authorName || design.creator || design.userId || '작가 정보 없음',
+            shares: design.shares || 0,
+            createdAt: design.createdAt
           });
-          if (sharedBy.length > 0) {
-            shares.push({
-              type: 'design',
-              id: design.id,
-              title: design.title || design.name || '제목 없음',
-              thumbnail: design.thumbnail || design.thumbnailUrl,
-              author: design.authorNickname || design.author || design.authorName || design.creator || design.userId || '작가 정보 없음',
-              shares: design.shares || 0, // 전체 공유 수 사용
-              createdAt: design.createdAt
-            });
-          }
-          return shares;
-        }, []),
-        // 박스카 이야기 공유 (sharedBy 배열 사용)
-        ...resolvedUserStories.reduce((shares: any[], story: any) => {
-          const sharedBy = story.sharedBy || [];
-          console.log('🔍 스토리 작품 공유 디버깅:', {
-            storyId: story.id,
-            storyTitle: story.title,
-            sharedBy: sharedBy,
-            sharedByLength: sharedBy.length,
-            shares: story.shares
+        }
+      });
+
+      // 스토리에서 사용자가 공유한 것들
+      allStories.forEach((story: any) => {
+        const sharedBy = story.sharedBy || [];
+        if (sharedBy.includes(currentUserUid)) {
+          userShares.push({
+            type: 'story',
+            id: story.id,
+            title: story.title || '제목 없음',
+            thumbnail: story.thumbnail || story.cardThumbnail,
+            author: story.authorNickname || story.author || story.authorName || story.creator || story.userId || '작가 정보 없음',
+            shares: story.shares || 0,
+            createdAt: story.createdAt
           });
-          if (sharedBy.length > 0) {
-            shares.push({
-              type: 'story',
-              id: story.id,
-              title: story.title || '제목 없음',
-              thumbnail: story.thumbnail || story.cardThumbnail,
-              author: story.actualNickname || story.authorNickname || story.authorName || story.author || story.creator || story.userId || '작가 정보 없음',
-              shares: story.shares || 0, // 전체 공유 수 사용
-              createdAt: story.createdAt
-            });
-          }
-          return shares;
-        }, []),
-        // 스토어 작품 공유 (sharedBy 배열 사용)
-        ...userStoreItems.reduce((shares: any[], storeItem: any) => {
-          const sharedBy = storeItem.sharedBy || [];
-          console.log('🔍 스토어 작품 공유 디버깅:', {
-            storeItemId: storeItem.id,
-            storeItemTitle: storeItem.title,
-            sharedBy: sharedBy,
-            sharedByLength: sharedBy.length,
-            shares: storeItem.shares
+        }
+      });
+
+      // 스토어 아이템에서 사용자가 공유한 것들
+      allStoreItems.forEach((storeItem: any) => {
+        const sharedBy = storeItem.sharedBy || [];
+        if (sharedBy.includes(currentUserUid)) {
+          userShares.push({
+            type: 'store',
+            id: storeItem.id,
+            title: storeItem.title || '제목 없음',
+            thumbnail: storeItem.thumbnail || storeItem.cardThumbnail,
+            author: storeItem.authorNickname || storeItem.author || storeItem.authorName || storeItem.creator || storeItem.userId || '작가 정보 없음',
+            shares: storeItem.shares || 0,
+            createdAt: storeItem.createdAt
           });
-          if (sharedBy.length > 0) {
-            shares.push({
-              type: 'store',
-              id: storeItem.id,
-              title: storeItem.title || '제목 없음',
-              thumbnail: storeItem.thumbnail || storeItem.cardThumbnail,
-              author: storeItem.authorNickname || storeItem.author || storeItem.authorName || storeItem.creator || storeItem.userId || '작가 정보 없음',
-              shares: storeItem.shares || 0, // 전체 공유 수 사용
-              createdAt: storeItem.createdAt
-            });
-          }
-          return shares;
-        }, [])
-      ].sort((a, b) => {
-        // Firestore Timestamp 객체 처리
+        }
+      });
+
+      // 최신순 정렬
+      userShares.sort((a, b) => {
         const getTimestamp = (date: any) => {
           if (!date) return 0;
           if (date.toDate && typeof date.toDate === 'function') {
@@ -2883,80 +2863,59 @@ export default function AdminPage() {
         return dateB - dateA; // 최신순 (내림차순)
       });
 
-      // 사용자의 조회 가져오기 (갤러리 작품 + 박스카 이야기 + 스토어 아이템)
-      const userViews = [
-        // 갤러리 작품 조회 (viewedBy 배열 사용)
-        ...userDesigns.reduce((views: any[], design: any) => {
-          const viewedBy = design.viewedBy || [];
-          console.log('🔍 갤러리 작품 조회 디버깅:', {
-            designId: design.id,
-            designTitle: design.title || design.name,
-            viewedByLength: viewedBy.length,
-            viewedBy: viewedBy
+      // 사용자가 조회한 콘텐츠 찾기 (다른 사람 콘텐츠를 조회한 것)
+      const userViews = [];
+      
+      // 갤러리 작품에서 사용자가 조회한 것들
+      allDesigns.forEach((design: any) => {
+        const viewedBy = design.viewedBy || [];
+        if (viewedBy.includes(currentUserUid)) {
+          userViews.push({
+            type: 'gallery',
+            id: design.id,
+            title: design.title || design.name || '제목 없음',
+            thumbnail: design.thumbnail || design.imageUrl,
+            author: design.authorNickname || design.author || design.authorName || design.creator || design.userId || '작가 정보 없음',
+            views: design.views || 0,
+            createdAt: design.createdAt
           });
-          
-          if (viewedBy.length > 0) {
-            views.push({
-              type: 'gallery',
-              id: design.id,
-              title: design.title || design.name || '제목 없음',
-              thumbnail: design.thumbnail || design.imageUrl,
-              author: design.authorNickname || design.author || design.authorName || design.creator || design.userId || '작가 정보 없음',
-              views: design.views || 0, // 전체 조회 수 사용
-              createdAt: design.createdAt
-            });
-          }
-          return views;
-        }, []),
-        
-        // 박스카 이야기 조회 (viewedBy 배열 사용)
-        ...userStories.reduce((views: any[], story: any) => {
-          const viewedBy = story.viewedBy || [];
-          console.log('🔍 박스카 이야기 조회 디버깅:', {
-            storyId: story.id,
-            storyTitle: story.title,
-            viewedByLength: viewedBy.length,
-            viewedBy: viewedBy
+        }
+      });
+
+      // 스토리에서 사용자가 조회한 것들
+      allStories.forEach((story: any) => {
+        const viewedBy = story.viewedBy || [];
+        if (viewedBy.includes(currentUserUid)) {
+          userViews.push({
+            type: 'story',
+            id: story.id,
+            title: story.title || '제목 없음',
+            thumbnail: story.thumbnail || story.cardThumbnail,
+            author: story.authorNickname || story.author || story.authorName || story.creator || story.userId || '작가 정보 없음',
+            views: story.views || 0,
+            createdAt: story.createdAt
           });
-          
-          if (viewedBy.length > 0) {
-            views.push({
-              type: 'story',
-              id: story.id,
-              title: story.title || '제목 없음',
-              thumbnail: story.thumbnail || story.imageUrl,
-              author: story.authorNickname || story.author || story.authorName || story.creator || story.userId || '작가 정보 없음',
-              views: story.views || 0, // 전체 조회 수 사용
-              createdAt: story.createdAt
-            });
-          }
-          return views;
-        }, []),
-        
-        // 스토어 아이템 조회 (viewedBy 배열 사용)
-        ...userStoreItems.reduce((views: any[], storeItem: any) => {
-          const viewedBy = storeItem.viewedBy || [];
-          console.log('🔍 스토어 아이템 조회 디버깅:', {
-            storeItemId: storeItem.id,
-            storeItemTitle: storeItem.title,
-            viewedByLength: viewedBy.length,
-            viewedBy: viewedBy
+        }
+      });
+
+      // 스토어 아이템에서 사용자가 조회한 것들
+      allStoreItems.forEach((storeItem: any) => {
+        const viewedBy = storeItem.viewedBy || [];
+        if (viewedBy.includes(currentUserUid)) {
+          userViews.push({
+            type: 'store',
+            id: storeItem.id,
+            title: storeItem.title || '제목 없음',
+            thumbnail: storeItem.thumbnail || storeItem.cardThumbnail,
+            author: storeItem.authorNickname || storeItem.author || storeItem.authorName || storeItem.creator || storeItem.userId || '작가 정보 없음',
+            views: storeItem.views || 0,
+            createdAt: storeItem.createdAt
           });
-          
-          if (viewedBy.length > 0) {
-            views.push({
-              type: 'store',
-              id: storeItem.id,
-              title: storeItem.title || '제목 없음',
-              thumbnail: storeItem.thumbnail || storeItem.cardThumbnail,
-              author: storeItem.authorNickname || storeItem.author || storeItem.authorName || storeItem.creator || storeItem.userId || '작가 정보 없음',
-              views: storeItem.views || 0, // 전체 조회 수 사용
-              createdAt: storeItem.createdAt
-            });
-          }
-          return views;
-        }, [])
-      ].sort((a, b) => {
+        }
+      });
+
+      // 최신순 정렬
+      userViews.sort((a, b) => {
         // Firestore Timestamp 객체 처리
         const getTimestamp = (date: any) => {
           if (!date) return 0;
