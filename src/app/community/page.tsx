@@ -1523,7 +1523,7 @@ export default function GalleryPage() {
         <meta property="og:title" content="박스카 갤러리 | BOXRO 박스로" />
         <meta property="og:description" content="친구들의 박스카를 구경하고, 내 작품도 뽐내보세요! 버려진 박스로 만든 창의적인 자동차 작품들을 만나보세요." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content={`${process.env.NEXT_PUBLIC_SITE_URL || 'https://boxro-maker.vercel.app'}/community`} />
+        <meta property="og:url" content={`${process.env.NEXT_PUBLIC_SITE_URL || 'https://boxro.vercel.app'}/community`} />
         <meta property="og:image" content="/og-image.png" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="박스카 갤러리 | BOXRO 박스로" />
@@ -1537,7 +1537,7 @@ export default function GalleryPage() {
               "@type": "CollectionPage",
               "name": "박스카 갤러리",
               "description": "친구들의 박스카를 구경하고, 내 작품도 뽐내보세요! 버려진 박스로 만든 창의적인 자동차 작품들을 만나보세요.",
-              "url": `${process.env.NEXT_PUBLIC_SITE_URL || 'https://boxro-maker.vercel.app'}/community`,
+              "url": `${process.env.NEXT_PUBLIC_SITE_URL || 'https://boxro.vercel.app'}/community`,
               "mainEntity": {
                 "@type": "ItemList",
                 "name": "박스카 작품들",

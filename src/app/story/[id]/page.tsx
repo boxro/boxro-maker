@@ -711,7 +711,7 @@ export default function StoryArticlePage() {
         <meta property="og:title" content={article.title} />
         <meta property="og:description" content={article.summary} />
         <meta property="og:type" content="article" />
-        <meta property="og:url" content={`${process.env.NEXT_PUBLIC_SITE_URL || 'https://boxro-maker.vercel.app'}/story/${id}`} />
+        <meta property="og:url" content={`${process.env.NEXT_PUBLIC_SITE_URL || 'https://boxro.vercel.app'}/story/${id}`} />
         {article.thumbnail && <meta property="og:image" content={article.thumbnail} />}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={article.title} />
@@ -741,7 +741,7 @@ export default function StoryArticlePage() {
               },
               "mainEntityOfPage": {
                 "@type": "WebPage",
-                "@id": `${process.env.NEXT_PUBLIC_SITE_URL || 'https://boxro-maker.vercel.app'}/story/${id}`
+                "@id": `${process.env.NEXT_PUBLIC_SITE_URL || 'https://boxro.vercel.app'}/story/${id}`
               },
               "image": article.thumbnail ? [article.thumbnail] : undefined,
               "keywords": article.tags.join(', ')
