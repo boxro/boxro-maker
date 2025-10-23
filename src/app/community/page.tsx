@@ -8,13 +8,11 @@ import Head from "next/head";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ErrorModal from "@/components/ErrorModal";
-import DownloadConfirmModal from "@/components/DownloadConfirmModal";
 import { 
   Car,
   Heart, 
   ThumbsUp,
   Share2, 
-  Download, 
   Plus,
   MessageCircle,
   Eye,
@@ -215,7 +213,6 @@ interface GalleryDesign {
   authorId: string;
   thumbnail: string;
   likes: number;
-  downloads: number;
   views: number;
   boxroTalks: number;
   shares: number;
@@ -226,8 +223,6 @@ interface GalleryDesign {
   likedBy: string[];
   isShared?: boolean;
   sharedBy?: string[];
-  isDownloaded?: boolean;
-  downloadedBy?: string[];
   isBoxroTalked?: boolean;
   boxroTalkedBy?: string[];
   description?: string;
@@ -336,14 +331,12 @@ export default function GalleryPage() {
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareDesignId, setShareDesignId] = useState<string | null>(null);
   const [showShareSuccessModal, setShowShareSuccessModal] = useState(false);
-  const [showDownloadConfirmModal, setShowDownloadConfirmModal] = useState(false);
-  const [pendingDownloadId, setPendingDownloadId] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteDesignId, setDeleteDesignId] = useState<string | null>(null);
   
   // 로그인 유도 모달 상태
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [loginModalType, setLoginModalType] = useState<'like' | 'share' | 'boxroTalk' | 'download'>('like');
+  const [loginModalType, setLoginModalType] = useState<'like' | 'share' | 'boxroTalk'>('like');
   const [loginModalDesignId, setLoginModalDesignId] = useState<string | null>(null);
   
   // 오류 모달 상태
@@ -593,87 +586,7 @@ export default function GalleryPage() {
     }
   };
 
-  // ===== 다운로드 함수 =====
-  // 중요: 좋아요와 동일한 패턴으로 처리됩니다
-  // 1. Firestore 업데이트 (increment + arrayUnion)
-  // 2. 로컬 상태 업데이트 (숫자 + 배열 + boolean)
-  // 3. 실제 파일 다운로드 실행
-  const handleDownload = async (designId: string) => {
-    if (!user) {
-      openLoginModal('download', designId);
-      return;
-    }
-
-    // 다운로드 확인 모달 표시
-    setPendingDownloadId(designId);
-    setShowDownloadConfirmModal(true);
-  };
-
-  const executeDownload = async (designId: string) => {
-    try {
-      const designRef = doc(db, 'communityDesigns', designId);
-      const design = designs.find(d => d.id === designId);
-      
-      if (!design) return;
-
-      // 다운로드 수 증가 및 사용자 ID 저장
-      await updateDoc(designRef, {
-        downloads: increment(1),
-        downloadedBy: arrayUnion(user.uid)
-      });
-
-      // 로컬 상태 업데이트
-      setDesigns(prevDesigns => 
-        prevDesigns.map(d => 
-          d.id === designId 
-            ? { 
-                ...d, 
-                downloads: d.downloads + 1, 
-                downloadedBy: [...(d.downloadedBy || []), user.uid],
-                isDownloaded: true
-              }
-            : d
-        )
-      );
-
-
-      // 도안 다운로드 기능 제거됨 - 3D 스냅샷 이미지만 다운로드
-      try {
-        // 썸네일 이미지를 PNG로 다운로드
-        const link = document.createElement('a');
-        link.href = design.thumbnail;
-        
-        // 파일명 규칙: boxro_snapshot_yyyymmddhhmm
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const day = String(now.getDate()).padStart(2, '0');
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        const timestamp = `${year}${month}${day}${hours}${minutes}`;
-        
-        link.download = `boxro_snapshot_${timestamp}.png`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        alert('3D 스냅샷 이미지 다운로드가 완료되었습니다!');
-      } catch (downloadError) {
-        console.error('파일 다운로드 실패:', downloadError);
-        setErrorMessage('파일 다운로드 중 오류가 발생했습니다.');
-        setShowErrorModal(true);
-      }
-    } catch (error) {
-      console.error('다운로드 실패:', error);
-      const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.';
-      console.error('오류 상세:', {
-        message: errorMessage,
-        stack: error instanceof Error ? error.stack : undefined
-      });
-      setErrorMessage('다운로드 중 오류가 발생했습니다.');
-      setShowErrorModal(true);
-    }
-  };
+  // 다운로드 기능 완전 제거됨
 
   const filteredAndSortedDesigns = designs
     .filter((design, index, self) => {
@@ -769,7 +682,7 @@ export default function GalleryPage() {
   };
 
   // 로그인 유도 모달 열기
-  const openLoginModal = (type: 'like' | 'share' | 'comment' | 'download', designId: string) => {
+  const openLoginModal = (type: 'like' | 'share' | 'comment', designId: string) => {
     setLoginModalType(type);
     setLoginModalDesignId(designId);
     setShowLoginModal(true);
@@ -1825,21 +1738,7 @@ export default function GalleryPage() {
                         <MessageCircle className={`w-5 h-5 ${design.isBoxroTalked ? 'text-white' : 'text-gray-500'}`} />
                         <span className={`text-xs font-medium ${design.isBoxroTalked ? 'text-white' : 'text-gray-500'}`}>{design.boxroTalks}</span>
                       </button>
-                      {/* 업로드된 파일이 아닌 경우에만 다운로드 버튼 표시 */}
-                      {design.type !== 'uploaded' && !design.isUploaded && (
-                        <button 
-                          className={`w-[60px] h-[60px] rounded-full p-0 flex flex-col items-center justify-center gap-1 ${design.isDownloaded
-                            ? 'bg-emerald-500 hover:bg-emerald-600 text-white' 
-                            : 'bg-white border-2 border-gray-100 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 text-gray-800 shadow-sm'
-                          }`}
-                          onClick={() => handleDownload(design.id)}
-                        >
-                          <Download className={`w-5 h-5 ${design.isDownloaded ? 'text-white' : 'text-gray-500'}`} />
-                          <span className={`text-xs font-medium ${design.isDownloaded ? 'text-white' : 'text-gray-500'}`}>
-                            {(design.downloads || 0) + (design.popularityBoost?.downloads || 0)}
-                          </span>
-                        </button>
-                      )}
+                      {/* 다운로드 기능 제거됨 */}
                     </div>
                   </div>
                 </CardContent>
@@ -2111,20 +2010,6 @@ export default function GalleryPage() {
       )}
 
       {/* 다운로드 확인 모달 */}
-      <DownloadConfirmModal
-        isOpen={showDownloadConfirmModal}
-        onClose={() => {
-          setShowDownloadConfirmModal(false);
-          setPendingDownloadId(null);
-        }}
-        onConfirm={() => {
-          setShowDownloadConfirmModal(false);
-          if (pendingDownloadId) {
-            executeDownload(pendingDownloadId);
-            setPendingDownloadId(null);
-          }
-        }}
-      />
 
       {/* 삭제 컨펌 모달 */}
       {showDeleteModal && deleteDesignId && (
