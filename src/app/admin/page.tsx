@@ -2403,7 +2403,32 @@ export default function AdminPage() {
   // 사용자 활동 데이터 가져오기
   const loadUserActivities = async (userEmail: string) => {
     try {
-      // 사용자 정보 가져오기
+      console.log('🔍 활동내역 로드 시작:', userEmail);
+      
+      // 회원통계에서 해당 사용자의 UID 가져오기 (이미 로드된 데이터 사용)
+      const userStat = userStats.find(stat => stat.email === userEmail);
+      const currentUserUid = userStat?.uid;
+      
+      console.log('🔍 회원통계에서 UID 찾기:', {
+        userEmail,
+        userStat: userStat ? { email: userStat.email, uid: userStat.uid } : null,
+        currentUserUid
+      });
+
+      if (!currentUserUid) {
+        console.error('❌ 회원통계에서 사용자 UID를 찾을 수 없습니다:', userEmail);
+        return {
+          designs: [],
+          boxroTalks: [],
+          likes: [],
+          downloads: [],
+          shares: [],
+          views: [],
+          storeRedirects: []
+        };
+      }
+
+      // 사용자 정보 가져오기 (박스로톡 등을 위해 필요)
       const usersQuery = query(collection(db, 'users'));
       const usersSnapshot = await getDocs(usersQuery);
       const users = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -2599,23 +2624,6 @@ export default function AdminPage() {
 
       // 고아 박스로톡 필터링 (삭제된 게시글의 박스로톡 제외)
       const validBoxroTalks = boxroTalksWithDesignInfo.filter((boxroTalk: any) => !boxroTalk.isOrphaned);
-
-      // 사용자 UID 찾기
-      const currentUser = users.find(u => u.email === userEmail);
-      const currentUserUid = currentUser?.uid;
-
-      if (!currentUserUid) {
-        console.error('사용자 UID를 찾을 수 없습니다:', userEmail);
-        return {
-          designs: userDesigns,
-          boxroTalks: validBoxroTalks,
-          likes: [],
-          downloads: [],
-          shares: [],
-          views: [],
-          storeRedirects: []
-        };
-      }
 
       // 모든 콘텐츠 가져오기 (사용자가 좋아요한 다른 사람의 콘텐츠 찾기 위해)
       const allDesignsSnapshot = await getDocs(collection(db, 'communityDesigns'));
