@@ -1479,6 +1479,22 @@ export default function GalleryPage() {
       return;
     }
 
+    // 디버깅 정보 출력
+    console.log('🔧 수정 시도 정보:', {
+      currentUser: {
+        uid: user.uid,
+        email: user.email
+      },
+      editingDesign: {
+        id: editingDesign.id,
+        authorId: editingDesign.authorId,
+        authorEmail: editingDesign.authorEmail,
+        author: editingDesign.author
+      },
+      isAuthor: user.uid === editingDesign.authorId || user.email === editingDesign.authorEmail,
+      isAdmin: isAdmin()
+    });
+
     try {
       let thumbnailUrl = editingDesign.thumbnail;
       
