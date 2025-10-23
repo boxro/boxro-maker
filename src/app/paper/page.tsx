@@ -301,9 +301,10 @@ export default function DrawPage() {
         const baseCropWidth = 650;
         const baseCropHeight = 488; // 4:3 비율
         
-        // 데스크톱과 모바일 모두 2배 크롭 사이즈 사용
-        const cropWidth = baseCropWidth * 2; // 1300
-        const cropHeight = baseCropHeight * 2; // 976
+        // 모바일은 정상, 데스크톱만 크롭 영역 조정
+        const isMobile = window.innerWidth < 768;
+        const cropWidth = isMobile ? baseCropWidth * 2 : baseCropWidth; // 모바일: 1300 (정상), 데스크톱: 650 (줄임)
+        const cropHeight = isMobile ? baseCropHeight * 2 : baseCropHeight; // 모바일: 976 (정상), 데스크톱: 488 (줄임)
         
         // 스냅샷의 크기에 맞춰 크롭 사이즈 조정
         const maxCropWidth = Math.min(cropWidth, img.width);
@@ -315,9 +316,9 @@ export default function DrawPage() {
         const centerX = (img.width - actualCropWidth) / 2;
         const centerY = (img.height - actualCropHeight) / 2;
         
-        // 데스크톱과 모바일 모두 2배 오프셋 사용
-        const offsetX = 40 * 2; // 80px
-        const offsetY = 100 * 2; // 200px
+        // 모바일은 정상, 데스크톱만 오프셋 조정
+        const offsetX = isMobile ? 40 * 2 : 40; // 모바일: 80px (정상), 데스크톱: 40px (줄임)
+        const offsetY = isMobile ? 100 * 2 : 100; // 모바일: 200px (정상), 데스크톱: 100px (줄임)
         
         const cropX = centerX - offsetX;
         const cropY = centerY - offsetY;

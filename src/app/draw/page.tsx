@@ -310,10 +310,10 @@ export default function DrawPage() {
         const baseCropWidth = 650;
         const baseCropHeight = 488; // 4:3 비율
         
-        // 모바일은 원래대로, 데스크톱만 박스카가 작게 보이도록 크롭 영역 확대
+        // 모바일은 정상, 데스크톱만 크롭 영역 조정
         const isMobile = window.innerWidth < 768;
-        const cropWidth = isMobile ? baseCropWidth * 2 : baseCropWidth * 2; // 모바일: 1300 (원래대로), 데스크톱: 1300 (확대)
-        const cropHeight = isMobile ? baseCropHeight * 2 : baseCropHeight * 2; // 모바일: 976 (원래대로), 데스크톱: 976 (확대)
+        const cropWidth = isMobile ? baseCropWidth * 2 : baseCropWidth; // 모바일: 1300 (정상), 데스크톱: 650 (줄임)
+        const cropHeight = isMobile ? baseCropHeight * 2 : baseCropHeight; // 모바일: 976 (정상), 데스크톱: 488 (줄임)
         
         // 스냅샷의 크기에 맞춰 크롭 사이즈 조정
         const maxCropWidth = Math.min(cropWidth, img.width);
@@ -325,9 +325,9 @@ export default function DrawPage() {
         const centerX = (img.width - actualCropWidth) / 2;
         const centerY = (img.height - actualCropHeight) / 2;
         
-        // 모바일은 원래대로, 데스크톱만 오프셋 조정
-        const offsetX = isMobile ? 40 * 2 : 40 * 2; // 모바일: 80px (원래대로), 데스크톱: 80px
-        const offsetY = isMobile ? 100 * 2 : 100 * 2; // 모바일: 200px (원래대로), 데스크톱: 200px
+        // 모바일은 정상, 데스크톱만 오프셋 조정
+        const offsetX = isMobile ? 40 * 2 : 40; // 모바일: 80px (정상), 데스크톱: 40px (줄임)
+        const offsetY = isMobile ? 100 * 2 : 100; // 모바일: 200px (정상), 데스크톱: 100px (줄임)
         
         const cropX = centerX - offsetX;
         const cropY = centerY - offsetY;
