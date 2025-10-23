@@ -3550,37 +3550,32 @@ export default function AdminPage() {
           }
         });
         
-        // 공유는 여러 번 공유해도 매번 카운트 (shares 필드 사용)
-        const totalShares = design.shares || 0;
-        if (totalShares > 0) {
-          // sharedBy 배열의 사용자들에게 공유 수만큼 카운트
-          sharedBy.forEach((userId: string) => {
-            const user = users.find(u => u.uid === userId);
-            if (user) {
-              const email = user.email || 'unknown';
-              if (!userStatsMap.has(email)) {
-                userStatsMap.set(email, {
-                  email,
-                  displayName: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
-                  authorNickname: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
-                  photoURL: user.photoURL || '',
-                  createdAt: user.createdAt || '',
-                  lastSignIn: user.lastSignIn || '',
-                  designsCount: 0,
-                  boxroTalksCount: 0,
-                  likesCount: 0,
-                  downloadsCount: 0,
-                  sharesCount: 0,
-                  viewsCount: 0,
-                  storeRedirectsCount: 0,
-                  uid: user.uid || ''
-                });
-              }
-              const userStat = userStatsMap.get(email)!;
-              userStat.sharesCount += totalShares; // 전체 공유 수 사용
+        sharedBy.forEach((userId: string) => {
+          const user = users.find(u => u.uid === userId);
+          if (user) {
+            const email = user.email || 'unknown';
+            if (!userStatsMap.has(email)) {
+              userStatsMap.set(email, {
+                email,
+                displayName: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
+                authorNickname: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
+                photoURL: user.photoURL || '',
+                createdAt: user.createdAt || '',
+                lastSignIn: user.lastSignIn || '',
+                designsCount: 0,
+                boxroTalksCount: 0,
+                likesCount: 0,
+                downloadsCount: 0,
+                sharesCount: 0,
+                viewsCount: 0,
+                storeRedirectsCount: 0,
+                uid: user.uid || ''
+              });
             }
-          });
-        }
+            const userStat = userStatsMap.get(email)!;
+            userStat.sharesCount++; // 공유한 콘텐츠 수 카운트
+          }
+        });
 
         viewedBy.forEach((userId: string) => {
           const user = users.find(u => u.uid === userId);
@@ -3605,7 +3600,7 @@ export default function AdminPage() {
               });
             }
             const userStat = userStatsMap.get(email)!;
-            userStat.viewsCount += design.views || 0; // 전체 조회 수 사용
+            userStat.viewsCount++; // 조회한 콘텐츠 수 카운트
           }
         });
       });
@@ -3644,37 +3639,32 @@ export default function AdminPage() {
           }
         });
         
-        // 공유는 여러 번 공유해도 매번 카운트 (shares 필드 사용)
-        const totalShares = story.shares || 0;
-        if (totalShares > 0) {
-          // sharedBy 배열의 사용자들에게 공유 수만큼 카운트
-          sharedBy.forEach((userId: string) => {
-            const user = users.find(u => u.uid === userId);
-            if (user) {
-              const email = user.email || 'unknown';
-              if (!userStatsMap.has(email)) {
-                userStatsMap.set(email, {
-                  email,
-                  displayName: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
-                  authorNickname: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
-                  photoURL: user.photoURL || '',
-                  createdAt: user.createdAt || '',
-                  lastSignIn: user.lastSignIn || '',
-                  designsCount: 0,
-                  boxroTalksCount: 0,
-                  likesCount: 0,
-                  downloadsCount: 0,
-                  sharesCount: 0,
-                  viewsCount: 0,
-                  storeRedirectsCount: 0,
-                  uid: user.uid || ''
-                });
-              }
-              const userStat = userStatsMap.get(email)!;
-              userStat.sharesCount += totalShares; // 전체 공유 수 사용
+        sharedBy.forEach((userId: string) => {
+          const user = users.find(u => u.uid === userId);
+          if (user) {
+            const email = user.email || 'unknown';
+            if (!userStatsMap.has(email)) {
+              userStatsMap.set(email, {
+                email,
+                displayName: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
+                authorNickname: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
+                photoURL: user.photoURL || '',
+                createdAt: user.createdAt || '',
+                lastSignIn: user.lastSignIn || '',
+                designsCount: 0,
+                boxroTalksCount: 0,
+                likesCount: 0,
+                downloadsCount: 0,
+                sharesCount: 0,
+                viewsCount: 0,
+                storeRedirectsCount: 0,
+                uid: user.uid || ''
+              });
             }
-          });
-        }
+            const userStat = userStatsMap.get(email)!;
+            userStat.sharesCount++; // 공유한 콘텐츠 수 카운트
+          }
+        });
 
         viewedBy.forEach((userId: string) => {
           const user = users.find(u => u.uid === userId);
@@ -3699,7 +3689,7 @@ export default function AdminPage() {
               });
             }
             const userStat = userStatsMap.get(email)!;
-            userStat.viewsCount += story.views || 0; // 전체 조회 수 사용
+            userStat.viewsCount++; // 조회한 콘텐츠 수 카운트
           }
         });
       });
@@ -3738,37 +3728,32 @@ export default function AdminPage() {
           }
         });
         
-        // 공유는 여러 번 공유해도 매번 카운트 (shares 필드 사용)
-        const totalShares = storeItem.shares || 0;
-        if (totalShares > 0) {
-          // sharedBy 배열의 사용자들에게 공유 수만큼 카운트
-          sharedBy.forEach((userId: string) => {
-            const user = users.find(u => u.uid === userId);
-            if (user) {
-              const email = user.email || 'unknown';
-              if (!userStatsMap.has(email)) {
-                userStatsMap.set(email, {
-                  email,
-                  displayName: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
-                  authorNickname: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
-                  photoURL: user.photoURL || '',
-                  createdAt: user.createdAt || '',
-                  lastSignIn: user.lastSignIn || '',
-                  designsCount: 0,
-                  boxroTalksCount: 0,
-                  likesCount: 0,
-                  downloadsCount: 0,
-                  sharesCount: 0,
-                  viewsCount: 0,
-                  storeRedirectsCount: 0,
-                  uid: user.uid || ''
-                });
-              }
-              const userStat = userStatsMap.get(email)!;
-              userStat.sharesCount += totalShares; // 전체 공유 수 사용
+        sharedBy.forEach((userId: string) => {
+          const user = users.find(u => u.uid === userId);
+          if (user) {
+            const email = user.email || 'unknown';
+            if (!userStatsMap.has(email)) {
+              userStatsMap.set(email, {
+                email,
+                displayName: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
+                authorNickname: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
+                photoURL: user.photoURL || '',
+                createdAt: user.createdAt || '',
+                lastSignIn: user.lastSignIn || '',
+                designsCount: 0,
+                boxroTalksCount: 0,
+                likesCount: 0,
+                downloadsCount: 0,
+                sharesCount: 0,
+                viewsCount: 0,
+                storeRedirectsCount: 0,
+                uid: user.uid || ''
+              });
             }
-          });
-        }
+            const userStat = userStatsMap.get(email)!;
+            userStat.sharesCount++; // 공유한 콘텐츠 수 카운트
+          }
+        });
 
         viewedBy.forEach((userId: string) => {
           const user = users.find(u => u.uid === userId);
@@ -3793,7 +3778,7 @@ export default function AdminPage() {
               });
             }
             const userStat = userStatsMap.get(email)!;
-            userStat.viewsCount += storeItem.views || 0; // 전체 조회 수 사용
+            userStat.viewsCount++; // 조회한 콘텐츠 수 카운트
           }
         });
       });
