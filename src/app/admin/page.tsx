@@ -1847,6 +1847,10 @@ export default function AdminPage() {
             aValue = a.viewsCount;
             bValue = b.viewsCount;
             break;
+          case 'storeRedirectsCount':
+            aValue = a.storeRedirectsCount || 0;
+            bValue = b.storeRedirectsCount || 0;
+            break;
           default:
             return 0;
         }
