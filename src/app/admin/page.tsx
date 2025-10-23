@@ -3453,7 +3453,7 @@ export default function AdminPage() {
           // uid로 사용자 찾기
           for (const [email, userStat] of userStatsMap.entries()) {
             if (userStat.uid === uid) {
-              userStat.storeRedirectsCount += storeItem.storeRedirects || 0; // 전체 바로가기 수 사용
+              userStat.storeRedirectsCount++; // 바로가기한 스토어 아이템 개수로 변경
               break;
             }
           }
