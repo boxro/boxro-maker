@@ -4634,11 +4634,11 @@ export default function AdminPage() {
                   {['작품', '좋아요', '공유', '박스로 톡', '다운로드', '조회', '스토어'].map((tab) => {
                     const count = tab === '작품' ? userActivities[selectedUser]?.designs?.length || 0 :
                                   tab === '좋아요' ? userActivities[selectedUser]?.likes?.length || 0 :
-                                  tab === '공유' ? userActivities[selectedUser]?.shares?.reduce((sum: number, share: any) => sum + (share.shares || 0), 0) || 0 :
+                                  tab === '공유' ? userActivities[selectedUser]?.shares?.length || 0 :
                                   tab === '박스로 톡' ? userActivities[selectedUser]?.boxroTalks?.length || 0 :
                                   tab === '다운로드' ? userActivities[selectedUser]?.downloads?.length || 0 :
-                                  tab === '조회' ? userActivities[selectedUser]?.views?.reduce((sum: number, view: any) => sum + (view.views || 0), 0) || 0 :
-                                  userActivities[selectedUser]?.storeRedirects?.reduce((sum: number, redirect: any) => sum + (redirect.storeRedirects || 0), 0) || 0;
+                                  tab === '조회' ? userActivities[selectedUser]?.views?.length || 0 :
+                                  userActivities[selectedUser]?.storeRedirects?.length || 0;
                     
                     return (
                       <button
