@@ -2600,79 +2600,86 @@ export default function AdminPage() {
       // 고아 박스로톡 필터링 (삭제된 게시글의 박스로톡 제외)
       const validBoxroTalks = boxroTalksWithDesignInfo.filter((boxroTalk: any) => !boxroTalk.isOrphaned);
 
-      // 사용자의 좋아요 가져오기 (갤러리 작품 + 박스카 이야기)
-      const userLikes = [
-        // 갤러리 작품 좋아요
-        ...userDesigns.reduce((likes: any[], design: any) => {
-          if (design.likes > 0) {
-            console.log('좋아요 작품 데이터:', design);
-            console.log('작가 정보:', {
-              author: design.author,
-              authorNickname: design.authorNickname,
-              authorName: design.authorName,
-              creator: design.creator,
-              userId: design.userId
-            });
-            
-            likes.push({
-              type: 'design',
-              id: design.id,
-              title: design.title || design.name || '제목 없음',
-              thumbnail: design.thumbnail || design.thumbnailUrl,
-              author: design.authorNickname || design.author || design.authorName || design.creator || design.userId || '작가 정보 없음',
-              likes: design.likes,
-              createdAt: design.createdAt
-            });
-          }
-          return likes;
-        }, []),
-        // 박스카 이야기 좋아요
-        ...resolvedUserStories.reduce((likes: any[], story: any) => {
-          if (story.likes > 0) {
-            console.log('박스카 이야기 전체 데이터:', story);
-            console.log('박스카 이야기 전체 필드 확인:', Object.keys(story));
-            console.log('박스카 이야기 작가 정보 상세:', {
-              // 현재 사용 중인 필드들
-              authorNickname: story.authorNickname,
-              author: story.author,
-              authorName: story.authorName,
-              creator: story.creator,
-              userId: story.userId,
-              displayName: story.displayName,
-              nickname: story.nickname,
-              userNickname: story.userNickname,
-              userDisplayName: story.userDisplayName,
-              userNick: story.userNick
-            });
-            
-            likes.push({
-              type: 'story',
-              id: story.id,
-              title: story.title || '제목 없음',
-              thumbnail: story.thumbnail || story.cardThumbnail,
-              author: story.actualNickname || story.authorNickname || story.authorName || story.author || story.creator || story.userId || '작가 정보 없음',
-              likes: story.likes,
-              createdAt: story.createdAt
-            });
-          }
-          return likes;
-        }, []),
-        // 스토어 작품 좋아요
-        ...userStoreItems.reduce((likes: any[], storeItem: any) => {
-          if (storeItem.likes > 0) {
-            likes.push({
-              type: 'store',
-              id: storeItem.id,
-              title: storeItem.title || '제목 없음',
-              thumbnail: storeItem.thumbnail || storeItem.cardThumbnail,
-              author: storeItem.authorNickname || storeItem.author || storeItem.authorName || storeItem.creator || storeItem.userId || '작가 정보 없음',
-              likes: storeItem.likes,
-              createdAt: storeItem.createdAt
-            });
-          }
-          return likes;
-        }, [])
-      ].sort((a, b) => {
+      // 사용자 UID 찾기
+      const currentUser = users.find(u => u.email === userEmail);
+      const currentUserUid = currentUser?.uid;
+
+      if (!currentUserUid) {
+        console.error('사용자 UID를 찾을 수 없습니다:', userEmail);
+        return {
+          designs: userDesigns,
+          boxroTalks: validBoxroTalks,
+          likes: [],
+          downloads: [],
+          shares: [],
+          views: [],
+          storeRedirects: []
+        };
+      }
+
+      // 모든 콘텐츠 가져오기 (사용자가 좋아요한 다른 사람의 콘텐츠 찾기 위해)
+      const allDesignsSnapshot = await getDocs(collection(db, 'communityDesigns'));
+      const allDesigns = allDesignsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      const allStoriesSnapshot = await getDocs(collection(db, 'storyArticles'));
+      const allStories = allStoriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      const allStoreItemsSnapshot = await getDocs(collection(db, 'storeItems'));
+      const allStoreItems = allStoreItemsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      // 사용자가 좋아요한 콘텐츠 찾기 (다른 사람 콘텐츠에 누른 좋아요)
+      const userLikes = [];
+      
+      // 갤러리 작품에서 사용자가 좋아요한 것들
+      allDesigns.forEach((design: any) => {
+        const likedBy = design.likedBy || [];
+        if (likedBy.includes(currentUserUid)) {
+          userLikes.push({
+            type: 'gallery',
+            id: design.id,
+            title: design.title || design.name || '제목 없음',
+            thumbnail: design.thumbnail || design.thumbnailUrl,
+            author: design.authorNickname || design.author || design.authorName || design.creator || design.userId || '작가 정보 없음',
+            likes: design.likes || 0,
+            createdAt: design.createdAt
+          });
+        }
+      });
+
+      // 스토리에서 사용자가 좋아요한 것들
+      allStories.forEach((story: any) => {
+        const likedBy = story.likedBy || [];
+        if (likedBy.includes(currentUserUid)) {
+          userLikes.push({
+            type: 'story',
+            id: story.id,
+            title: story.title || '제목 없음',
+            thumbnail: story.thumbnail || story.cardThumbnail,
+            author: story.authorNickname || story.author || story.authorName || story.creator || story.userId || '작가 정보 없음',
+            likes: story.likes || 0,
+            createdAt: story.createdAt
+          });
+        }
+      });
+
+      // 스토어 아이템에서 사용자가 좋아요한 것들
+      allStoreItems.forEach((storeItem: any) => {
+        const likedBy = storeItem.likedBy || [];
+        if (likedBy.includes(currentUserUid)) {
+          userLikes.push({
+            type: 'store',
+            id: storeItem.id,
+            title: storeItem.title || '제목 없음',
+            thumbnail: storeItem.thumbnail || storeItem.cardThumbnail,
+            author: storeItem.authorNickname || storeItem.author || storeItem.authorName || storeItem.creator || storeItem.userId || '작가 정보 없음',
+            likes: storeItem.likes || 0,
+            createdAt: storeItem.createdAt
+          });
+        }
+      });
+
+      // 최신순 정렬
+      userLikes.sort((a, b) => {
         // Firestore Timestamp 객체 처리
         const getTimestamp = (date: any) => {
           if (!date) return 0;
