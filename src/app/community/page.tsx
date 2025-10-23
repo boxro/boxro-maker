@@ -8,6 +8,7 @@ import Head from "next/head";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ErrorModal from "@/components/ErrorModal";
+import DownloadConfirmModal from "@/components/DownloadConfirmModal";
 import { 
   Car,
   Heart, 
@@ -335,6 +336,8 @@ export default function GalleryPage() {
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareDesignId, setShareDesignId] = useState<string | null>(null);
   const [showShareSuccessModal, setShowShareSuccessModal] = useState(false);
+  const [showDownloadConfirmModal, setShowDownloadConfirmModal] = useState(false);
+  const [pendingDownloadId, setPendingDownloadId] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteDesignId, setDeleteDesignId] = useState<string | null>(null);
   
@@ -601,6 +604,12 @@ export default function GalleryPage() {
       return;
     }
 
+    // 다운로드 확인 모달 표시
+    setPendingDownloadId(designId);
+    setShowDownloadConfirmModal(true);
+  };
+
+  const executeDownload = async (designId: string) => {
     try {
       const designRef = doc(db, 'communityDesigns', designId);
       const design = designs.find(d => d.id === designId);
@@ -2144,6 +2153,22 @@ export default function GalleryPage() {
           </div>
         </div>
       )}
+
+      {/* 다운로드 확인 모달 */}
+      <DownloadConfirmModal
+        isOpen={showDownloadConfirmModal}
+        onClose={() => {
+          setShowDownloadConfirmModal(false);
+          setPendingDownloadId(null);
+        }}
+        onConfirm={() => {
+          setShowDownloadConfirmModal(false);
+          if (pendingDownloadId) {
+            executeDownload(pendingDownloadId);
+            setPendingDownloadId(null);
+          }
+        }}
+      />
 
       {/* 삭제 컨펌 모달 */}
       {showDeleteModal && deleteDesignId && (

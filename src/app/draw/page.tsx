@@ -11,6 +11,7 @@ import CommonBackground from "@/components/CommonBackground";
 import PageHeader from "@/components/PageHeader";
 import DrawSplashScreen from "@/components/DrawSplashScreen";
 import ErrorModal from "@/components/ErrorModal";
+import DownloadConfirmModal from "@/components/DownloadConfirmModal";
 import { 
   ArrowLeft, 
   ArrowRight,
@@ -95,6 +96,7 @@ export default function DrawPage() {
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [showSplashScreen, setShowSplashScreen] = useState(false);
+  const [showDownloadConfirmModal, setShowDownloadConfirmModal] = useState(false);
   
   // 로그인 유도 모달 상태
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -5791,7 +5793,7 @@ export default function DrawPage() {
                   openLoginModal('download');
                   return;
                 }
-                downloadAllPagesAsPDF();
+                setShowDownloadConfirmModal(true);
               }}
               disabled={!blueprintGenerated || blueprintImages.length === 0}
               className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-3xl w-[74px] h-[74px] md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -6225,6 +6227,16 @@ export default function DrawPage() {
           </div>
         </div>
       )}
+
+      {/* 다운로드 확인 모달 */}
+      <DownloadConfirmModal
+        isOpen={showDownloadConfirmModal}
+        onClose={() => setShowDownloadConfirmModal(false)}
+        onConfirm={() => {
+          setShowDownloadConfirmModal(false);
+          downloadAllPagesAsPDF();
+        }}
+      />
 
       {/* 에러 모달 */}
       <ErrorModal
