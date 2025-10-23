@@ -649,23 +649,25 @@ export default function DrawPage() {
       ctx.fillRect(0, 0, a4Width, a4Height);
       
       // === 1페이지 스냅샷 설정 (메모) ===
-      // 스냅샷은 원본 비율 그대로 유지 (naturalWidth, naturalHeight 사용)
+      // 스냅샷은 환경에 관계없이 고정 크기 사용 (650x488px)
       // 텍스트는 스냅샷 위치와 무관하게 고정값 사용
       // 모바일과 데스크톱 도면은 동일해야 함
       // 
       // 스냅샷 위치: 모바일/데스크톱 Y=440px (동일)
-      // 스냅샷 크기: 원본 크기 그대로 사용
+      // 스냅샷 크기: 650x488px 고정 (로컬/배포 환경 일관성)
       // 텍스트 위치: Y=1000px, Y=1030px (고정값)
       // 3D 렌더러 카메라: camera.position.set(-6.6, 2.5, 4.8) 고정
       // 그리드 색상: 0xF0F0F0, 0xF5F5F5 (연한 회색)
       // 
       // 나중에 다시 조정할 때 이 설정을 참고할 것!
       
-      // 3D 렌더링 스냅샷 영역 (중앙) - 원본 크기 그대로 사용
+      // 3D 렌더링 스냅샷 영역 (중앙) - 환경에 관계없이 고정 크기 사용
       const isMobile = window.innerWidth < 768;
-      // 스냅샷 원본 크기 그대로 사용
-      const snapshotWidth = snapshotImg.naturalWidth;
-      const snapshotHeight = snapshotImg.naturalHeight;
+      // 환경에 관계없이 일정한 크기로 표시 (크롭된 이미지 기준)
+      const targetSnapshotWidth = 650;  // 기본 크롭 크기
+      const targetSnapshotHeight = 488; // 기본 크롭 크기 (4:3 비율)
+      const snapshotWidth = targetSnapshotWidth;
+      const snapshotHeight = targetSnapshotHeight;
       const snapshotX = (a4Width - snapshotWidth) / 2;
       const snapshotY = 440; // 450 - 10
       
