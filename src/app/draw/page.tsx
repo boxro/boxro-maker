@@ -3773,7 +3773,7 @@ export default function DrawPage() {
       // 태그를 배열로 변환
       const tagsArray = shareTags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
       
-      // Firebase에 디자인 데이터 저장
+      // Firebase에 디자인 데이터 저장 (blueprintImages 제거 - 저장공간 절약)
       const designData = {
         name: shareTitle,
         type: selectedCarType || drawingAnalysis?.analysis?.carType || 'sedan',
@@ -3783,7 +3783,6 @@ export default function DrawPage() {
         authorId: user.uid, // 작성자 ID 추가
         thumbnail: thumbnail,
         tags: tagsArray,
-        blueprintImages: compressedImages,
         likes: 0,
         downloads: 0,
         views: 0,

@@ -227,7 +227,6 @@ interface GalleryDesign {
   boxroTalkedBy?: string[];
   description?: string;
   tags?: string[];
-  blueprintImages?: string[];
   isUploaded?: boolean; // 파일 업로드로 생성된 카드인지 구분
 }
 
