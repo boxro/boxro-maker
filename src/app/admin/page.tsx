@@ -21,6 +21,23 @@ import { Users, Calendar, MessageCircle, Heart, Download, Share2, Eye, Trash2, C
 import { DragEndEvent } from '@dnd-kit/core';
 import Image from 'next/image';
 
+// 이메일 주소에서 계정 부분만 추출하는 헬퍼 함수
+const getDisplayName = (author: string, authorNickname: string, email: string) => {
+  // authorNickname이 있고 이메일이 아닌 경우
+  if (authorNickname && !authorNickname.includes('@')) {
+    return authorNickname;
+  }
+  // author가 있고 이메일이 아닌 경우
+  if (author && !author.includes('@')) {
+    return author;
+  }
+  // 이메일에서 @ 앞부분만 추출
+  if (email && email.includes('@')) {
+    return email.split('@')[0];
+  }
+  return email || 'unknown';
+};
+
 interface UserStats {
   email: string;
   displayName: string;
@@ -3143,22 +3160,6 @@ export default function AdminPage() {
         }
       });
 
-      // 이메일 주소에서 계정 부분만 추출하는 헬퍼 함수
-      const getDisplayName = (author: string, authorNickname: string, email: string) => {
-        // authorNickname이 있고 이메일이 아닌 경우
-        if (authorNickname && !authorNickname.includes('@')) {
-          return authorNickname;
-        }
-        // author가 있고 이메일이 아닌 경우
-        if (author && !author.includes('@')) {
-          return author;
-        }
-        // 이메일 계정 부분 사용
-        if (email !== 'unknown') {
-          return email.split('@')[0];
-        }
-        return '익명';
-      };
 
       // 사용자별 통계 계산
       const userStatsMap = new Map<string, UserStats>();
