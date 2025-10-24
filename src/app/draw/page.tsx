@@ -86,6 +86,7 @@ export default function DrawPage() {
   const [showGalleryShareModal, setShowGalleryShareModal] = useState(false);
   const [shareTitle, setShareTitle] = useState('');
   const [shareTags, setShareTags] = useState('');
+  const [preCapturedCanvasSnapshot, setPreCapturedCanvasSnapshot] = useState<string>('');
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [saveTitle, setSaveTitle] = useState('');
   const [saveDescription, setSaveDescription] = useState('');
@@ -217,11 +218,15 @@ export default function DrawPage() {
 
   // 화면 크기 변경 시 캔버스 재초기화
   useEffect(() => {
+    console.log('🔍 캔버스 useEffect 실행, ref 상태:', !!canvasRef.current);
     if (canvasRef.current) {
+      console.log('✅ 캔버스 ref 존재, 초기화 시작');
       // 약간의 지연을 두고 재초기화 (DOM 업데이트 완료 후)
       setTimeout(() => {
         initializeCanvas();
       }, 50);
+    } else {
+      console.log('❌ 캔버스 ref 없음, 초기화 건너뜀');
     }
   }, [isMobile]);
 
@@ -318,6 +323,55 @@ export default function DrawPage() {
     });
   }, [thumbnailRendererRef]);
 
+  // 캔버스 스냅샷 캡처 함수 (고정 크기)
+  const captureCanvasSnapshot = useCallback((): string => {
+    const canvas = canvasRef.current;
+    if (!canvas) {
+      console.error('❌ 캔버스 ref가 없습니다');
+      console.log('🔍 DOM에서 캔버스 찾기:', document.querySelector('canvas'));
+      return '';
+    }
+    
+    try {
+      // 캔버스가 비어있는지 확인
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        console.error('❌ 캔버스 컨텍스트가 없습니다');
+        return '';
+      }
+      
+      // 캔버스 크기 확인
+      console.log('🔍 캔버스 크기:', canvas.width, 'x', canvas.height);
+      console.log('🔍 캔버스 스타일 크기:', canvas.style.width, 'x', canvas.style.height);
+      
+      // 캔버스에 그려진 내용이 있는지 확인
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const hasContent = imageData.data.some((value, index) => index % 4 !== 3 && value !== 0);
+      console.log('🔍 캔버스에 그려진 내용 있음:', hasContent);
+      
+      // 고정 크기로 캔버스 스냅샷 캡처 (데스크톱/모바일 공통)
+      const tempCanvas = document.createElement('canvas');
+      const tempCtx = tempCanvas.getContext('2d');
+      if (!tempCtx) return '';
+      
+      // 최종 썸네일 크기로 직접 저장 (용량 최적화)
+      const THUMBNAIL_WIDTH = 450;
+      const THUMBNAIL_HEIGHT = 338;
+      
+      tempCanvas.width = THUMBNAIL_WIDTH;
+      tempCanvas.height = THUMBNAIL_HEIGHT;
+      
+      // 캔버스를 최종 썸네일 크기로 리사이징
+      tempCtx.drawImage(canvas, 0, 0, THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT);
+      
+      const dataURL = tempCanvas.toDataURL('image/png');
+      console.log('✅ 캔버스 스냅샷 캡처 성공:', THUMBNAIL_WIDTH, 'x', THUMBNAIL_HEIGHT, '데이터 길이:', dataURL.length);
+      return dataURL;
+    } catch (error) {
+      console.error('❌ 캔버스 스냅샷 캡처 실패:', error);
+      return '';
+    }
+  }, []);
 
   // 블루프린트용 이미지 생성 함수 (모바일 해상도에 따른 리사이징 적용)
   const createBlueprintFromSnapshot = (snapshotDataUrl: string): Promise<string> => {
@@ -332,12 +386,12 @@ export default function DrawPage() {
         }
 
         // 기본 크롭 사이즈 (4:3 비율)
-        const baseCropWidth = 650;
-        const baseCropHeight = 488; // 4:3 비율
+        const baseCropWidth = 700;
+        const baseCropHeight = 525; // 4:3 비율 (700 * 3/4 = 525)
         
-        // 고정 크기 스냅샷(1300x976)에서 650x488 크롭 - 모바일/데스크톱 공통
-        const cropWidth = baseCropWidth; // 650 (기본 크롭)
-        const cropHeight = baseCropHeight; // 488 (기본 크롭)
+        // 고정 크기 스냅샷(1300x976)에서 700x525 크롭 - 모바일/데스크톱 공통
+        const cropWidth = baseCropWidth; // 700 (기본 크롭)
+        const cropHeight = baseCropHeight; // 525 (기본 크롭)
         
         // 스냅샷의 크기에 맞춰 크롭 사이즈 조정
         const maxCropWidth = Math.min(cropWidth, img.width);
@@ -351,7 +405,7 @@ export default function DrawPage() {
         
         // 고정 크기 스냅샷용 오프셋 (일관성 보장) - 기본 오프셋 사용
         const offsetX = 40; // 40px (기본 오프셋)
-        const offsetY = 100; // 100px (기본 오프셋)
+        const offsetY = 120; // 120px (Y축 30px 위로 이동)
         
         const cropX = centerX - offsetX;
         const cropY = centerY - offsetY;
@@ -679,7 +733,7 @@ export default function DrawPage() {
       const snapshotWidth = snapshotImg.naturalWidth;
       const snapshotHeight = snapshotImg.naturalHeight;
       const snapshotX = (a4Width - snapshotWidth) / 2;
-      const snapshotY = 440; // 450 - 10
+      const snapshotY = 540; // 490 + 50 (아래로 50px 더 이동)
       
       
       
@@ -3746,6 +3800,67 @@ export default function DrawPage() {
     }
   };
 
+  // 갤러리 공유 모달 열기 (캔버스 스냅샷 미리 캡처)
+  const openGalleryShareModal = () => {
+    if (!user) {
+      openLoginModal('share');
+      return;
+    }
+    
+    // 모달 열기 전에 캔버스 스냅샷 미리 캡처
+    console.log('🎨 갤러리 공유 모달 열기 전 캔버스 스냅샷 캡처...');
+    
+    // 캔버스가 존재하는지 확인하고 캡처
+    if (canvasRef.current) {
+      const canvasSnapshot = captureCanvasSnapshot();
+      setPreCapturedCanvasSnapshot(canvasSnapshot);
+      console.log('🎨 미리 캡처된 캔버스 스냅샷:', canvasSnapshot ? '성공' : '실패', canvasSnapshot?.length || 0, 'bytes');
+    } else {
+      console.log('❌ 캔버스 ref가 없음 - 이전에 캡처한 스냅샷 사용');
+      // 이전에 캡처한 스냅샷이 있다면 그대로 사용
+      if (preCapturedCanvasSnapshot) {
+        console.log('🎨 이전에 캡처한 캔버스 스냅샷 사용:', preCapturedCanvasSnapshot.length, 'bytes');
+      } else {
+        console.log('❌ 이전에 캡처한 스냅샷도 없음');
+        setPreCapturedCanvasSnapshot('');
+      }
+    }
+    
+    // 랜덤 제목 생성
+    const generateFunTitle = (carType: string) => {
+      const adjectives = {
+        'sedan-type1': ['부릉부릉 너무 귀여운', '씽씽 달리는', '방긋 웃는', '깜찍발랄한', '콩콩 튀는'],
+        'sedan-type2': ['든든하게 달리는', '똑똑하고 멋진', '반짝반짝 빛나는', '여유로운', '묵직하게 힘찬'],
+        'sports': ['번쩍번쩍 멋있는', '쌩쌩 신나는', '슝슝 달려가는', '짜릿하게 질주하는', '번개처럼 빠른'],
+        'suv': ['튼튼하게 달리는', '모험을 좋아하는', '든든한', '힘차게 달리는', '멋진'],
+        'truck': ['힘세고 강한', '무거운 짐을 나르는', '든든한', '힘찬', '멋진'],
+        'bus': ['많은 사람을 태우는', '안전하게 달리는', '든든한', '힘찬', '멋진']
+      };
+      
+      const nouns = {
+        'sedan-type1': ['꼬마차', '작은차', '귀여운차', '작은자동차', '꼬마자동차'],
+        'sedan-type2': ['세단', '자동차', '승용차', '멋진차', '세련된차'],
+        'sports': ['스포츠카', '레이싱카', '빠른차', '멋진차', '스피드카'],
+        'suv': ['SUV', '지프', '오프로드카', '모험차', '힘센차'],
+        'truck': ['트럭', '화물차', '힘센차', '큰차', '무거운차'],
+        'bus': ['버스', '대중교통', '큰차', '많은사람차', '공공교통']
+      };
+      
+      const carTypeKey = carType as keyof typeof adjectives;
+      const adjectiveList = adjectives[carTypeKey] || adjectives['sedan-type1'];
+      const nounList = nouns[carTypeKey] || nouns['sedan-type1'];
+      
+      const randomAdjective = adjectiveList[Math.floor(Math.random() * adjectiveList.length)];
+      const randomNoun = nounList[Math.floor(Math.random() * nounList.length)];
+      
+      return `${randomAdjective} ${randomNoun}`;
+    };
+    
+    const randomTitle = generateFunTitle(selectedCarType || drawingAnalysis?.analysis?.carType || 'sedan');
+    setShareTitle(randomTitle);
+    setShowGalleryShareModal(true);
+  };
+
   // 박스카 갤러리에 디자인 공유
   const shareToGallery = async () => {
     if (!user) {
@@ -3781,10 +3896,14 @@ export default function DrawPage() {
       const snapshot = await captureThumbnailSnapshot();
       const thumbnail = snapshot ? await createBlueprintFromSnapshot(snapshot) : await compressImage(blueprintImages[0], 0.5);
       
+      // 미리 캡처된 캔버스 스냅샷 사용
+      const canvasSnapshot = preCapturedCanvasSnapshot;
+      console.log('🎨 미리 캡처된 캔버스 스냅샷 사용:', canvasSnapshot ? '성공' : '실패', canvasSnapshot?.length || 0, 'bytes');
+      
       // 태그를 배열로 변환
       const tagsArray = shareTags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
       
-      // Firebase에 디자인 데이터 저장 (blueprintImages 제거 - 저장공간 절약)
+      // Firebase에 디자인 데이터 저장 (캔버스 스냅샷 추가)
       const designData = {
         name: shareTitle,
         type: selectedCarType || drawingAnalysis?.analysis?.carType || 'sedan',
@@ -3792,7 +3911,8 @@ export default function DrawPage() {
         authorNickname: userNickname, // Firestore에서 가져온 최신 닉네임 사용
         authorEmail: user.email || '',
         authorId: user.uid, // 작성자 ID 추가
-        thumbnail: thumbnail,
+        thumbnail: thumbnail, // 3D 렌더링 스냅샷 (메인)
+        canvasSnapshot: canvasSnapshot, // 그리기 캔버스 스냅샷 (서브)
         tags: tagsArray,
         likes: 0,
         downloads: 0,
@@ -4092,7 +4212,11 @@ export default function DrawPage() {
   // 캔버스 초기화 (고속 최적화)
   const initializeCanvas = useCallback(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) {
+      console.log('🔍 캔버스 초기화 시 ref가 없음');
+      return;
+    }
+    console.log('✅ 캔버스 초기화 시작:', canvas);
     
     // 점선 div 컨테이너의 크기를 가져옴
     const parentElement = canvas.parentElement;
@@ -4399,6 +4523,12 @@ export default function DrawPage() {
       
       // 분석된 차종을 기본 선택으로 설정
       setSelectedCarType(analysis.carType);
+      
+      // 그리기 완료 시점에 캔버스 스냅샷 미리 캡처
+      console.log('🎨 그리기 완료 시점에 캔버스 스냅샷 미리 캡처...');
+      const canvasSnapshot = captureCanvasSnapshot();
+      setPreCapturedCanvasSnapshot(canvasSnapshot);
+      console.log('🎨 미리 캡처된 캔버스 스냅샷:', canvasSnapshot ? '성공' : '실패', canvasSnapshot?.length || 0, 'bytes');
     
     const dataUrl = canvas.toDataURL('image/png');
     setSavedDrawingData(dataUrl); // 드로잉 데이터 저장
@@ -5737,57 +5867,7 @@ export default function DrawPage() {
               <span className="text-xs md:text-sm font-medium">전체</span>
             </Button> */}
         <Button 
-          onClick={() => {
-            if (!user) {
-              openLoginModal('share');
-              return;
-            }
-            // 박스카 갤러리 공유 모달 열 때 자동으로 랜덤 제목 생성
-            const generateFunTitle = (carType: string) => {
-              const adjectives = {
-                'sedan-type1': ['부릉부릉 너무 귀여운', '씽씽 달리는', '방긋 웃는', '깜찍발랄한', '콩콩 튀는'],
-                'sedan-type2': ['든든하게 달리는', '똑똑하고 멋진', '반짝반짝 빛나는', '여유로운', '묵직하게 힘찬'],
-                'sports': ['번쩍번쩍 멋있는', '쌩쌩 신나는', '슝슝 달려가는', '짜릿하게 질주하는', '번개처럼 빠른'],
-                'suv': ['우당탕탕 용감한', '씩씩하게 달리는', '어디든 갈 수 있는', '힘센', '모험심 가득한'],
-                'truck': ['든든하게 짐을 싣는', '빵빵 힘찬', '우직한', '무거운 것도 척척', '으랏차차 힘센'],
-                'bus': ['즐겁게 달리는', '방긋 인사하는', '신나게 출발하는', '콩닥콩닥 두근거리는', '꽉 찬 웃음의'],
-                'bus-square': ['네모네모 귀여운', '사각사각 멋진', '반듯반듯 착한', '네모난 세상', '네모로 즐거운']
-              };
-              
-              const carTypeNames = {
-                'sedan-type1': '꼬마세단',
-                'sedan-type2': '큰세단', 
-                'sports': '스포츠카',
-                'suv': 'SUV',
-                'truck': '빵빵트럭',
-                'bus': '통통버스',
-                'bus-square': '네모버스'
-              };
-              
-              const typeAdjectives = adjectives[carType as keyof typeof adjectives] || adjectives['sedan-type1'];
-              const typeName = carTypeNames[carType as keyof typeof carTypeNames] || '꼬마세단';
-              
-              const randomAdjective = typeAdjectives[Math.floor(Math.random() * typeAdjectives.length)];
-              return `${randomAdjective} ${typeName}`;
-            };
-
-            const mapAnalyzedCarType = (analyzedType: string) => {
-              const mapping: { [key: string]: string } = {
-                'sedan': 'sedan-type1',
-                'suv': 'suv',
-                'truck': 'truck',
-                'bus': 'bus',
-                'sports': 'sports'
-              };
-              return mapping[analyzedType] || 'sedan-type1';
-            };
-
-            const carType = selectedCarType || drawingAnalysis?.analysis?.carType || 'sedan';
-            const mappedCarType = mapAnalyzedCarType(carType);
-            const funTitle = generateFunTitle(mappedCarType);
-            setShareTitle(funTitle);
-            setShowGalleryShareModal(true);
-          }}
+          onClick={openGalleryShareModal}
           disabled={!blueprintGenerated || blueprintImages.length === 0}
           className="bg-gradient-to-r from-sky-400 to-sky-500 hover:from-sky-500 hover:to-sky-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 rounded-3xl w-[74px] h-[74px] md:w-20 md:h-20 p-2 md:p-3 flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
         >

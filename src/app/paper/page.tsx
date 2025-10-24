@@ -85,6 +85,7 @@ export default function DrawPage() {
   const [showGalleryShareModal, setShowGalleryShareModal] = useState(false);
   const [shareTitle, setShareTitle] = useState('');
   const [shareTags, setShareTags] = useState('');
+  const [preCapturedCanvasSnapshot, setPreCapturedCanvasSnapshot] = useState<string>('');
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [saveTitle, setSaveTitle] = useState('');
   const [saveDescription, setSaveDescription] = useState('');
@@ -309,6 +310,48 @@ export default function DrawPage() {
     });
   }, [thumbnailRendererRef]);
 
+  // 캔버스 스냅샷 캡처 함수 (고정 크기)
+  const captureCanvasSnapshot = useCallback((): string => {
+    const canvas = canvasRef.current;
+    if (!canvas) {
+      console.error('❌ 캔버스 ref가 없습니다');
+      return '';
+    }
+    
+    try {
+      // 캔버스가 비어있는지 확인
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        console.error('❌ 캔버스 컨텍스트가 없습니다');
+        return '';
+      }
+      
+      // 캔버스 크기 확인
+      console.log('🔍 캔버스 크기:', canvas.width, 'x', canvas.height);
+      
+      // 고정 크기로 캔버스 스냅샷 캡처 (데스크톱/모바일 공통)
+      const tempCanvas = document.createElement('canvas');
+      const tempCtx = tempCanvas.getContext('2d');
+      if (!tempCtx) return '';
+      
+      // 최종 썸네일 크기로 직접 저장 (용량 최적화)
+      const THUMBNAIL_WIDTH = 450;
+      const THUMBNAIL_HEIGHT = 338;
+      
+      tempCanvas.width = THUMBNAIL_WIDTH;
+      tempCanvas.height = THUMBNAIL_HEIGHT;
+      
+      // 캔버스를 최종 썸네일 크기로 리사이징
+      tempCtx.drawImage(canvas, 0, 0, THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT);
+      
+      const dataURL = tempCanvas.toDataURL('image/png');
+      console.log('✅ 캔버스 스냅샷 캡처 성공:', THUMBNAIL_WIDTH, 'x', THUMBNAIL_HEIGHT, '데이터 길이:', dataURL.length);
+      return dataURL;
+    } catch (error) {
+      console.error('❌ 캔버스 스냅샷 캡처 실패:', error);
+      return '';
+    }
+  }, []);
 
   // 블루프린트용 이미지 생성 함수 (모바일 해상도에 따른 리사이징 적용)
   const createBlueprintFromSnapshot = (snapshotDataUrl: string): Promise<string> => {
@@ -323,12 +366,12 @@ export default function DrawPage() {
         }
 
         // 기본 크롭 사이즈 (4:3 비율)
-        const baseCropWidth = 650;
-        const baseCropHeight = 488; // 4:3 비율
+        const baseCropWidth = 700;
+        const baseCropHeight = 525; // 4:3 비율 (700 * 3/4 = 525)
         
-        // 고정 크기 스냅샷(1300x976)에서 650x488 크롭 - 모바일/데스크톱 공통
-        const cropWidth = baseCropWidth; // 650 (기본 크롭)
-        const cropHeight = baseCropHeight; // 488 (기본 크롭)
+        // 고정 크기 스냅샷(1300x976)에서 700x525 크롭 - 모바일/데스크톱 공통
+        const cropWidth = baseCropWidth; // 700 (기본 크롭)
+        const cropHeight = baseCropHeight; // 525 (기본 크롭)
         
         // 스냅샷의 크기에 맞춰 크롭 사이즈 조정
         const maxCropWidth = Math.min(cropWidth, img.width);
@@ -342,7 +385,7 @@ export default function DrawPage() {
         
         // 고정 크기 스냅샷용 오프셋 (일관성 보장) - 기본 오프셋 사용
         const offsetX = 40; // 40px (기본 오프셋)
-        const offsetY = 100; // 100px (기본 오프셋)
+        const offsetY = 120; // 120px (Y축 30px 위로 이동)
         
         const cropX = centerX - offsetX;
         const cropY = centerY - offsetY;
@@ -669,7 +712,7 @@ export default function DrawPage() {
       const snapshotWidth = snapshotImg.naturalWidth;
       const snapshotHeight = snapshotImg.naturalHeight;
       const snapshotX = (a4Width - snapshotWidth) / 2;
-      const snapshotY = 440; // 450 - 10
+      const snapshotY = 540; // 490 + 50 (아래로 50px 더 이동)
       
       
       
@@ -3887,10 +3930,14 @@ export default function DrawPage() {
       const snapshot = await captureThumbnailSnapshot();
       const thumbnail = snapshot ? await createBlueprintFromSnapshot(snapshot) : await compressImage(blueprintImages[0], 0.5);
       
+      // 미리 캡처된 캔버스 스냅샷 사용
+      const canvasSnapshot = preCapturedCanvasSnapshot;
+      console.log('🎨 미리 캡처된 캔버스 스냅샷 사용:', canvasSnapshot ? '성공' : '실패', canvasSnapshot?.length || 0, 'bytes');
+      
       // 태그를 배열로 변환
       const tagsArray = shareTags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
       
-      // Firebase에 디자인 데이터 저장 (blueprintImages 제거 - 저장공간 절약)
+      // Firebase에 디자인 데이터 저장 (캔버스 스냅샷 추가)
       const designData = {
         name: shareTitle,
         type: selectedCarType || drawingAnalysis?.analysis?.carType || 'sedan',
@@ -3898,7 +3945,8 @@ export default function DrawPage() {
         authorNickname: userNickname, // Firestore에서 가져온 최신 닉네임 사용
         authorEmail: user.email || '',
         authorId: user.uid, // 작성자 ID 추가
-        thumbnail: thumbnail,
+        thumbnail: thumbnail, // 3D 렌더링 스냅샷 (메인)
+        canvasSnapshot: canvasSnapshot, // 그리기 캔버스 스냅샷 (서브)
         tags: tagsArray,
         likes: 0,
         downloads: 0,
@@ -4498,6 +4546,12 @@ export default function DrawPage() {
       
       // 분석된 차종을 기본 선택으로 설정
       setSelectedCarType(analysis.carType);
+      
+      // 그리기 완료 시점에 캔버스 스냅샷 미리 캡처
+      console.log('🎨 그리기 완료 시점에 캔버스 스냅샷 미리 캡처...');
+      const canvasSnapshot = captureCanvasSnapshot();
+      setPreCapturedCanvasSnapshot(canvasSnapshot);
+      console.log('🎨 미리 캡처된 캔버스 스냅샷:', canvasSnapshot ? '성공' : '실패', canvasSnapshot?.length || 0, 'bytes');
     
     const dataUrl = canvas.toDataURL('image/png');
     setSavedDrawingData(dataUrl); // 드로잉 데이터 저장
@@ -5971,6 +6025,26 @@ export default function DrawPage() {
               openLoginModal('share');
               return;
             }
+            
+            // 모달 열기 전에 캔버스 스냅샷 미리 캡처
+            console.log('🎨 갤러리 공유 모달 열기 전 캔버스 스냅샷 캡처...');
+            
+            // 캔버스가 존재하는지 확인하고 캡처
+            if (canvasRef.current) {
+              const canvasSnapshot = captureCanvasSnapshot();
+              setPreCapturedCanvasSnapshot(canvasSnapshot);
+              console.log('🎨 미리 캡처된 캔버스 스냅샷:', canvasSnapshot ? '성공' : '실패', canvasSnapshot?.length || 0, 'bytes');
+            } else {
+              console.log('❌ 캔버스 ref가 없음 - 이전에 캡처한 스냅샷 사용');
+              // 이전에 캡처한 스냅샷이 있다면 그대로 사용
+              if (preCapturedCanvasSnapshot) {
+                console.log('🎨 이전에 캡처한 캔버스 스냅샷 사용:', preCapturedCanvasSnapshot.length, 'bytes');
+              } else {
+                console.log('❌ 이전에 캡처한 스냅샷도 없음');
+                setPreCapturedCanvasSnapshot('');
+              }
+            }
+            
             // 박스카 갤러리 공유 모달 열 때 자동으로 랜덤 제목 생성
             const generateFunTitle = (carType: string) => {
               const adjectives = {

@@ -212,6 +212,7 @@ interface GalleryDesign {
   authorEmail: string;
   authorId: string;
   thumbnail: string;
+  canvasSnapshot?: string; // 그리기 캔버스 스냅샷 (스와이프용)
   likes: number;
   views: number;
   boxroTalks: number;
@@ -346,7 +347,45 @@ export default function GalleryPage() {
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [infoMessage, setInfoMessage] = useState('');
   
+  // 스와이프 상태 관리 (0: 3D 렌더링, 1: 캔버스 스냅샷)
+  const [swipeStates, setSwipeStates] = useState<{[key: string]: number}>({});
+  
+  // 스와이프 핸들러 함수들
+  const handleSwipe = (designId: string, direction: 'left' | 'right') => {
+    setSwipeStates(prev => ({
+      ...prev,
+      [designId]: direction === 'left' ? 1 : 0
+    }));
+  };
 
+  // 클릭으로 전환 (데스크톱용)
+  const handleImageClick = (designId: string) => {
+    setSwipeStates(prev => ({
+      ...prev,
+      [designId]: prev[designId] === 0 ? 1 : 0
+    }));
+  };
+
+  const handleTouchStart = (e: React.TouchEvent, designId: string) => {
+    const touch = e.touches[0];
+    const startX = touch.clientX;
+    e.currentTarget.setAttribute('data-start-x', startX.toString());
+  };
+
+  const handleTouchMove = (e: React.TouchEvent, designId: string) => {
+    const startX = parseFloat(e.currentTarget.getAttribute('data-start-x') || '0');
+    const currentX = e.touches[0].clientX;
+    const diff = startX - currentX;
+    
+    // 스와이프 임계값 (50px)
+    if (Math.abs(diff) > 50) {
+      handleSwipe(designId, diff > 0 ? 'left' : 'right');
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent, designId: string) => {
+    e.currentTarget.removeAttribute('data-start-x');
+  };
 
   // 관리자 권한 체크
   const isAdmin = () => {
@@ -377,6 +416,15 @@ export default function GalleryPage() {
       querySnapshot.forEach((doc) => {
         const data = doc.data();
         
+        // 디버깅: canvasSnapshot 데이터 확인
+        console.log('🔍 갤러리 데이터 로드:', {
+          id: doc.id,
+          name: data.name,
+          hasCanvasSnapshot: !!data.canvasSnapshot,
+          canvasSnapshotLength: data.canvasSnapshot?.length || 0,
+          canvasSnapshotPreview: data.canvasSnapshot?.substring(0, 50) || '없음'
+        });
+        
         const currentUserId = user?.uid || null;
         designsData.push({
           id: doc.id,
@@ -387,6 +435,7 @@ export default function GalleryPage() {
           authorEmail: data.authorEmail || '',
           authorId: data.authorId || '',
           thumbnail: data.thumbnail || '/api/placeholder/300/200',
+          canvasSnapshot: data.canvasSnapshot, // 그리기 캔버스 스냅샷 추가
           likes: data.likes || 0,
           downloads: data.downloads || 0,
           views: data.views || 0,
@@ -429,6 +478,13 @@ export default function GalleryPage() {
       setLastDoc(querySnapshot.docs[querySnapshot.docs.length - 1] || null);
       setHasMore(querySnapshot.docs.length === 10);
       setError(null);
+      
+      // 스와이프 상태 초기화 (모든 디자인을 3D 렌더링으로 설정)
+      const initialSwipeStates: {[key: string]: number} = {};
+      designsData.forEach(design => {
+        initialSwipeStates[design.id] = 0; // 0: 3D 렌더링
+      });
+      setSwipeStates(initialSwipeStates);
     } catch (err) {
       console.error('작품 데이터 로드 실패:', err);
       setError('작품을 불러오는데 실패했습니다.');
@@ -472,6 +528,7 @@ export default function GalleryPage() {
           authorEmail: data.authorEmail || '',
           authorId: data.authorId || '',
           thumbnail: data.thumbnail || '/api/placeholder/300/200',
+          canvasSnapshot: data.canvasSnapshot, // 그리기 캔버스 스냅샷 추가
           likes: data.likes || 0,
           downloads: data.downloads || 0,
           views: data.views || 0,
@@ -1572,7 +1629,7 @@ export default function GalleryPage() {
                 key={`${design.id}-${index}`} 
                 className="group bg-white/97 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden w-full rounded-2xl gap-2 flex flex-col [&>*:not(:first-child)]:mt-2 p-0"
               >
-                {/* 썸네일 */}
+                {/* 스와이프 가능한 이미지 */}
                 {design.thumbnail && design.thumbnail !== '/api/placeholder/300/200' && design.thumbnail !== '' ? (
                   <div className="w-full overflow-hidden relative">
                     {/* 수정/삭제 버튼 */}
@@ -1603,15 +1660,79 @@ export default function GalleryPage() {
                       </div>
                     )}
                     
-                    <img 
-                      src={design.thumbnail} 
-                      alt={design.name}
-                      className="w-full aspect-[4/3] object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                      }}
-                    />
+                    {/* 스와이프 컨테이너 */}
+                    <div 
+                      className="relative w-full aspect-[4/3] overflow-hidden cursor-pointer"
+                      onTouchStart={(e) => handleTouchStart(e, design.id)}
+                      onTouchMove={(e) => handleTouchMove(e, design.id)}
+                      onTouchEnd={(e) => handleTouchEnd(e, design.id)}
+                      onClick={() => handleImageClick(design.id)}
+                    >
+           {/* 3D 렌더링 이미지 */}
+           <img 
+             src={design.thumbnail} 
+             alt={`${design.name} - 3D 렌더링`}
+             className={`absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03] ${
+               (swipeStates[design.id] || 0) === 1 ? '-translate-x-full' : 'translate-x-0'
+             }`}
+             onError={(e) => {
+               e.currentTarget.style.display = 'none';
+             }}
+           />
+           
+           {/* 그리기 캔버스 이미지 */}
+           {design.canvasSnapshot && (
+             <img 
+               src={design.canvasSnapshot} 
+               alt={`${design.name} - 그리기 과정`}
+               className={`absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03] ${
+                 (swipeStates[design.id] || 0) === 1 ? 'translate-x-0' : 'translate-x-full'
+               }`}
+               onLoad={() => {
+                 console.log('✅ 캔버스 스냅샷 이미지 로드 성공:', design.name);
+               }}
+               onError={(e) => {
+                 console.error('❌ 캔버스 스냅샷 이미지 로드 실패:', design.name, design.canvasSnapshot?.substring(0, 100));
+                 e.currentTarget.style.display = 'none';
+               }}
+             />
+           )}
+                      
+                    </div>
+                    
+                    {/* 스와이프 인디케이터 - 이미지 밖으로 이동 */}
+                    <div className="flex justify-center gap-2 mt-2">
+                      <div 
+                        className={`flex items-center px-3 py-1.5 rounded-full cursor-pointer transition-all duration-200 ${
+                          (swipeStates[design.id] || 0) === 0 
+                            ? 'bg-blue-500 text-white shadow-lg' 
+                            : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                        }`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSwipeStates(prev => ({ ...prev, [design.id]: 0 }));
+                        }}
+                      >
+                        <span className="text-xs font-medium">
+                          {(design.isUploaded || design.type === 'uploaded' || design.blueprintImages?.length > 0) ? '완성된 박스카' : '3D 모습'}
+                        </span>
+                      </div>
+                      {design.canvasSnapshot && (
+                          <div 
+                            className={`flex items-center px-3 py-1.5 rounded-full cursor-pointer transition-all duration-200 ${
+                              (swipeStates[design.id] || 0) === 1 
+                                ? 'bg-pink-500 text-white shadow-lg' 
+                                : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                            }`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSwipeStates(prev => ({ ...prev, [design.id]: 1 }));
+                          }}
+                        >
+                          <span className="text-xs font-medium">내 디자인</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ) : (
                   <div className="w-full bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center overflow-hidden relative min-h-32">
@@ -1647,9 +1768,27 @@ export default function GalleryPage() {
                 )}
                 
                 {/* 상단: 작성자, 제목, 설명 */}
-                <CardHeader className="flex-shrink-0 pr-5 relative px-7 pt-1 pb-0">
+                <CardHeader className="flex-shrink-0 pr-5 relative px-6 pt-0 pb-0">
                   
-                  <div className="flex items-center gap-2 mb-2">
+                  <div className="flex justify-center items-start mb-1">
+                    <CardTitle 
+                      className="text-lg font-semibold text-gray-900 text-center" 
+                      title={design.name}
+                      style={{
+                        display: '-webkit-box',
+                        WebkitLineClamp: 1,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        lineHeight: '1.4',
+                        maxHeight: '1.4em'
+                      }}
+                    >
+                      {design.name}
+                    </CardTitle>
+                  </div>
+                  
+                  <div className="flex items-center gap-3 bg-gray-100 rounded-full px-3 py-2">
                     {/* 작성자 프로필 이미지 */}
                     <ProfileImage 
                       authorId={design.authorId || ''} 
@@ -1667,24 +1806,6 @@ export default function GalleryPage() {
                         {new Date(design.createdAt).toLocaleString()}
                       </div>
                     </div>
-                  </div>
-                  
-                  <div className="flex justify-between items-start">
-                    <CardTitle 
-                      className="text-lg font-semibold flex-1 text-gray-900" 
-                      title={design.name}
-                      style={{
-                        display: '-webkit-box',
-                        WebkitLineClamp: 1,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        lineHeight: '1.4',
-                        maxHeight: '1.4em'
-                      }}
-                    >
-                      {design.name}
-                    </CardTitle>
                   </div>
                 </CardHeader>
                 
