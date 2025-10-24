@@ -2635,6 +2635,9 @@ export default function AdminPage() {
       const allStoreItemsSnapshot = await getDocs(collection(db, 'storeItems'));
       const allStoreItems = allStoreItemsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
+      const allYoutubeItemsSnapshot = await getDocs(collection(db, 'youtubeItems'));
+      const allYoutubeItems = allYoutubeItemsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
       // 사용자가 좋아요한 콘텐츠 찾기 (다른 사람 콘텐츠에 누른 좋아요)
       const userLikes = [];
       
@@ -2682,6 +2685,22 @@ export default function AdminPage() {
             author: storeItem.authorNickname || storeItem.author || storeItem.authorName || storeItem.creator || storeItem.userId || '작가 정보 없음',
             likes: storeItem.likes || 0,
             createdAt: storeItem.createdAt
+          });
+        }
+      });
+
+      // 유튜브 아이템에서 사용자가 좋아요한 것들
+      allYoutubeItems.forEach((youtubeItem: any) => {
+        const likedBy = youtubeItem.likedBy || [];
+        if (likedBy.includes(currentUserUid)) {
+          userLikes.push({
+            type: 'youtube',
+            id: youtubeItem.id,
+            title: youtubeItem.title || '제목 없음',
+            thumbnail: youtubeItem.thumbnail || youtubeItem.cardThumbnail,
+            author: youtubeItem.authorNickname || youtubeItem.author || youtubeItem.authorName || youtubeItem.creator || youtubeItem.userId || '작가 정보 없음',
+            likes: youtubeItem.likes || 0,
+            createdAt: youtubeItem.createdAt
           });
         }
       });
@@ -2881,6 +2900,38 @@ export default function AdminPage() {
         }
       });
 
+      // 유튜브 아이템에서 사용자가 조회한 것들
+      console.log('🔍 유튜브 아이템 조회 데이터 확인:', {
+        totalYoutubeItems: allYoutubeItems.length,
+        currentUserUid,
+        youtubeItems: allYoutubeItems.map(item => ({
+          id: item.id,
+          title: item.title,
+          viewedBy: item.viewedBy || [],
+          hasViewedBy: (item.viewedBy || []).includes(currentUserUid)
+        }))
+      });
+      
+      allYoutubeItems.forEach((youtubeItem: any) => {
+        const viewedBy = youtubeItem.viewedBy || [];
+        if (viewedBy.includes(currentUserUid)) {
+          console.log('✅ 유튜브 아이템 조회 발견:', {
+            id: youtubeItem.id,
+            title: youtubeItem.title,
+            viewedBy: viewedBy
+          });
+          userViews.push({
+            type: 'youtube',
+            id: youtubeItem.id,
+            title: youtubeItem.title || '제목 없음',
+            thumbnail: youtubeItem.thumbnail || youtubeItem.cardThumbnail,
+            author: youtubeItem.authorNickname || youtubeItem.author || youtubeItem.authorName || youtubeItem.creator || youtubeItem.userId || '작가 정보 없음',
+            views: youtubeItem.views || 0,
+            createdAt: youtubeItem.createdAt
+          });
+        }
+      });
+
       // 최신순 정렬
       userViews.sort((a, b) => {
         // Firestore Timestamp 객체 처리
@@ -2898,6 +2949,19 @@ export default function AdminPage() {
         const dateA = getTimestamp(a.createdAt);
         const dateB = getTimestamp(b.createdAt);
         return dateB - dateA; // 최신순 (내림차순)
+      });
+
+      console.log('🔍 최종 조회 데이터:', {
+        totalViews: userViews.length,
+        viewsByType: userViews.reduce((acc, view) => {
+          acc[view.type] = (acc[view.type] || 0) + 1;
+          return acc;
+        }, {}),
+        allViews: userViews.map(view => ({
+          type: view.type,
+          title: view.title,
+          id: view.id
+        }))
       });
 
       // 사용자가 스토어 바로가기한 콘텐츠 찾기 (다른 사람 스토어 아이템을 바로가기한 것)
@@ -3701,6 +3765,99 @@ export default function AdminPage() {
         });
       });
 
+      // 유튜브 아이템에서 사용자 활동 추적
+      const youtubeItemsQuery = query(collection(db, 'youtubeItems'));
+      const youtubeItemsSnapshot = await getDocs(youtubeItemsQuery);
+      const youtubeItems = youtubeItemsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      youtubeItems.forEach((youtubeItem: any) => {
+        const likedBy = youtubeItem.likedBy || [];
+        const sharedBy = youtubeItem.sharedBy || [];
+        const viewedBy = youtubeItem.viewedBy || [];
+        
+        // 각 사용자별로 활동 카운트
+        likedBy.forEach((userId: string) => {
+          const user = users.find(u => u.uid === userId);
+          if (user) {
+            const email = user.email || 'unknown';
+            if (!userStatsMap.has(email)) {
+              userStatsMap.set(email, {
+                email,
+                displayName: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
+                authorNickname: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
+                photoURL: user.photoURL || '',
+                createdAt: user.createdAt || '',
+                lastSignIn: user.lastSignIn || '',
+                designsCount: 0,
+                boxroTalksCount: 0,
+                likesCount: 0,
+                downloadsCount: 0,
+                sharesCount: 0,
+                viewsCount: 0,
+                storeRedirectsCount: 0,
+                uid: user.uid || ''
+              });
+            }
+            const userStat = userStatsMap.get(email)!;
+            userStat.likesCount++;
+          }
+        });
+        
+        sharedBy.forEach((userId: string) => {
+          const user = users.find(u => u.uid === userId);
+          if (user) {
+            const email = user.email || 'unknown';
+            if (!userStatsMap.has(email)) {
+              userStatsMap.set(email, {
+                email,
+                displayName: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
+                authorNickname: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
+                photoURL: user.photoURL || '',
+                createdAt: user.createdAt || '',
+                lastSignIn: user.lastSignIn || '',
+                designsCount: 0,
+                boxroTalksCount: 0,
+                likesCount: 0,
+                downloadsCount: 0,
+                sharesCount: 0,
+                viewsCount: 0,
+                storeRedirectsCount: 0,
+                uid: user.uid || ''
+              });
+            }
+            const userStat = userStatsMap.get(email)!;
+            userStat.sharesCount++; // 공유한 콘텐츠 수 카운트
+          }
+        });
+
+        viewedBy.forEach((userId: string) => {
+          const user = users.find(u => u.uid === userId);
+          if (user) {
+            const email = user.email || 'unknown';
+            if (!userStatsMap.has(email)) {
+              userStatsMap.set(email, {
+                email,
+                displayName: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
+                authorNickname: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
+                photoURL: user.photoURL || '',
+                createdAt: user.createdAt || '',
+                lastSignIn: user.lastSignIn || '',
+                designsCount: 0,
+                boxroTalksCount: 0,
+                likesCount: 0,
+                downloadsCount: 0,
+                sharesCount: 0,
+                viewsCount: 0,
+                storeRedirectsCount: 0,
+                uid: user.uid || ''
+              });
+            }
+            const userStat = userStatsMap.get(email)!;
+            userStat.viewsCount++; // 조회한 콘텐츠 수 카운트
+          }
+        });
+      });
+
       // Firestore에서 가져온 사용자 정보로 업데이트
       users.forEach((userData: any) => {
         const email = userData.email || 'unknown';
@@ -4161,7 +4318,7 @@ export default function AdminPage() {
               <table className="w-full min-w-[1000px]">
                 <thead>
                   <tr className="border-b-2 border-gray-300">
-                    <th className="text-left py-3 px-1 text-[13px] font-medium text-gray-800 w-40">
+                    <th className="text-left py-3 px-1 text-[13px] font-medium text-gray-800 w-48">
                       <button
                         onClick={() => {
                           if (tableSortField === 'email') {
@@ -4179,7 +4336,7 @@ export default function AdminPage() {
                         )}
                       </button>
                     </th>
-                    <th className="text-left py-3 px-1 text-[13px] font-medium text-gray-800 w-40">
+                    <th className="text-left py-3 px-1 text-[13px] font-medium text-gray-800 w-48">
                       <button
                         onClick={() => {
                           if (tableSortField === 'displayName') {
@@ -4197,7 +4354,7 @@ export default function AdminPage() {
                         )}
                       </button>
                     </th>
-                    <th className="text-center py-3 px-1 text-[13px] font-medium text-gray-800 w-24">
+                    <th className="text-center py-3 px-1 text-[13px] font-medium text-gray-800 w-20">
                       <button
                         onClick={() => {
                           if (tableSortField === 'createdAt') {
@@ -4215,7 +4372,7 @@ export default function AdminPage() {
                         )}
                       </button>
                     </th>
-                    <th className="text-center py-3 px-1 text-[13px] font-medium text-gray-800 w-24">
+                    <th className="text-center py-3 px-1 text-[13px] font-medium text-gray-800 w-20">
                       <button
                         onClick={() => {
                           if (tableSortField === 'lastSignIn') {
@@ -4371,8 +4528,8 @@ export default function AdminPage() {
                         className="border-b border-gray-200 hover:bg-gray-50 cursor-pointer"
                         onClick={() => handleUserClick(user.email)}
                       >
-                        <td className="py-3 px-2 font-medium text-[13px] text-gray-800 w-40">{user.email}</td>
-                      <td className="py-3 px-1 flex items-center gap-3 w-40">
+                        <td className="py-3 px-2 font-medium text-[13px] text-gray-800 w-48">{user.email}</td>
+                      <td className="py-3 px-1 flex items-center gap-3 w-48">
                         {user.photoURL ? (
                           <img 
                             src={user.photoURL.startsWith('data:image/') ? user.photoURL : `https://images.weserv.nl/?url=${encodeURIComponent(user.photoURL)}&w=32&h=32&fit=cover&output=webp`}
@@ -4393,11 +4550,19 @@ export default function AdminPage() {
                           )}
                         </div>
                       </td>
-                      <td className="py-3 px-1 text-center text-[13px] text-gray-800 w-24">
-                        {user.createdAt ? new Date(user.createdAt).toLocaleDateString('ko-KR') : 'N/A'}
+                      <td className="py-3 px-1 text-center text-[13px] text-gray-800 w-20">
+                        {user.createdAt ? new Date(user.createdAt).toLocaleDateString('ko-KR', { 
+                          year: '2-digit', 
+                          month: '2-digit', 
+                          day: '2-digit' 
+                        }).replace(/\./g, '.').replace(/\s/g, '') : 'N/A'}
                       </td>
-                      <td className="py-3 px-1 text-center text-[13px] text-gray-800 w-24">
-                        {user.lastSignIn ? new Date(user.lastSignIn).toLocaleDateString('ko-KR') : 'N/A'}
+                      <td className="py-3 px-1 text-center text-[13px] text-gray-800 w-20">
+                        {user.lastSignIn ? new Date(user.lastSignIn).toLocaleDateString('ko-KR', { 
+                          year: '2-digit', 
+                          month: '2-digit', 
+                          day: '2-digit' 
+                        }).replace(/\./g, '.').replace(/\s/g, '') : 'N/A'}
                       </td>
                       <td className="py-3 px-2 text-center w-[58px]">
                         <span className="bg-blue-100 text-blue-800 px-1 py-1 rounded-full text-[13px]">
@@ -5244,9 +5409,13 @@ export default function AdminPage() {
                                       ? 'bg-purple-100 text-purple-800' 
                                       : view.type === 'store'
                                       ? 'bg-orange-100 text-orange-800'
+                                      : view.type === 'youtube'
+                                      ? 'bg-red-100 text-red-800'
                                       : 'bg-blue-100 text-blue-800'
                                   }`}>
-                                    {view.type === 'story' ? '이야기' : view.type === 'store' ? '스토어' : '갤러리'}
+                                    {view.type === 'story' ? '이야기' : 
+                                     view.type === 'store' ? '스토어' : 
+                                     view.type === 'youtube' ? '유튜브' : '갤러리'}
                         </span>
                       </td>
                                 <td className="py-1 px-3 text-gray-800">

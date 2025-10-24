@@ -721,11 +721,16 @@ export default function YoutubePageClient() {
     try {
       const articleRef = doc(db, 'youtubeItems', articleId);
       await updateDoc(articleRef, {
-        views: increment(1)
+        views: increment(1),
+        viewedBy: arrayUnion(user?.uid || 'anonymous')
       });
       
       setArticles(articles.map(a => 
-        a.id === articleId ? { ...a, views: (a.views || 0) + 1 } : a
+        a.id === articleId ? { 
+          ...a, 
+          views: (a.views || 0) + 1,
+          isViewed: true
+        } : a
       ));
     } catch (error) {
       console.error('조회수 증가 실패:', error);
@@ -994,9 +999,12 @@ export default function YoutubePageClient() {
                       <span className={`text-xs font-medium ${article.isBoxroTalked ? 'text-white' : 'text-gray-500'}`}>{article.boxroTalks || 0}</span>
                     </button>
                     <button 
-                      onClick={(e) => {
+                      onClick={async (e) => {
                         e.stopPropagation();
-                        router.push(`/youtube/${article.id}`);
+                        await incrementView(article.id);
+                        if (article.storeUrl) {
+                          window.open(article.storeUrl, '_blank');
+                        }
                       }}
                       className={`w-[60px] h-[60px] rounded-full p-0 flex flex-col items-center justify-center gap-1 ${
                         article.isViewed 

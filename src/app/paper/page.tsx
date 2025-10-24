@@ -6380,7 +6380,7 @@ export default function DrawPage() {
       {/* 저장 확인 모달 */}
       {showConfirmModal && (
         <div className="fixed inset-0 bg-gradient-to-br from-purple-900/20 via-blue-900/20 to-pink-900/20 backdrop-blur-md z-50 flex items-center justify-center">
-          <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-6 max-w-sm w-full mx-6">
+          <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 px-6 py-8 max-w-md w-full mx-6">
             <div className="text-center">
               <div className="text-2xl mb-4">✨</div>
               <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">

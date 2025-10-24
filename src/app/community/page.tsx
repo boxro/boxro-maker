@@ -2036,7 +2036,8 @@ export default function GalleryPage() {
                   <div className="flex justify-center">
                     <Button
                       onClick={() => addComment()}
-                      className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-full px-12"
+                      disabled={!boxroTalkText.trim()}
+                      className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white disabled:opacity-50 disabled:cursor-not-allowed rounded-full px-12"
                       style={{fontSize: '14px'}}
                     >
                       톡 남기기
@@ -2133,10 +2134,9 @@ export default function GalleryPage() {
 
       {/* 삭제 컨펌 모달 */}
       {showDeleteModal && deleteDesignId && (
-        <div className="fixed inset-0 bg-gradient-to-br from-purple-900/20 via-blue-900/20 to-pink-900/20 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 max-w-sm w-full mx-6">
-            <div className="p-6">
-              <div className="text-center">
+        <div className="fixed inset-0 bg-gradient-to-br from-purple-900/20 via-blue-900/20 to-pink-900/20 backdrop-blur-md z-50 flex items-center justify-center">
+          <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-6 max-w-md w-full mx-6">
+            <div className="text-center">
                 <div className="flex justify-center mb-2">
                   <div className="text-[30px]">🗑️</div>
                 </div>
@@ -2165,7 +2165,6 @@ export default function GalleryPage() {
                     삭제하기
                   </Button>
                 </div>
-              </div>
             </div>
           </div>
         </div>

@@ -6114,7 +6114,7 @@ export default function DrawPage() {
                         const funTitle = generateFunTitle(mappedCarType);
                         setShareTitle(funTitle);
                       }}
-                      className="px-4 py-2 bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 transition-colors text-sm font-medium whitespace-nowrap min-w-[80px]"
+                      className="px-1 py-2 bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 transition-colors text-sm font-medium whitespace-nowrap min-w-[50px]"
                     >
                       랜덤
                     </button>
@@ -6156,7 +6156,7 @@ export default function DrawPage() {
       {/* 저장 확인 모달 */}
       {showConfirmModal && (
         <div className="fixed inset-0 bg-gradient-to-br from-purple-900/20 via-blue-900/20 to-pink-900/20 backdrop-blur-md z-50 flex items-center justify-center">
-          <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-6 max-w-sm w-full mx-6">
+          <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 px-6 py-8 max-w-md w-full mx-6">
             <div className="text-center">
               <div className="text-[30px] mb-2">✨</div>
               <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
@@ -6233,7 +6233,7 @@ export default function DrawPage() {
                         const funTitle = generateFunTitle(mappedCarType);
                         setSaveTitle(funTitle);
                       }}
-                      className="px-3 py-2 bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 transition-colors text-sm font-medium"
+                      className="px-1 py-2 bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 transition-colors text-sm font-medium"
                     >
                       랜덤
                     </button>
@@ -6318,10 +6318,9 @@ export default function DrawPage() {
 
       {/* 다운로드 확인 모달 */}
       {showDownloadConfirmModal && (
-        <div className="fixed inset-0 bg-gradient-to-br from-purple-900/20 via-blue-900/20 to-pink-900/20 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 max-w-sm w-full mx-6">
-            <div className="p-6">
-              <div className="text-center">
+        <div className="fixed inset-0 bg-gradient-to-br from-purple-900/20 via-blue-900/20 to-pink-900/20 backdrop-blur-md z-50 flex items-center justify-center">
+          <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-6 max-w-md w-full mx-6">
+            <div className="text-center">
                 <div className="flex justify-center mb-4">
                   <div className="text-[40px]">🚗✨</div>
                 </div>
@@ -6334,7 +6333,7 @@ export default function DrawPage() {
                 <div className="flex gap-3">
                   <button
                     onClick={() => setShowDownloadConfirmModal(false)}
-                    className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-full font-medium transition-colors"
+                    className="flex-1 px-4 py-2 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 text-gray-800 rounded-full font-medium transition-colors"
                   >
                     취소
                   </button>
@@ -6348,7 +6347,6 @@ export default function DrawPage() {
                     다운로드
                   </button>
                 </div>
-              </div>
             </div>
           </div>
         </div>
