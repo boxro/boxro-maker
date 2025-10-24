@@ -350,20 +350,22 @@ export default function GalleryPage() {
   // 스와이프 상태 관리 (0: 3D 렌더링, 1: 캔버스 스냅샷)
   const [swipeStates, setSwipeStates] = useState<{[key: string]: number}>({});
   
-  // 스와이프 핸들러 함수들
+  // 스와이프 핸들러 함수들 (한 방향 무한 루프)
   const handleSwipe = (designId: string, direction: 'left' | 'right') => {
-    setSwipeStates(prev => ({
-      ...prev,
-      [designId]: direction === 'left' ? 1 : 0
-    }));
+    setSwipeStates(prev => {
+      const currentState = prev[designId] || 0;
+      // 한 방향으로 계속 돌기: 0 → 1 → 0 → 1 ...
+      return { ...prev, [designId]: currentState === 0 ? 1 : 0 };
+    });
   };
 
-  // 클릭으로 전환 (데스크톱용)
+  // 클릭으로 전환 (데스크톱용) - 한 방향 무한 루프
   const handleImageClick = (designId: string) => {
-    setSwipeStates(prev => ({
-      ...prev,
-      [designId]: prev[designId] === 0 ? 1 : 0
-    }));
+    setSwipeStates(prev => {
+      const currentState = prev[designId] || 0;
+      // 한 방향으로 계속 돌기: 0 → 1 → 0 → 1 ...
+      return { ...prev, [designId]: currentState === 0 ? 1 : 0 };
+    });
   };
 
   const handleTouchStart = (e: React.TouchEvent, designId: string) => {
@@ -1668,6 +1670,54 @@ export default function GalleryPage() {
                       onTouchEnd={(e) => handleTouchEnd(e, design.id)}
                       onClick={() => handleImageClick(design.id)}
                     >
+                      {/* 좌우 화살표 오버레이 */}
+                      {design.canvasSnapshot && (
+                        <>
+                          {/* 왼쪽 화살표 */}
+                          <div 
+                            className="absolute left-2 top-1/2 transform -translate-y-1/2 z-10 bg-sky-500/20 hover:bg-sky-500/30 rounded-full p-2 transition-all duration-200 cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSwipeStates(prev => {
+                                const currentState = prev[design.id] || 0;
+                                // 한 방향으로 계속 돌기: 0 → 1 → 0 → 1 ...
+                                return { ...prev, [design.id]: currentState === 0 ? 1 : 0 };
+                              });
+                            }}
+                          >
+                            <svg 
+                              className="w-4 h-4 text-white" 
+                              fill="none" 
+                              stroke="currentColor" 
+                              viewBox="0 0 24 24"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                            </svg>
+                          </div>
+                          
+                          {/* 오른쪽 화살표 */}
+                          <div 
+                            className="absolute right-2 top-1/2 transform -translate-y-1/2 z-10 bg-sky-500/20 hover:bg-sky-500/30 rounded-full p-2 transition-all duration-200 cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSwipeStates(prev => {
+                                const currentState = prev[design.id] || 0;
+                                // 한 방향으로 계속 돌기: 0 → 1 → 0 → 1 ...
+                                return { ...prev, [design.id]: currentState === 0 ? 1 : 0 };
+                              });
+                            }}
+                          >
+                            <svg 
+                              className="w-4 h-4 text-white" 
+                              fill="none" 
+                              stroke="currentColor" 
+                              viewBox="0 0 24 24"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </div>
+                        </>
+                      )}
            {/* 3D 렌더링 이미지 */}
            <img 
              src={design.thumbnail} 
@@ -1700,37 +1750,48 @@ export default function GalleryPage() {
                       
                     </div>
                     
-                    {/* 스와이프 인디케이터 - 이미지 밖으로 이동 */}
-                    <div className="flex justify-center gap-2 mt-2">
+                    {/* 스와이프 인디케이터 - 고정 영역 */}
+                    <div className="flex justify-center items-center gap-2 mt-2 h-4">
                       <div 
-                        className={`flex items-center px-3 py-1.5 rounded-full cursor-pointer transition-all duration-200 ${
+                        className={`rounded-full transition-all duration-200 ${
                           (swipeStates[design.id] || 0) === 0 
-                            ? 'bg-blue-500 text-white shadow-lg' 
-                            : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                            ? 'w-2.5 h-2.5 bg-purple-500' 
+                            : 'w-2 h-2 bg-gray-300'
+                        } ${
+                          // 내 작품 올리기가 아닌 경우에만 클릭 가능
+                          !(design.isUploaded || design.type === 'uploaded' || design.blueprintImages?.length > 0) 
+                            ? 'cursor-pointer' 
+                            : 'cursor-default'
                         }`}
                         onClick={(e) => {
                           e.stopPropagation();
-                          setSwipeStates(prev => ({ ...prev, [design.id]: 0 }));
+                          // 내 작품 올리기가 아닌 경우에만 전환
+                          if (!(design.isUploaded || design.type === 'uploaded' || design.blueprintImages?.length > 0)) {
+                            setSwipeStates(prev => {
+                              const currentState = prev[design.id] || 0;
+                              // 한 방향으로 계속 돌기: 0 → 1 → 0 → 1 ...
+                              return { ...prev, [design.id]: currentState === 0 ? 1 : 0 };
+                            });
+                          }
                         }}
-                      >
-                        <span className="text-xs font-medium">
-                          {(design.isUploaded || design.type === 'uploaded' || design.blueprintImages?.length > 0) ? '완성된 박스카' : '3D 모습'}
-                        </span>
-                      </div>
-                      {design.canvasSnapshot && (
-                          <div 
-                            className={`flex items-center px-3 py-1.5 rounded-full cursor-pointer transition-all duration-200 ${
-                              (swipeStates[design.id] || 0) === 1 
-                                ? 'bg-pink-500 text-white shadow-lg' 
-                                : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
-                            }`}
+                      />
+                      {/* 내 작품 올리기가 아닌 경우에만 두 번째 점 표시 */}
+                      {!(design.isUploaded || design.type === 'uploaded' || design.blueprintImages?.length > 0) && (
+                        <div 
+                          className={`rounded-full cursor-pointer transition-all duration-200 ${
+                            (swipeStates[design.id] || 0) === 1 
+                              ? 'w-2.5 h-2.5 bg-purple-500' 
+                              : 'w-2 h-2 bg-gray-300'
+                          }`}
                           onClick={(e) => {
                             e.stopPropagation();
-                            setSwipeStates(prev => ({ ...prev, [design.id]: 1 }));
+                            setSwipeStates(prev => {
+                              const currentState = prev[design.id] || 0;
+                              // 한 방향으로 계속 돌기: 0 → 1 → 0 → 1 ...
+                              return { ...prev, [design.id]: currentState === 0 ? 1 : 0 };
+                            });
                           }}
-                        >
-                          <span className="text-xs font-medium">내 디자인</span>
-                        </div>
+                        />
                       )}
                     </div>
                   </div>

@@ -343,7 +343,7 @@ export default function OnboardingTutorial({ isOpen, onClose, onComplete, showDo
                       key={index}
                       className={`rounded-full transition-all duration-200 ${
                         index === currentStep 
-                          ? 'w-3 h-3 bg-purple-500' 
+                          ? 'w-2.5 h-2.5 bg-purple-500' 
                           : 'w-2 h-2 bg-gray-300'
                       }`}
                     />
