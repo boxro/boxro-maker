@@ -386,12 +386,12 @@ export default function DrawPage() {
         }
 
         // 기본 크롭 사이즈 (4:3 비율)
-        const baseCropWidth = 700;
-        const baseCropHeight = 525; // 4:3 비율 (700 * 3/4 = 525)
+        const baseCropWidth = 750;
+        const baseCropHeight = 563; // 4:3 비율 (750 * 3/4 = 562.5)
         
-        // 고정 크기 스냅샷(1300x976)에서 700x525 크롭 - 모바일/데스크톱 공통
-        const cropWidth = baseCropWidth; // 700 (기본 크롭)
-        const cropHeight = baseCropHeight; // 525 (기본 크롭)
+        // 고정 크기 스냅샷(1300x976)에서 750x563 크롭 - 모바일/데스크톱 공통
+        const cropWidth = baseCropWidth; // 750 (기본 크롭)
+        const cropHeight = baseCropHeight; // 563 (기본 크롭)
         
         // 스냅샷의 크기에 맞춰 크롭 사이즈 조정
         const maxCropWidth = Math.min(cropWidth, img.width);
