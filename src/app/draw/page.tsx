@@ -3832,28 +3832,27 @@ export default function DrawPage() {
         'sedan-type1': ['부릉부릉 너무 귀여운', '씽씽 달리는', '방긋 웃는', '깜찍발랄한', '콩콩 튀는'],
         'sedan-type2': ['든든하게 달리는', '똑똑하고 멋진', '반짝반짝 빛나는', '여유로운', '묵직하게 힘찬'],
         'sports': ['번쩍번쩍 멋있는', '쌩쌩 신나는', '슝슝 달려가는', '짜릿하게 질주하는', '번개처럼 빠른'],
-        'suv': ['튼튼하게 달리는', '모험을 좋아하는', '든든한', '힘차게 달리는', '멋진'],
-        'truck': ['힘세고 강한', '무거운 짐을 나르는', '든든한', '힘찬', '멋진'],
-        'bus': ['많은 사람을 태우는', '안전하게 달리는', '든든한', '힘찬', '멋진']
+        'suv': ['우당탕탕 용감한', '씩씩하게 달리는', '어디든 갈 수 있는', '힘센', '모험심 가득한'],
+        'truck': ['든든하게 짐을 싣는', '빵빵 힘찬', '우직한', '무거운 것도 척척', '으랏차차 힘센'],
+        'bus': ['즐겁게 달리는', '방긋 인사하는', '신나게 출발하는', '콩닥콩닥 두근거리는', '꽉 찬 웃음의'],
+        'bus-square': ['네모네모 귀여운', '사각사각 멋진', '반듯반듯 착한', '네모난 세상', '네모로 즐거운']
       };
       
-      const nouns = {
-        'sedan-type1': ['꼬마차', '작은차', '귀여운차', '작은자동차', '꼬마자동차'],
-        'sedan-type2': ['세단', '자동차', '승용차', '멋진차', '세련된차'],
-        'sports': ['스포츠카', '레이싱카', '빠른차', '멋진차', '스피드카'],
-        'suv': ['SUV', '지프', '오프로드카', '모험차', '힘센차'],
-        'truck': ['트럭', '화물차', '힘센차', '큰차', '무거운차'],
-        'bus': ['버스', '대중교통', '큰차', '많은사람차', '공공교통']
+      const carTypeNames = {
+        'sedan-type1': '꼬마세단',
+        'sedan-type2': '큰세단', 
+        'sports': '스포츠카',
+        'suv': 'SUV',
+        'truck': '빵빵트럭',
+        'bus': '통통버스',
+        'bus-square': '네모버스'
       };
       
-      const carTypeKey = carType as keyof typeof adjectives;
-      const adjectiveList = adjectives[carTypeKey] || adjectives['sedan-type1'];
-      const nounList = nouns[carTypeKey] || nouns['sedan-type1'];
+      const typeAdjectives = adjectives[carType as keyof typeof adjectives] || adjectives['sedan-type1'];
+      const typeName = carTypeNames[carType as keyof typeof carTypeNames] || '꼬마세단';
       
-      const randomAdjective = adjectiveList[Math.floor(Math.random() * adjectiveList.length)];
-      const randomNoun = nounList[Math.floor(Math.random() * nounList.length)];
-      
-      return `${randomAdjective} ${randomNoun}`;
+      const randomAdjective = typeAdjectives[Math.floor(Math.random() * typeAdjectives.length)];
+      return `${randomAdjective} ${typeName}`;
     };
     
     const randomTitle = generateFunTitle(selectedCarType || drawingAnalysis?.analysis?.carType || 'sedan');

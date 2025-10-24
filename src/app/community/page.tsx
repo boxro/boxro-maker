@@ -2248,10 +2248,10 @@ export default function GalleryPage() {
                   onChange={(e) => setUploadTitle(e.target.value)}
                   placeholder="작품 이야기를 함께 적어주세요"
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-[14px]"
-                  maxLength={30}
+                  maxLength={20}
                 />
                 <div className="text-xs text-gray-500 mt-1">
-                  {uploadTitle.length}/30
+                  {uploadTitle.length}/20
                 </div>
               </div>
 
