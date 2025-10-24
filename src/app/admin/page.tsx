@@ -3197,7 +3197,6 @@ export default function AdminPage() {
         
         const userStat = userStatsMap.get(email)!;
         userStat.designsCount++;
-        // 갤러리 작품의 조회수는 별도로 계산하지 않음 (사용자 활동이 아님)
       });
 
       // 스토리별 통계
@@ -3223,7 +3222,6 @@ export default function AdminPage() {
         }
         
         const userStat = userStatsMap.get(email)!;
-        // 스토리의 조회수는 별도로 계산하지 않음 (사용자 활동이 아님)
       });
 
       // 갤러리 박스로 톡별 통계 (삭제되지 않은 것만 + 고아 박스로톡 제외)
@@ -3319,7 +3317,6 @@ export default function AdminPage() {
         }
         
         const userStat = userStatsMap.get(email)!;
-        // 스토어 아이템의 조회수는 별도로 계산하지 않음 (사용자 활동이 아님)
         
         // 디버깅: 스토어 아이템 내부 박스로 톡 확인
         if (storeItem.boxroTalks && storeItem.boxroTalks.length > 0) {
@@ -3532,6 +3529,33 @@ export default function AdminPage() {
         
         // 갤러리 다운로드 로직 제거됨 - 도안 다운로드만 추적
         
+        viewedBy.forEach((userId: string) => {
+          const user = users.find(u => u.uid === userId);
+          if (user) {
+            const email = user.email || 'unknown';
+            if (!userStatsMap.has(email)) {
+              userStatsMap.set(email, {
+                email,
+                displayName: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
+                authorNickname: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
+                photoURL: user.photoURL || '',
+                createdAt: user.createdAt || '',
+                lastSignIn: user.lastSignIn || '',
+                designsCount: 0,
+                boxroTalksCount: 0,
+                likesCount: 0,
+                downloadsCount: 0,
+                sharesCount: 0,
+                viewsCount: 0,
+                storeRedirectsCount: 0,
+                uid: user.uid || ''
+              });
+            }
+            const userStat = userStatsMap.get(email)!;
+            userStat.viewsCount++;
+          }
+        });
+        
         sharedBy.forEach((userId: string) => {
           const user = users.find(u => u.uid === userId);
           if (user) {
@@ -3594,6 +3618,33 @@ export default function AdminPage() {
         const viewedBy = story.viewedBy || [];
         
         // 각 사용자별로 활동 카운트
+        viewedBy.forEach((userId: string) => {
+          const user = users.find(u => u.uid === userId);
+          if (user) {
+            const email = user.email || 'unknown';
+            if (!userStatsMap.has(email)) {
+              userStatsMap.set(email, {
+                email,
+                displayName: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
+                authorNickname: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
+                photoURL: user.photoURL || '',
+                createdAt: user.createdAt || '',
+                lastSignIn: user.lastSignIn || '',
+                designsCount: 0,
+                boxroTalksCount: 0,
+                likesCount: 0,
+                downloadsCount: 0,
+                sharesCount: 0,
+                viewsCount: 0,
+                storeRedirectsCount: 0,
+                uid: user.uid || ''
+              });
+            }
+            const userStat = userStatsMap.get(email)!;
+            userStat.viewsCount++;
+          }
+        });
+        
         likedBy.forEach((userId: string) => {
           const user = users.find(u => u.uid === userId);
           if (user) {
@@ -3683,6 +3734,33 @@ export default function AdminPage() {
         const viewedBy = storeItem.viewedBy || [];
         
         // 각 사용자별로 활동 카운트
+        viewedBy.forEach((userId: string) => {
+          const user = users.find(u => u.uid === userId);
+          if (user) {
+            const email = user.email || 'unknown';
+            if (!userStatsMap.has(email)) {
+              userStatsMap.set(email, {
+                email,
+                displayName: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
+                authorNickname: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
+                photoURL: user.photoURL || '',
+                createdAt: user.createdAt || '',
+                lastSignIn: user.lastSignIn || '',
+                designsCount: 0,
+                boxroTalksCount: 0,
+                likesCount: 0,
+                downloadsCount: 0,
+                sharesCount: 0,
+                viewsCount: 0,
+                storeRedirectsCount: 0,
+                uid: user.uid || ''
+              });
+            }
+            const userStat = userStatsMap.get(email)!;
+            userStat.viewsCount++;
+          }
+        });
+        
         likedBy.forEach((userId: string) => {
           const user = users.find(u => u.uid === userId);
           if (user) {
@@ -3776,6 +3854,33 @@ export default function AdminPage() {
         const viewedBy = youtubeItem.viewedBy || [];
         
         // 각 사용자별로 활동 카운트
+        viewedBy.forEach((userId: string) => {
+          const user = users.find(u => u.uid === userId);
+          if (user) {
+            const email = user.email || 'unknown';
+            if (!userStatsMap.has(email)) {
+              userStatsMap.set(email, {
+                email,
+                displayName: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
+                authorNickname: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
+                photoURL: user.photoURL || '',
+                createdAt: user.createdAt || '',
+                lastSignIn: user.lastSignIn || '',
+                designsCount: 0,
+                boxroTalksCount: 0,
+                likesCount: 0,
+                downloadsCount: 0,
+                sharesCount: 0,
+                viewsCount: 0,
+                storeRedirectsCount: 0,
+                uid: user.uid || ''
+              });
+            }
+            const userStat = userStatsMap.get(email)!;
+            userStat.viewsCount++;
+          }
+        });
+        
         likedBy.forEach((userId: string) => {
           const user = users.find(u => u.uid === userId);
           if (user) {

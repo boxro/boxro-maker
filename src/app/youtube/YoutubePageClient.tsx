@@ -971,7 +971,7 @@ export default function YoutubePageClient() {
                 )}
                 
                 {/* 수정/삭제 버튼 */}
-                {user && (user.uid === article.authorId || user.email === article.authorEmail || isAdmin(user.email)) && (
+                {user && (user.uid === article.authorId || user.email === article.authorEmail || isAdminUser) && (
                   <div className="absolute top-2 right-2 flex gap-1 z-10">
                     <Button
                       variant="outline"
@@ -1267,7 +1267,7 @@ export default function YoutubePageClient() {
                               {comment.text}
                             </div>
                             {/* 박스로 톡 삭제 버튼 (작성자 또는 관리자) */}
-                            {user && (user.uid === comment.authorId || isAdmin(user.email)) && (
+                            {user && (user.uid === comment.authorId || isAdminUser) && (
                               <button
                                 onClick={() => deleteBoxroTalk(comment.id)}
                                 className="ml-2 text-red-500 hover:text-red-700 text-xs"

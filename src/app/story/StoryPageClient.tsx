@@ -276,6 +276,22 @@ export default function StoryPageClient() {
   // 삭제 확인 모달 상태
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteArticleId, setDeleteArticleId] = useState<string | null>(null);
+  
+  // 아코디언 상태 관리
+  const [expandedArticles, setExpandedArticles] = useState<Set<string>>(new Set());
+  
+  // 아코디언 토글 함수
+  const toggleArticleExpansion = (articleId: string) => {
+    setExpandedArticles(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(articleId)) {
+        newSet.delete(articleId);
+      } else {
+        newSet.add(articleId);
+      }
+      return newSet;
+    });
+  };
 
   // 관리자 이메일 목록
   const adminEmails = [
@@ -744,7 +760,7 @@ export default function StoryPageClient() {
       });
       
       setArticles(articles.map(a => 
-        a.id === articleId ? { ...a, views: (a.views || 0) + 1 } : a
+        a.id === articleId ? { ...a, views: (a.views || 0) + 1, isViewed: true } : a
       ));
     } catch (error) {
       console.error('조회수 증가 실패:', error);
@@ -875,7 +891,7 @@ export default function StoryPageClient() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="columns-1 md:columns-2 lg:columns-3 gap-3" style={{ columnGap: '12px' }}>
             {/* 배너 표시 - 카드들과 섞여서 표시 */}
             <BannerDisplay currentPage="story" />
             
@@ -884,9 +900,14 @@ export default function StoryPageClient() {
             ).map((article, index) => (
               <div 
                 key={`${article.id}-${index}`} 
-                className="group shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden w-full rounded-2xl relative cursor-pointer flex flex-col"
-                style={{ backgroundColor: article.cardBackgroundColor || 'rgba(255, 255, 255, 0.97)' }}
-                onClick={() => router.push(`/story/${article.id}`)}
+                className="group shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden w-full rounded-2xl relative flex flex-col mb-3 cursor-pointer"
+                style={{ 
+                  breakInside: 'avoid',
+                  backgroundColor: article.cardBackgroundColor || 'rgba(255, 255, 255, 0.97)' 
+                }}
+                onClick={() => {
+                  incrementView(article.id);
+                }}
               >
                 {/* 썸네일 */}
                 {article.thumbnail && (
@@ -900,7 +921,7 @@ export default function StoryPageClient() {
                 )}
                 
                 {/* 수정/삭제 버튼 */}
-                {user && (user.uid === article.authorId || user.email === article.authorEmail || isAdmin(user.email)) && (
+                {user && (user.uid === article.authorId || user.email === article.authorEmail || isAdminUser) && (
                   <div className="absolute top-2 right-2 flex gap-1 z-10">
                     <Button
                       variant="outline"
@@ -945,11 +966,38 @@ export default function StoryPageClient() {
                   </h3>
                   
                   {article.summary && (
-                    <p 
-                      className="text-[14px] mb-0 whitespace-pre-wrap flex-1 text-gray-900"
-                    >
-                      {article.summary}
-                    </p>
+                    <div className="text-[14px] mb-0 whitespace-pre-wrap flex-1 text-gray-900">
+                      {expandedArticles.has(article.id) ? (
+                        <p>{article.summary}</p>
+                      ) : (
+                        <p 
+                          style={{
+                            display: '-webkit-box',
+                            WebkitLineClamp: 3,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            lineHeight: '1.4',
+                            maxHeight: '4.2em'
+                          }}
+                        >
+                          {article.summary}
+                        </p>
+                      )}
+                      
+                      {article.summary.length > 100 && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleArticleExpansion(article.id);
+                            incrementView(article.id);
+                          }}
+                          className="text-blue-500 hover:text-blue-700 text-sm font-medium mt-2 transition-colors duration-200"
+                        >
+                          {expandedArticles.has(article.id) ? '접기' : '더보기'}
+                        </button>
+                      )}
+                    </div>
                   )}
                   
                   {/* 좋아요, 공유, 박스로 톡, 보기 버튼 */}
@@ -1003,7 +1051,8 @@ export default function StoryPageClient() {
                     <button 
                       onClick={(e) => {
                         e.stopPropagation();
-                        router.push(`/story/${article.id}`);
+                        toggleArticleExpansion(article.id);
+                        incrementView(article.id);
                       }}
                       className={`w-[60px] h-[60px] rounded-full p-0 flex flex-col items-center justify-center gap-1 ${
                         article.isViewed 
