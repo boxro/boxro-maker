@@ -356,15 +356,18 @@ export default function DrawPage() {
         const cropX = centerX - offsetX;
         const cropY = centerY - offsetY;
         
-        // 고정 크기 스냅샷(650x488)은 크롭만 적용 (리사이징 불필요)
-        canvas.width = actualCropWidth;
-        canvas.height = actualCropHeight;
+        // 크롭은 650x488로 유지, 저장은 500으로 리사이징 (용량 절약)
+        const SAVE_WIDTH = 500;
+        const SAVE_HEIGHT = 375; // 4:3 비율 유지
         
-        // 크롭된 이미지를 그대로 사용 (줌인 효과)
+        canvas.width = SAVE_WIDTH;
+        canvas.height = SAVE_HEIGHT;
+        
+        // 크롭된 이미지를 500으로 리사이징하여 저장
         ctx.drawImage(
           img,
           cropX, cropY, actualCropWidth, actualCropHeight,
-          0, 0, actualCropWidth, actualCropHeight
+          0, 0, SAVE_WIDTH, SAVE_HEIGHT
         );
         
         resolve(canvas.toDataURL('image/png'));
