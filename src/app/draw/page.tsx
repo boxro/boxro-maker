@@ -335,9 +335,9 @@ export default function DrawPage() {
         const baseCropWidth = 650;
         const baseCropHeight = 488; // 4:3 비율
         
-        // 고정 크기 스냅샷(650x488) 사용으로 일관성 보장 - 기본 크롭 사용
-        const cropWidth = baseCropWidth; // 650 (고정 스냅샷 크기와 동일)
-        const cropHeight = baseCropHeight; // 488 (고정 스냅샷 크기와 동일)
+        // 고정 크기 스냅샷(650x488)에서 박스카 부분만 크롭 (줌인 효과)
+        const cropWidth = Math.floor(baseCropWidth * 0.6); // 390 (60% 크롭)
+        const cropHeight = Math.floor(baseCropHeight * 0.6); // 293 (60% 크롭)
         
         // 스냅샷의 크기에 맞춰 크롭 사이즈 조정
         const maxCropWidth = Math.min(cropWidth, img.width);
@@ -349,9 +349,9 @@ export default function DrawPage() {
         const centerX = (img.width - actualCropWidth) / 2;
         const centerY = (img.height - actualCropHeight) / 2;
         
-        // 고정 크기 스냅샷용 오프셋 (일관성 보장) - 기본 오프셋 사용
-        const offsetX = 40; // 40px (기본 오프셋)
-        const offsetY = 100; // 100px (기본 오프셋)
+        // 박스카 중앙 정렬을 위한 오프셋 조정
+        const offsetX = 20; // 20px (줄인 오프셋)
+        const offsetY = 50; // 50px (줄인 오프셋)
         
         const cropX = centerX - offsetX;
         const cropY = centerY - offsetY;
