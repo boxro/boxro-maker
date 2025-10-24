@@ -243,44 +243,69 @@ export default function DrawPage() {
   }>(null);
 
 
-  // 썸네일용 스냅샷 캡처 함수
+  // 썸네일용 스냅샷 캡처 함수 (고정 크기 렌더러 사용)
   const captureThumbnailSnapshot = useCallback((): Promise<string | null> => {
     return new Promise((resolve) => {
       const tryCapture = (attempts = 0) => {
-        const renderer = thumbnailRendererRef.current?.getRenderer();
+        // 기존 렌더러에서 씬과 카메라 가져오기
+        const existingRenderer = thumbnailRendererRef.current?.getRenderer();
+        const scene = thumbnailRendererRef.current?.getScene();
+        const camera = thumbnailRendererRef.current?.getCamera();
         
-        if (!renderer || !renderer.domElement) {
+        if (!existingRenderer || !scene || !camera) {
           if (attempts < 15) {
             setTimeout(() => tryCapture(attempts + 1), 1000);
           } else {
-            console.error('❌ 썸네일용 렌더러를 찾을 수 없습니다');
+            console.error('❌ 썸네일용 렌더러, 씬 또는 카메라를 찾을 수 없습니다');
             resolve(null);
           }
           return;
         }
         
         try {
-          // 렌더러 강제 렌더링
+          // 기존 렌더러 강제 렌더링 (씬 업데이트)
           if (thumbnailRendererRef.current?.forceRender) {
             thumbnailRendererRef.current.forceRender();
           }
           
-          // 더 긴 대기 후 캡처
-          setTimeout(() => {
-            try {
-              const dataURL = renderer.domElement.toDataURL('image/png');
-              resolve(dataURL);
-            } catch (error) {
-              console.error('❌ 썸네일용 스냅샷 캡처 실패:', error);
-              if (attempts < 15) {
-                setTimeout(() => tryCapture(attempts + 1), 1000);
-              } else {
-                resolve(null);
-              }
-            }
-          }, 300);
+          // 고정 크기 임시 렌더러 생성 (사용자에게 보이지 않음)
+          const tempCanvas = document.createElement('canvas');
+          const tempRenderer = new THREE.WebGLRenderer({ 
+            canvas: tempCanvas, 
+            preserveDrawingBuffer: true,
+            antialias: true,
+            alpha: false
+          });
+          
+          // 고정 크기 설정 (화면 크기와 무관)
+          const FIXED_WIDTH = 1300;
+          const FIXED_HEIGHT = 976;
+          tempRenderer.setSize(FIXED_WIDTH, FIXED_HEIGHT);
+          tempRenderer.setPixelRatio(1); // 고정 픽셀 비율
+          
+          // 카메라 종횡비 임시 조정
+          const originalAspect = camera.aspect;
+          camera.aspect = FIXED_WIDTH / FIXED_HEIGHT;
+          camera.updateProjectionMatrix();
+          
+          // 고정 크기로 렌더링
+          tempRenderer.render(scene, camera);
+          
+          // 카메라 종횡비 복원
+          camera.aspect = originalAspect;
+          camera.updateProjectionMatrix();
+          
+          // 스냅샷 캡처
+          const dataURL = tempCanvas.toDataURL('image/png');
+          
+          // 임시 렌더러 정리 (메모리 해제)
+          tempRenderer.dispose();
+          
+          console.log('✅ 고정 크기 스냅샷 캡처 성공:', FIXED_WIDTH, 'x', FIXED_HEIGHT);
+          resolve(dataURL);
+          
         } catch (error) {
-          console.error('❌ 썸네일용 스냅샷 캡처 실패:', error);
+          console.error('❌ 고정 크기 스냅샷 캡처 실패:', error);
           if (attempts < 15) {
             setTimeout(() => tryCapture(attempts + 1), 1000);
           } else {
@@ -310,10 +335,9 @@ export default function DrawPage() {
         const baseCropWidth = 650;
         const baseCropHeight = 488; // 4:3 비율
         
-        // 모바일은 정상, 데스크톱만 크롭 영역 조정
-        const isMobile = window.innerWidth < 768;
-        const cropWidth = isMobile ? baseCropWidth * 2 : baseCropWidth; // 모바일: 1300 (정상), 데스크톱: 650 (줄임)
-        const cropHeight = isMobile ? baseCropHeight * 2 : baseCropHeight; // 모바일: 976 (정상), 데스크톱: 488 (줄임)
+        // 고정 크기 스냅샷(1300x976) 사용으로 일관성 보장
+        const cropWidth = baseCropWidth * 2; // 1300 (고정 스냅샷 크기와 동일)
+        const cropHeight = baseCropHeight * 2; // 976 (고정 스냅샷 크기와 동일)
         
         // 스냅샷의 크기에 맞춰 크롭 사이즈 조정
         const maxCropWidth = Math.min(cropWidth, img.width);
@@ -325,9 +349,9 @@ export default function DrawPage() {
         const centerX = (img.width - actualCropWidth) / 2;
         const centerY = (img.height - actualCropHeight) / 2;
         
-        // 모바일은 정상, 데스크톱만 오프셋 조정
-        const offsetX = isMobile ? 40 * 2 : 40; // 모바일: 80px (정상), 데스크톱: 40px (줄임)
-        const offsetY = isMobile ? 100 * 2 : 100; // 모바일: 200px (정상), 데스크톱: 100px (줄임)
+        // 고정 크기 스냅샷용 오프셋 (일관성 보장)
+        const offsetX = 40 * 2; // 80px (고정 오프셋)
+        const offsetY = 100 * 2; // 200px (고정 오프셋)
         
         const cropX = centerX - offsetX;
         const cropY = centerY - offsetY;
