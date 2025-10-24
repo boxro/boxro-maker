@@ -268,9 +268,9 @@ export default function DrawPage() {
             alpha: false
           });
           
-          // 고정 크기 설정 (화면 크기와 무관)
-          const FIXED_WIDTH = 1300;
-          const FIXED_HEIGHT = 976;
+          // 고정 크기 설정 (화면 크기와 무관) - 절반 크기로 줌인 효과
+          const FIXED_WIDTH = 650;  // 1300의 절반
+          const FIXED_HEIGHT = 488; // 976의 절반
           tempRenderer.setSize(FIXED_WIDTH, FIXED_HEIGHT);
           tempRenderer.setPixelRatio(1); // 고정 픽셀 비율
           
@@ -326,9 +326,9 @@ export default function DrawPage() {
         const baseCropWidth = 650;
         const baseCropHeight = 488; // 4:3 비율
         
-        // 고정 크기 스냅샷(1300x976) 사용으로 일관성 보장
-        const cropWidth = baseCropWidth * 2; // 1300 (고정 스냅샷 크기와 동일)
-        const cropHeight = baseCropHeight * 2; // 976 (고정 스냅샷 크기와 동일)
+        // 고정 크기 스냅샷(650x488) 사용으로 일관성 보장 - 기본 크롭 사용
+        const cropWidth = baseCropWidth; // 650 (고정 스냅샷 크기와 동일)
+        const cropHeight = baseCropHeight; // 488 (고정 스냅샷 크기와 동일)
         
         // 스냅샷의 크기에 맞춰 크롭 사이즈 조정
         const maxCropWidth = Math.min(cropWidth, img.width);
@@ -340,39 +340,23 @@ export default function DrawPage() {
         const centerX = (img.width - actualCropWidth) / 2;
         const centerY = (img.height - actualCropHeight) / 2;
         
-        // 고정 크기 스냅샷용 오프셋 (일관성 보장)
-        const offsetX = 40 * 2; // 80px (고정 오프셋)
-        const offsetY = 100 * 2; // 200px (고정 오프셋)
+        // 고정 크기 스냅샷용 오프셋 (일관성 보장) - 기본 오프셋 사용
+        const offsetX = 40; // 40px (기본 오프셋)
+        const offsetY = 100; // 100px (기본 오프셋)
         
         const cropX = centerX - offsetX;
         const cropY = centerY - offsetY;
         
-        // 데스크톱과 모바일 모두 2배 크롭 후 리사이징 적용
-        if (img.width > 1000) {
-          // 고해상도 스냅샷을 기본 크기로 리사이징
-          const targetWidth = baseCropWidth; // 650
-          const targetHeight = baseCropHeight; // 488
-          
-          canvas.width = targetWidth;
-          canvas.height = targetHeight;
-          
-          // 크롭된 이미지를 기본 크기로 리사이징하여 그리기
-          ctx.drawImage(
-            img,
-            cropX, cropY, actualCropWidth, actualCropHeight,  // 소스 크롭 영역 (2배 크기)
-            0, 0, targetWidth, targetHeight  // 타겟 크기 (기본 크기로 리사이징)
-          );
-        } else {
-          // 저해상도는 원본 크기 유지
-          canvas.width = actualCropWidth;
-          canvas.height = actualCropHeight;
-          
-          ctx.drawImage(
-            img,
-            cropX, cropY, actualCropWidth, actualCropHeight,  // 소스 크롭 영역
-            0, 0, actualCropWidth, actualCropHeight  // 타겟 크기 (원본 크기 유지)
-          );
-        }
+        // 고정 크기 스냅샷(650x488)은 크롭만 적용 (리사이징 불필요)
+        canvas.width = actualCropWidth;
+        canvas.height = actualCropHeight;
+        
+        // 크롭된 이미지를 그대로 사용 (줌인 효과)
+        ctx.drawImage(
+          img,
+          cropX, cropY, actualCropWidth, actualCropHeight,
+          0, 0, actualCropWidth, actualCropHeight
+        );
         
         resolve(canvas.toDataURL('image/png'));
       };
