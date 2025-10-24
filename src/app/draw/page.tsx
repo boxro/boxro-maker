@@ -356,14 +356,14 @@ export default function DrawPage() {
         const cropX = centerX - offsetX;
         const cropY = centerY - offsetY;
         
-        // 크롭은 650x488로 유지, 저장은 500으로 리사이징 (용량 절약)
-        const SAVE_WIDTH = 500;
-        const SAVE_HEIGHT = 375; // 4:3 비율 유지
+        // 크롭은 650x488로 유지, 저장은 450으로 리사이징 (용량 절약)
+        const SAVE_WIDTH = 450;
+        const SAVE_HEIGHT = 338; // 4:3 비율 유지
         
         canvas.width = SAVE_WIDTH;
         canvas.height = SAVE_HEIGHT;
         
-        // 크롭된 이미지를 500으로 리사이징하여 저장
+        // 크롭된 이미지를 450으로 리사이징하여 저장
         ctx.drawImage(
           img,
           cropX, cropY, actualCropWidth, actualCropHeight,
