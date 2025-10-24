@@ -360,7 +360,8 @@ export default function GalleryPage() {
   };
 
   // 클릭으로 전환 (데스크톱용) - 한 방향 무한 루프
-  const handleImageClick = (designId: string) => {
+  const handleImageClick = async (designId: string) => {
+    await incrementViewCount(designId);
     setSwipeStates(prev => {
       const currentState = prev[designId] || 0;
       // 한 방향으로 계속 돌기: 0 → 1 → 0 → 1 ...
@@ -773,6 +774,12 @@ export default function GalleryPage() {
     }
 
     try {
+      const design = designs.find(d => d.id === designId);
+      if (!design) return;
+      
+      // 이미 조회한 경우 중복 증가 방지
+      if (design.isViewed) return;
+      
       console.log('🔍 뷰 카운트 증가 시도:', { designId, user: user?.uid, isAuthenticated: !!user });
       
       await updateDoc(doc(db, 'communityDesigns', designId), {
@@ -1635,7 +1642,7 @@ export default function GalleryPage() {
               <Card 
                 key={`${design.id}-${index}`} 
                 className="group bg-white/97 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden w-full rounded-2xl gap-2 flex flex-col [&>*:not(:first-child)]:mt-2 p-0 cursor-pointer"
-                onClick={() => incrementViewCount(design.id)}
+                onClick={() => {}}
               >
                 {/* 스와이프 가능한 이미지 */}
                 {design.thumbnail && design.thumbnail !== '/api/placeholder/300/200' && design.thumbnail !== '' ? (
@@ -1682,8 +1689,9 @@ export default function GalleryPage() {
                           {/* 왼쪽 화살표 */}
                           <div 
                             className="absolute left-2 top-1/2 transform -translate-y-1/2 z-10 bg-sky-500/20 hover:bg-sky-500/30 rounded-full p-2 transition-all duration-200 cursor-pointer"
-                            onClick={(e) => {
+                            onClick={async (e) => {
                               e.stopPropagation();
+                              await incrementViewCount(design.id);
                               setSwipeStates(prev => {
                                 const currentState = prev[design.id] || 0;
                                 // 한 방향으로 계속 돌기: 0 → 1 → 0 → 1 ...
@@ -1704,8 +1712,9 @@ export default function GalleryPage() {
                           {/* 오른쪽 화살표 */}
                           <div 
                             className="absolute right-2 top-1/2 transform -translate-y-1/2 z-10 bg-sky-500/20 hover:bg-sky-500/30 rounded-full p-2 transition-all duration-200 cursor-pointer"
-                            onClick={(e) => {
+                            onClick={async (e) => {
                               e.stopPropagation();
+                              await incrementViewCount(design.id);
                               setSwipeStates(prev => {
                                 const currentState = prev[design.id] || 0;
                                 // 한 방향으로 계속 돌기: 0 → 1 → 0 → 1 ...
@@ -1904,9 +1913,9 @@ export default function GalleryPage() {
                           ? 'bg-green-400 hover:bg-green-500 text-white' 
                           : 'bg-white border-2 border-gray-100 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 text-gray-800 shadow-sm'
                         }`}
-                        onClick={(e) => {
+                        onClick={async (e) => {
                           e.stopPropagation();
-                          incrementViewCount(design.id);
+                          await incrementViewCount(design.id);
                         }}
                       >
                         <Eye className={`w-5 h-5 ${design.isViewed ? 'text-white' : 'text-gray-500'}`} />

@@ -813,6 +813,12 @@ export default function YoutubePageClient() {
   // 조회수 증가
   const incrementView = async (articleId: string) => {
     try {
+      const article = articles.find(a => a.id === articleId);
+      if (!article) return;
+      
+      // 이미 조회한 경우 중복 증가 방지
+      if (article.isViewed) return;
+      
       const articleRef = doc(db, 'youtubeItems', articleId);
       await updateDoc(articleRef, {
         views: increment(1),
@@ -953,7 +959,8 @@ export default function YoutubePageClient() {
                 key={`${article.id}-${index}`} 
                 className="group shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden w-full rounded-2xl relative cursor-pointer flex flex-col"
                 style={{ backgroundColor: article.cardBackgroundColor || 'rgba(255, 255, 255, 0.97)' }}
-                onClick={() => {
+                onClick={async () => {
+                  await incrementView(article.id);
                   if (article.storeUrl) {
                     window.open(article.storeUrl, '_blank', 'noopener,noreferrer');
                   }
@@ -1030,7 +1037,10 @@ export default function YoutubePageClient() {
                         href={article.storeUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          await incrementView(article.id);
+                        }}
                         className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-white rounded-full transition-colors text-sm font-medium"
                         style={{ backgroundColor: '#f0544c' }}
                         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e04a42'}

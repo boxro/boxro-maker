@@ -754,9 +754,16 @@ export default function StoryPageClient() {
   // 조회수 증가
   const incrementView = async (articleId: string) => {
     try {
+      const article = articles.find(a => a.id === articleId);
+      if (!article) return;
+      
+      // 이미 조회한 경우 중복 증가 방지
+      if (article.isViewed) return;
+      
       const articleRef = doc(db, 'storyArticles', articleId);
       await updateDoc(articleRef, {
-        views: increment(1)
+        views: increment(1),
+        viewedBy: arrayUnion(user?.uid || 'anonymous')
       });
       
       setArticles(articles.map(a => 
@@ -905,8 +912,8 @@ export default function StoryPageClient() {
                   breakInside: 'avoid',
                   backgroundColor: article.cardBackgroundColor || 'rgba(255, 255, 255, 0.97)' 
                 }}
-                onClick={() => {
-                  incrementView(article.id);
+                onClick={async () => {
+                  await incrementView(article.id);
                 }}
               >
                 {/* 썸네일 */}
@@ -987,10 +994,10 @@ export default function StoryPageClient() {
                       
                       {article.summary.length > 100 && (
                         <button
-                          onClick={(e) => {
+                          onClick={async (e) => {
                             e.stopPropagation();
+                            await incrementView(article.id);
                             toggleArticleExpansion(article.id);
-                            incrementView(article.id);
                           }}
                           className="text-blue-500 hover:text-blue-700 text-sm font-medium mt-2 transition-colors duration-200"
                         >
@@ -1049,10 +1056,10 @@ export default function StoryPageClient() {
                       <span className={`text-xs font-medium ${article.isBoxroTalked ? 'text-white' : 'text-gray-500'}`}>{article.boxroTalks || 0}</span>
                     </button>
                     <button 
-                      onClick={(e) => {
+                      onClick={async (e) => {
                         e.stopPropagation();
+                        await incrementView(article.id);
                         toggleArticleExpansion(article.id);
-                        incrementView(article.id);
                       }}
                       className={`w-[60px] h-[60px] rounded-full p-0 flex flex-col items-center justify-center gap-1 ${
                         article.isViewed 
