@@ -470,6 +470,10 @@ export default function GalleryPage() {
           isBoxroTalked: currentUserId ? (data.boxroTalkedBy?.includes(currentUserId) || false) : false,
           boxroTalkedBy: data.boxroTalkedBy || [],
           
+          // 뷰 상태
+          isViewed: currentUserId ? (data.viewedBy?.includes(currentUserId) || false) : false,
+          viewedBy: data.viewedBy || [],
+          
           description: data.description || '',
           tags: data.tags || [],
           blueprintImages: data.blueprintImages || []
@@ -772,7 +776,8 @@ export default function GalleryPage() {
       console.log('🔍 뷰 카운트 증가 시도:', { designId, user: user?.uid, isAuthenticated: !!user });
       
       await updateDoc(doc(db, 'communityDesigns', designId), {
-        views: increment(1)
+        views: increment(1),
+        viewedBy: arrayUnion(user.uid)
       });
       
       console.log('✅ 뷰 카운트 증가 성공');
@@ -781,7 +786,7 @@ export default function GalleryPage() {
       setDesigns(prevDesigns => 
         prevDesigns.map(design => 
           design.id === designId 
-            ? { ...design, views: design.views + 1 }
+            ? { ...design, views: design.views + 1, isViewed: true }
             : design
         )
       );
@@ -1629,7 +1634,8 @@ export default function GalleryPage() {
             ).map((design, index) => (
               <Card 
                 key={`${design.id}-${index}`} 
-                className="group bg-white/97 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden w-full rounded-2xl gap-2 flex flex-col [&>*:not(:first-child)]:mt-2 p-0"
+                className="group bg-white/97 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden w-full rounded-2xl gap-2 flex flex-col [&>*:not(:first-child)]:mt-2 p-0 cursor-pointer"
+                onClick={() => incrementViewCount(design.id)}
               >
                 {/* 스와이프 가능한 이미지 */}
                 {design.thumbnail && design.thumbnail !== '/api/placeholder/300/200' && design.thumbnail !== '' ? (
@@ -1718,7 +1724,28 @@ export default function GalleryPage() {
                           </div>
                         </>
                       )}
-           {/* 3D 렌더링 이미지 */}
+                    
+                    {/* 스와이프 인디케이터 - 썸네일 아래 오버레이 (내 작품 올리기가 아닌 경우에만 표시) */}
+                    {!(design.isUploaded || design.type === 'uploaded' || design.blueprintImages?.length > 0) && (
+                      <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 z-20 flex justify-center items-center gap-2">
+                        <div 
+                          className={`rounded-full transition-all duration-200 ${
+                            (swipeStates[design.id] || 0) === 0 
+                              ? 'w-2 h-2 bg-purple-500' 
+                              : 'w-2 h-2 bg-gray-300'
+                          }`}
+                        />
+                        <div 
+                          className={`rounded-full transition-all duration-200 ${
+                            (swipeStates[design.id] || 0) === 1 
+                              ? 'w-2 h-2 bg-purple-500' 
+                              : 'w-2 h-2 bg-gray-300'
+                          }`}
+                        />
+                      </div>
+                    )}
+                    
+                    {/* 3D 렌더링 이미지 */}
            <img 
              src={design.thumbnail} 
              alt={`${design.name} - 3D 렌더링`}
@@ -1748,51 +1775,6 @@ export default function GalleryPage() {
              />
            )}
                       
-                    </div>
-                    
-                    {/* 스와이프 인디케이터 - 고정 영역 */}
-                    <div className="flex justify-center items-center gap-2 mt-2 h-4">
-                      <div 
-                        className={`rounded-full transition-all duration-200 ${
-                          (swipeStates[design.id] || 0) === 0 
-                            ? 'w-2.5 h-2.5 bg-purple-500' 
-                            : 'w-2 h-2 bg-gray-300'
-                        } ${
-                          // 내 작품 올리기가 아닌 경우에만 클릭 가능
-                          !(design.isUploaded || design.type === 'uploaded' || design.blueprintImages?.length > 0) 
-                            ? 'cursor-pointer' 
-                            : 'cursor-default'
-                        }`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          // 내 작품 올리기가 아닌 경우에만 전환
-                          if (!(design.isUploaded || design.type === 'uploaded' || design.blueprintImages?.length > 0)) {
-                            setSwipeStates(prev => {
-                              const currentState = prev[design.id] || 0;
-                              // 한 방향으로 계속 돌기: 0 → 1 → 0 → 1 ...
-                              return { ...prev, [design.id]: currentState === 0 ? 1 : 0 };
-                            });
-                          }
-                        }}
-                      />
-                      {/* 내 작품 올리기가 아닌 경우에만 두 번째 점 표시 */}
-                      {!(design.isUploaded || design.type === 'uploaded' || design.blueprintImages?.length > 0) && (
-                        <div 
-                          className={`rounded-full cursor-pointer transition-all duration-200 ${
-                            (swipeStates[design.id] || 0) === 1 
-                              ? 'w-2.5 h-2.5 bg-purple-500' 
-                              : 'w-2 h-2 bg-gray-300'
-                          }`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSwipeStates(prev => {
-                              const currentState = prev[design.id] || 0;
-                              // 한 방향으로 계속 돌기: 0 → 1 → 0 → 1 ...
-                              return { ...prev, [design.id]: currentState === 0 ? 1 : 0 };
-                            });
-                          }}
-                        />
-                      )}
                     </div>
                   </div>
                 ) : (
@@ -1872,8 +1854,6 @@ export default function GalleryPage() {
                 
                 {/* 하단: 통계, 버튼들 */}
                 <CardContent className="flex flex-col flex-grow px-6 pt-0 pb-3">
-                  
-                  
                   {/* 버튼들을 하단에 고정 */}
                   <div className="mt-auto px-0 pb-1">
                     {/* 아이콘과 숫자가 함께 있는 버튼들 */}
@@ -1918,6 +1898,21 @@ export default function GalleryPage() {
                       >
                         <MessageCircle className={`w-5 h-5 ${design.isBoxroTalked ? 'text-white' : 'text-gray-500'}`} />
                         <span className={`text-xs font-medium ${design.isBoxroTalked ? 'text-white' : 'text-gray-500'}`}>{design.boxroTalks}</span>
+                      </button>
+                      <button 
+                        className={`w-[60px] h-[60px] rounded-full p-0 flex flex-col items-center justify-center gap-1 ${design.isViewed
+                          ? 'bg-green-400 hover:bg-green-500 text-white' 
+                          : 'bg-white border-2 border-gray-100 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 text-gray-800 shadow-sm'
+                        }`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          incrementViewCount(design.id);
+                        }}
+                      >
+                        <Eye className={`w-5 h-5 ${design.isViewed ? 'text-white' : 'text-gray-500'}`} />
+                        <span className={`text-xs font-medium ${design.isViewed ? 'text-white' : 'text-gray-500'}`}>
+                          {(design.views || 0) + (design.popularityBoost?.views || 0)}
+                        </span>
                       </button>
                       {/* 다운로드 기능 제거됨 */}
                     </div>

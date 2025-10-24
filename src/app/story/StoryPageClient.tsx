@@ -1007,7 +1007,7 @@ export default function StoryPageClient() {
                       }}
                       className={`w-[60px] h-[60px] rounded-full p-0 flex flex-col items-center justify-center gap-1 ${
                         article.isViewed 
-                          ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
+                          ? 'bg-green-400 hover:bg-green-500 text-white'
                           : 'bg-white border-2 border-gray-100 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 text-gray-800 shadow-sm'
                       }`}
                     >

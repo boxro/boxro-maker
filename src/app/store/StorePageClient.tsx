@@ -483,6 +483,100 @@ export default function StorePageClient() {
     }
   };
 
+  // 공유 토글
+  const toggleShare = async (articleId: string) => {
+    if (!user) {
+      openLoginModal('share', articleId);
+      return;
+    }
+
+    const article = articles.find(a => a.id === articleId);
+    if (!article) return;
+
+    try {
+      const articleRef = doc(db, 'storeItems', articleId);
+      const isCurrentlyShared = article.isShared;
+      const newShares = isCurrentlyShared ? article.shares - 1 : article.shares + 1;
+      
+      // Firebase 업데이트
+      try {
+        await updateDoc(articleRef, {
+          shares: newShares,
+          sharedBy: isCurrentlyShared 
+            ? article.sharedBy?.filter(uid => uid !== user.uid) || []
+            : [...(article.sharedBy || []), user.uid]
+        });
+      } catch (firestoreError: any) {
+        if (firestoreError.code === 'permission-denied') {
+          console.log('🔧 Firebase 보안 규칙 설정 대기 중 - 공유 업데이트 건너뜀');
+        } else {
+          throw firestoreError;
+        }
+      }
+
+      // 로컬 상태 업데이트
+      setArticles(articles.map(a => 
+        a.id === articleId ? {
+          ...a,
+          shares: newShares,
+          isShared: !isCurrentlyShared,
+          sharedBy: isCurrentlyShared 
+            ? a.sharedBy?.filter(uid => uid !== user.uid) || []
+            : [...(a.sharedBy || []), user.uid]
+        } : a
+      ));
+    } catch (error) {
+      console.error('공유 토글 실패:', error);
+    }
+  };
+
+  // 박스로톡 토글
+  const toggleBoxroTalk = async (articleId: string) => {
+    if (!user) {
+      openLoginModal('comment', articleId);
+      return;
+    }
+
+    const article = articles.find(a => a.id === articleId);
+    if (!article) return;
+
+    try {
+      const articleRef = doc(db, 'storeItems', articleId);
+      const isCurrentlyBoxroTalked = article.isBoxroTalked;
+      const newBoxroTalks = isCurrentlyBoxroTalked ? article.boxroTalks - 1 : article.boxroTalks + 1;
+      
+      // Firebase 업데이트
+      try {
+        await updateDoc(articleRef, {
+          boxroTalks: newBoxroTalks,
+          boxroTalkedBy: isCurrentlyBoxroTalked 
+            ? article.boxroTalkedBy?.filter(uid => uid !== user.uid) || []
+            : [...(article.boxroTalkedBy || []), user.uid]
+        });
+      } catch (firestoreError: any) {
+        if (firestoreError.code === 'permission-denied') {
+          console.log('🔧 Firebase 보안 규칙 설정 대기 중 - 박스로톡 업데이트 건너뜀');
+        } else {
+          throw firestoreError;
+        }
+      }
+
+      // 로컬 상태 업데이트
+      setArticles(articles.map(a => 
+        a.id === articleId ? {
+          ...a,
+          boxroTalks: newBoxroTalks,
+          isBoxroTalked: !isCurrentlyBoxroTalked,
+          boxroTalkedBy: isCurrentlyBoxroTalked 
+            ? a.boxroTalkedBy?.filter(uid => uid !== user.uid) || []
+            : [...(a.boxroTalkedBy || []), user.uid]
+        } : a
+      ));
+    } catch (error) {
+      console.error('박스로톡 토글 실패:', error);
+    }
+  };
+
   // 공유하기
   const shareArticle = async (article: StoryArticle) => {
     try {
@@ -1025,7 +1119,7 @@ export default function StorePageClient() {
                       }}
                       className={`w-[60px] h-[60px] rounded-full p-0 flex flex-col items-center justify-center gap-1 ${
                         article.isViewed 
-                          ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
+                          ? 'bg-green-400 hover:bg-green-500 text-white'
                           : 'bg-white border-2 border-gray-100 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 text-gray-800 shadow-sm'
                       }`}
                     >
