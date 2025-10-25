@@ -4659,8 +4659,8 @@ export default function DrawPage() {
             <span className="bg-gradient-to-r from-blue-600 to-pink-600 bg-clip-text text-transparent">그리기 캔버스</span>
           </CardTitle>
           {/* 안내 문구 */}
-          <p className="text-xs text-gray-600 mt-0 mb-0 text-left">
-            다양한 색상의 펜으로 그림을 그리고, 지우개로 지울 수 있어요.
+          <p className="text-sm font-medium text-gray-600 mt-0 mb-0 text-left">
+            펜으로 그림을 그리고, 지우개로 지울 수 있어요.
           </p>
         </CardHeader>
         <CardContent 
@@ -4826,8 +4826,8 @@ export default function DrawPage() {
                 </button>
               </CardTitle>
               {/* 안내 문구 */}
-              <p className="text-xs text-gray-600 mt-0 mb-0 text-left">
-                결과가 마음에 안 든다면? 다른 차종으로 쓱 바꿔보세요!
+              <p className="text-sm text-gray-600 mt-0 mb-0 text-left">
+                결과가 마음에 안 들면, 다른 차로 바로 바꿔보세요!
               </p>
             </CardHeader>
             <CardContent className="px-4 md:px-8 pt-0 pb-0 -mt-3">
@@ -5081,8 +5081,8 @@ export default function DrawPage() {
             <span className="bg-gradient-to-r from-blue-600 to-pink-600 bg-clip-text text-transparent">꾸미기 아이템</span>
           </CardTitle>
           {/* 안내 문구 */}
-          <p className="text-xs text-gray-600 mt-0 mb-0 text-left">
-            내 박스카를 360° 돌려보며, 아이템으로 나만의 스타일을 완성해요.
+          <p className="text-sm text-gray-600 mt-0 mb-0 text-left">
+            360° 돌려보며, 아이템으로 스타일을 완성해요.
           </p>
         </CardHeader>
         <CardContent className="px-4 md:px-8 pt-0 pb-0 -mt-3">

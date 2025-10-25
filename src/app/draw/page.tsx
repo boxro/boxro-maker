@@ -4650,8 +4650,8 @@ export default function DrawPage() {
             <span className="bg-gradient-to-r from-blue-600 to-pink-600 bg-clip-text text-transparent">그리기 캔버스</span>
           </CardTitle>
           {/* 안내 문구 */}
-          <p className="text-xs text-gray-600 mt-0 mb-0 text-left">
-            다양한 색상의 펜으로 그림을 그리고, 지우개로 지울 수 있어요.
+          <p className="text-sm font-medium text-gray-600 mt-0 mb-0 text-left">
+            펜으로 그림을 그리고, 지우개로 지울 수 있어요.
           </p>
         </CardHeader>
         <CardContent 
@@ -4806,8 +4806,8 @@ export default function DrawPage() {
                 <span className="bg-gradient-to-r from-blue-600 to-pink-600 bg-clip-text text-transparent">AI가 분석한 박스카</span>
               </CardTitle>
               {/* 안내 문구 */}
-              <p className="text-xs text-gray-600 mt-0 mb-0 text-left">
-                결과가 마음에 안 든다면? 다른 차종으로 쓱 바꿔보세요!
+              <p className="text-sm text-gray-600 mt-0 mb-0 text-left">
+                결과가 마음에 안 들면, 다른 차로 바로 바꿔보세요!
               </p>
             </CardHeader>
             <CardContent className="px-4 md:px-8 pt-0 pb-0 -mt-3">
@@ -4921,8 +4921,8 @@ export default function DrawPage() {
             <span className="bg-gradient-to-r from-blue-600 to-pink-600 bg-clip-text text-transparent">꾸미기 아이템</span>
           </CardTitle>
           {/* 안내 문구 */}
-          <p className="text-xs text-gray-600 mt-0 mb-0 text-left">
-            내 박스카를 360° 돌려보며, 아이템으로 나만의 스타일을 완성해요.
+          <p className="text-sm text-gray-600 mt-0 mb-0 text-left">
+            360° 돌려보며, 아이템으로 스타일을 완성해요.
           </p>
         </CardHeader>
         <CardContent className="px-4 md:px-8 pt-0 pb-0 -mt-3">
@@ -5772,8 +5772,8 @@ export default function DrawPage() {
             <span className="bg-gradient-to-r from-blue-600 to-pink-600 bg-clip-text text-transparent">내가 만든 박스카 도안</span>
           </CardTitle>
           {/* 안내 문구 */}
-          <p className="text-xs text-gray-600 mt-0 mb-0 text-left">
-            나만의 박스카를 완성해보세요. 친구들과 함께 만들면 더 즐거워요.
+          <p className="text-sm text-gray-600 mt-0 mb-0 text-left">
+            나만의 박스카 완성! 친구들과 만들면 더 재밌어요.
           </p>
         </CardHeader>
         <CardContent className="px-4 md:px-8 pt-0 pb-0 -mt-3">
