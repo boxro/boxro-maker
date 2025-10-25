@@ -999,7 +999,7 @@ export default function StoryPageClient() {
                             await incrementView(article.id);
                             toggleArticleExpansion(article.id);
                           }}
-                          className="text-blue-500 hover:text-blue-700 text-sm font-medium mt-2 transition-colors duration-200"
+                          className="text-blue-500 hover:text-blue-700 text-[15px] font-medium mt-2 transition-colors duration-200"
                         >
                           {expandedArticles.has(article.id) ? '접기' : '더보기'}
                         </button>
