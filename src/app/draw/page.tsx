@@ -6043,7 +6043,7 @@ export default function DrawPage() {
               <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
                 멋진 작품이네요!
               </h3>
-              <p className="text-gray-900 mb-6" style={{fontSize: '14px'}}>
+              <p className="text-gray-900 mb-4" style={{fontSize: '14px'}}>
                 박스카 갤러리에 공유할까요?
               </p>
             
@@ -6122,7 +6122,7 @@ export default function DrawPage() {
                   {!shareTitle.trim() && (
                     <p className="text-red-500 text-xs mt-1">제목을 입력하거나 랜덤 버튼을 눌러주세요</p>
                   )}
-                  <p className="text-gray-900 mt-2" style={{fontSize: '13px'}}>
+                  <p className="text-gray-900 mt-2 text-sm">
                     이 작품에 어울리는 이름을 지어보세요.<br />
                     랜덤 버튼으로 재밌게 바꿀 수도 있어요.
                   </p>
@@ -6322,7 +6322,7 @@ export default function DrawPage() {
           <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-6 max-w-md w-full mx-6">
             <div className="text-center">
                 <div className="flex justify-center mb-4">
-                  <div className="text-[40px]">🚗✨</div>
+                  <div className="text-[30px]">🚗✨</div>
                 </div>
                 <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-3">
                   도안을 다운로드하시겠어요?

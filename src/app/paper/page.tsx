@@ -6348,7 +6348,7 @@ export default function DrawPage() {
                   {!shareTitle.trim() && (
                     <p className="text-red-500 text-xs mt-1">제목을 입력하거나 랜덤 버튼을 눌러주세요</p>
                   )}
-                  <p className="text-gray-600 text-xs mt-2">
+                  <p className="text-gray-600 text-sm mt-2">
                     이 작품에 어울리는 이름을 지어보세요.<br />
                     랜덤 버튼으로 재밌게 바꿀 수도 있어요.
                   </p>
