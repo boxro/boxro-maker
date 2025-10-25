@@ -4659,7 +4659,7 @@ export default function DrawPage() {
             <span className="bg-gradient-to-r from-blue-600 to-pink-600 bg-clip-text text-transparent">그리기 캔버스</span>
           </CardTitle>
           {/* 안내 문구 */}
-          <p className="text-sm font-medium text-gray-600 mt-0 mb-0 text-left">
+          <p className="text-sm text-gray-600 mt-0 mb-0 text-left">
             펜으로 그림을 그리고, 지우개로 지울 수 있어요.
           </p>
         </CardHeader>
