@@ -362,6 +362,13 @@ export default function GalleryPage() {
   // 클릭으로 전환 (데스크톱용) - 한 방향 무한 루프
   const handleImageClick = async (designId: string) => {
     await incrementViewCount(designId);
+    
+    // 내 작품 올리기로 업로드된 작품은 스와이핑 비활성화
+    const design = designs.find(d => d.id === designId);
+    if (design && (design.isUploaded || design.type === 'uploaded' || design.blueprintImages?.length > 0)) {
+      return;
+    }
+    
     setSwipeStates(prev => {
       const currentState = prev[designId] || 0;
       // 한 방향으로 계속 돌기: 0 → 1 → 0 → 1 ...
@@ -370,6 +377,12 @@ export default function GalleryPage() {
   };
 
   const handleTouchStart = (e: React.TouchEvent, designId: string) => {
+    // 내 작품 올리기로 업로드된 작품은 스와이핑 비활성화
+    const design = designs.find(d => d.id === designId);
+    if (design && (design.isUploaded || design.type === 'uploaded' || design.blueprintImages?.length > 0)) {
+      return;
+    }
+    
     const touch = e.touches[0];
     const startX = touch.clientX;
     e.currentTarget.setAttribute('data-start-x', startX.toString());
@@ -1683,12 +1696,12 @@ export default function GalleryPage() {
                       onTouchEnd={(e) => handleTouchEnd(e, design.id)}
                       onClick={() => handleImageClick(design.id)}
                     >
-                      {/* 좌우 화살표 오버레이 */}
-                      {design.canvasSnapshot && (
+                      {/* 좌우 화살표 오버레이 - 내 작품 올리기가 아닌 경우에만 표시 */}
+                      {design.canvasSnapshot && !(design.isUploaded || design.type === 'uploaded' || design.blueprintImages?.length > 0) && (
                         <>
                           {/* 왼쪽 화살표 */}
                           <div 
-                            className="absolute left-2 top-1/2 transform -translate-y-1/2 z-10 bg-sky-500/20 hover:bg-sky-500/30 rounded-full p-2 transition-all duration-200 cursor-pointer"
+                            className="absolute left-2 top-1/2 transform -translate-y-1/2 z-10 bg-gray-400/30 hover:bg-gray-400/40 rounded-full p-2 transition-all duration-200 cursor-pointer"
                             onClick={async (e) => {
                               e.stopPropagation();
                               await incrementViewCount(design.id);
@@ -1711,7 +1724,7 @@ export default function GalleryPage() {
                           
                           {/* 오른쪽 화살표 */}
                           <div 
-                            className="absolute right-2 top-1/2 transform -translate-y-1/2 z-10 bg-sky-500/20 hover:bg-sky-500/30 rounded-full p-2 transition-all duration-200 cursor-pointer"
+                            className="absolute right-2 top-1/2 transform -translate-y-1/2 z-10 bg-gray-400/30 hover:bg-gray-400/40 rounded-full p-2 transition-all duration-200 cursor-pointer"
                             onClick={async (e) => {
                               e.stopPropagation();
                               await incrementViewCount(design.id);
