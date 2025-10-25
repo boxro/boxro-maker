@@ -1025,7 +1025,7 @@ export default function YoutubePageClient() {
                   {article.summary && (
                     <p 
                       className="text-[15px] mb-3 whitespace-pre-wrap flex-1 text-gray-900"
-                      style={{ lineHeight: '1.8' }}
+                      style={{ lineHeight: '1.6' }}
                     >
                       {article.summary}
                     </p>
