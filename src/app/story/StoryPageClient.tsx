@@ -973,7 +973,7 @@ export default function StoryPageClient() {
                   </h3>
                   
                   {article.summary && (
-                    <div className="text-[14px] mb-0 whitespace-pre-wrap flex-1 text-gray-900">
+                    <div className="text-[15px] mb-0 whitespace-pre-wrap flex-1 text-gray-900">
                       {expandedArticles.has(article.id) ? (
                         <p>{article.summary}</p>
                       ) : (
@@ -984,7 +984,7 @@ export default function StoryPageClient() {
                             WebkitBoxOrient: 'vertical',
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
-                            lineHeight: '1.4',
+                            lineHeight: '1.5',
                             maxHeight: '4.2em'
                           }}
                         >
