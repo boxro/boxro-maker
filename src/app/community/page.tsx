@@ -366,6 +366,11 @@ export default function GalleryPage() {
     // 내 작품 올리기로 업로드된 작품은 스와이핑 비활성화
     const design = designs.find(d => d.id === designId);
     if (design && (design.isUploaded || design.type === 'uploaded' || design.blueprintImages?.length > 0)) {
+      // 스와이프 상태를 강제로 0으로 고정
+      setSwipeStates(prev => ({
+        ...prev,
+        [designId]: 0
+      }));
       return;
     }
     
@@ -502,7 +507,12 @@ export default function GalleryPage() {
       // 스와이프 상태 초기화 (모든 디자인을 3D 렌더링으로 설정)
       const initialSwipeStates: {[key: string]: number} = {};
       designsData.forEach(design => {
-        initialSwipeStates[design.id] = 0; // 0: 3D 렌더링
+        // 내 작품 올리기로 업로드된 작품은 항상 0 (3D 렌더링)으로 고정
+        if (design.isUploaded || design.type === 'uploaded' || design.blueprintImages?.length > 0) {
+          initialSwipeStates[design.id] = 0; // 항상 3D 렌더링만 표시
+        } else {
+          initialSwipeStates[design.id] = 0; // 0: 3D 렌더링
+        }
       });
       setSwipeStates(initialSwipeStates);
     } catch (err) {
@@ -1691,9 +1701,9 @@ export default function GalleryPage() {
                     {/* 스와이프 컨테이너 */}
                     <div 
                       className="relative w-full aspect-[4/3] overflow-hidden cursor-pointer"
-                      onTouchStart={(e) => handleTouchStart(e, design.id)}
-                      onTouchMove={(e) => handleTouchMove(e, design.id)}
-                      onTouchEnd={(e) => handleTouchEnd(e, design.id)}
+                      onTouchStart={!(design.isUploaded || design.type === 'uploaded' || design.blueprintImages?.length > 0) ? (e) => handleTouchStart(e, design.id) : undefined}
+                      onTouchMove={!(design.isUploaded || design.type === 'uploaded' || design.blueprintImages?.length > 0) ? (e) => handleTouchMove(e, design.id) : undefined}
+                      onTouchEnd={!(design.isUploaded || design.type === 'uploaded' || design.blueprintImages?.length > 0) ? (e) => handleTouchEnd(e, design.id) : undefined}
                       onClick={() => handleImageClick(design.id)}
                     >
                       {/* 좌우 화살표 오버레이 - 내 작품 올리기가 아닌 경우에만 표시 */}
@@ -1779,8 +1789,8 @@ export default function GalleryPage() {
              }}
            />
            
-           {/* 그리기 캔버스 이미지 */}
-           {design.canvasSnapshot && (
+           {/* 그리기 캔버스 이미지 - 내 작품 올리기가 아닌 경우에만 표시 */}
+           {design.canvasSnapshot && !(design.isUploaded || design.type === 'uploaded' || design.blueprintImages?.length > 0) && (
              <img 
                src={design.canvasSnapshot} 
                alt={`${design.name} - 그리기 과정`}
