@@ -6328,7 +6328,7 @@ export default function DrawPage() {
                   도안을 다운로드하시겠어요?
                 </h3>
                 <p className="text-gray-800 text-sm mb-6 leading-relaxed">
-                  이제 이 멋진 박스카가 현실로 태어날 차례예요! 🚗✨
+                  이제 멋진 박스카가 현실로 태어날 차례예요!
                 </p>
                 <div className="flex gap-3">
                   <button
