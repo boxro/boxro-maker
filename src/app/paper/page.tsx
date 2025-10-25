@@ -4862,9 +4862,9 @@ export default function DrawPage() {
                           <img 
                             src={car.image} 
                             alt={car.label}
-                            className="w-16 h-16 md:w-24 md:h-24 mb-1 object-contain"
+                            className="w-14 h-14 md:w-20 md:h-20 mb-1 object-contain"
                           />
-                          <span className="text-sm font-medium">{car.label}</span>
+                          <span className="text-sm">{car.label}</span>
                         </button>
                       );
                     })}
@@ -5117,9 +5117,9 @@ export default function DrawPage() {
                   <img 
                     src={`/buttons/${item.image}`} 
                     alt={item.label}
-                    className="w-16 h-16 md:w-[90px] md:h-[90px] mb-1 object-contain"
+                    className="w-14 h-14 md:w-[80px] md:h-[80px] mb-1 object-contain"
                   />
-                  <span className="text-sm font-medium">{item.label}</span>
+                  <span className="text-sm">{item.label}</span>
                 </button>
               );
             })}
