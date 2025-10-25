@@ -656,8 +656,8 @@ export default function EditYoutubePage() {
                       </h4>
                       {summary && (
                         <p 
-                          className="text-sm mb-3 whitespace-pre-wrap"
-                          style={{ color: summaryColor }}
+                          className="text-[15px] mb-3 whitespace-pre-wrap"
+                          style={{ color: summaryColor, lineHeight: '1.8' }}
                         >
                           {summary}
                         </p>
