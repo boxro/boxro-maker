@@ -4833,7 +4833,7 @@ export default function DrawPage() {
                           onClick={() => {
                             setSelectedCarType(car.type);
                           }}
-                          className={`flex flex-col items-center justify-center px-2 py-2 md:p-2 rounded-xl border-2 transition-all duration-200 h-[85px] md:h-[106px] ${
+                          className={`flex flex-col items-center justify-center px-1 py-2 md:p-2 rounded-xl border-2 transition-all duration-200 h-[85px] md:h-[106px] ${
                             selectedCarType === car.type
                               ? 'border-transparent bg-gradient-to-br from-blue-500 to-purple-500 text-white'
                               : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50 text-gray-700'
@@ -4844,7 +4844,7 @@ export default function DrawPage() {
                             alt={car.label}
                             className="w-16 h-16 md:w-24 md:h-24 mb-1 object-contain"
                           />
-                          <span className="font-medium" style={{fontSize: '13px'}}>{car.label}</span>
+                          <span className="font-medium text-sm">{car.label}</span>
                         </button>
                       );
                     })}
@@ -4942,7 +4942,7 @@ export default function DrawPage() {
                 <button
                   key={item.type}
                   onClick={() => setSelectedItem(item.type)}
-                  className={`relative flex flex-col items-center justify-center p-2 rounded-xl border-2 transition-all duration-200 h-[85px] md:h-[106px] ${
+                  className={`relative flex flex-col items-center justify-center px-1 py-2 md:p-2 rounded-xl border-2 transition-all duration-200 h-[85px] md:h-[106px] ${
                     selectedItem === item.type
                       ? 'border-transparent bg-gradient-to-br from-blue-500 to-purple-500 text-white'
                       : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50 text-gray-700'
@@ -4959,7 +4959,7 @@ export default function DrawPage() {
                     alt={item.label}
                     className="w-16 h-16 md:w-[90px] md:h-[90px] mb-1 object-contain"
                   />
-                  <span className="font-medium" style={{fontSize: '13px'}}>{item.label}</span>
+                  <span className="font-medium text-sm">{item.label}</span>
                 </button>
               );
             })}
