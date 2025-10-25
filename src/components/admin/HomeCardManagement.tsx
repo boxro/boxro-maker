@@ -420,7 +420,7 @@ const HomeCardManagement: React.FC<HomeCardManagementProps> = ({
                   <CardTitle className="text-[24px] font-bold mb-1 font-cookie-run" style={{ color: homeCardTitleColor }}>
                     {homeCardTitle || "카드 제목"}
                   </CardTitle>
-                  <p className="leading-relaxed" style={{ fontSize: '14px', whiteSpace: 'pre-line', color: homeCardDescriptionColor }}>
+                  <p className="leading-relaxed" style={{ fontSize: '15px', whiteSpace: 'pre-line', color: homeCardDescriptionColor }}>
                     {homeCardDescription || "카드 설명이 여기에 표시됩니다.\n최대 2줄까지 권장됩니다."}
                   </p>
                 </CardHeader>

@@ -1847,7 +1847,7 @@ export default function GalleryPage() {
                   
                   <div className="flex justify-center items-start mb-1">
                     <CardTitle 
-                      className="text-lg font-semibold text-gray-900 text-center" 
+                      className="text-lg font-bold text-gray-900 text-center" 
                       title={design.name}
                       style={{
                         display: '-webkit-box',

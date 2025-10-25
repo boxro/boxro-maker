@@ -1008,7 +1008,7 @@ export default function YoutubePageClient() {
                 {/* 제목, 요약 */}
                 <div className="px-7 py-4 flex-1 flex flex-col">
                   <h3 
-                    className="text-lg font-semibold mb-2 mt-1 text-gray-900"
+                    className="text-lg font-bold mb-2 mt-1 text-gray-900"
                     style={{
                       display: '-webkit-box',
                       WebkitLineClamp: 1,

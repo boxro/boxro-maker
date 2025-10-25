@@ -543,7 +543,7 @@ export default function WriteStoryPage() {
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
                       placeholder="도안 카드에 표시될 제목"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] mb-3 bg-white"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] mb-3 bg-white"
                     />
                     <div className="flex gap-2">
                       <input 
@@ -557,7 +557,7 @@ export default function WriteStoryPage() {
                         value={titleColor}
                         onChange={(e) => setTitleColor(e.target.value)}
                         placeholder="#000000"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] bg-white"
                       />
                     </div>
                   </div>
@@ -574,7 +574,7 @@ export default function WriteStoryPage() {
                       onChange={(e) => setSummary(e.target.value)}
                       placeholder="도안 카드에 표시될 설명"
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] mb-2 bg-white"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] mb-2 bg-white"
                     />
                     <div className="flex gap-2">
                       <input 
@@ -588,7 +588,7 @@ export default function WriteStoryPage() {
                         value={summaryColor}
                         onChange={(e) => setSummaryColor(e.target.value)}
                         placeholder="#000000"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] bg-white"
                       />
                     </div>
                   </div>
@@ -605,7 +605,7 @@ export default function WriteStoryPage() {
                       value={price}
                       onChange={(e) => setPrice(e.target.value)}
                       placeholder="도안 가격을 입력하세요 (예: 5,000원)"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] mb-3 bg-white"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] mb-3 bg-white"
                     />
                     <div className="flex gap-2">
                       <input 
@@ -619,7 +619,7 @@ export default function WriteStoryPage() {
                         value={priceColor}
                         onChange={(e) => setPriceColor(e.target.value)}
                         placeholder="#000000"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] bg-white"
                       />
                     </div>
                     
@@ -700,7 +700,7 @@ export default function WriteStoryPage() {
                         value={cardBackgroundColor}
                         onChange={(e) => setCardBackgroundColor(e.target.value)}
                         placeholder="#ffffff"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] bg-white"
                       />
                     </div>
                   </div>
@@ -981,7 +981,7 @@ export default function WriteStoryPage() {
                               value={cardTitle}
                               onChange={(e) => setCardTitle(e.target.value)}
                               placeholder="홈 카드에 표시될 제목을 입력하세요"
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] mb-3 bg-white"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] mb-3 bg-white"
                               required={showOnHome}
                             />
                             <div className="flex gap-2">
@@ -996,7 +996,7 @@ export default function WriteStoryPage() {
                                 value={cardTitleColor}
                                 onChange={(e) => setCardTitleColor(e.target.value)}
                                 placeholder="#ffffff"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] bg-white"
                               />
                             </div>
                           </div>
@@ -1011,7 +1011,7 @@ export default function WriteStoryPage() {
                               onChange={(e) => setCardDescription(e.target.value)}
                               placeholder="홈 카드에 표시될 설명을 입력하세요"
                               rows={3}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] mb-2 bg-white"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] mb-2 bg-white"
                               required={showOnHome}
                             />
                             <div className="flex gap-2">
@@ -1026,7 +1026,7 @@ export default function WriteStoryPage() {
                                 value={cardDescriptionColor}
                                 onChange={(e) => setCardDescriptionColor(e.target.value)}
                                 placeholder="#ffffff"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] bg-white"
                               />
                             </div>
                           </div>
@@ -1100,7 +1100,7 @@ export default function WriteStoryPage() {
                               type="file" 
                               accept="image/*"
                               onChange={handleCardThumbnailUpload}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[15px] bg-white"
                               required={showOnHome}
                             />
                             {cardThumbnail && (
