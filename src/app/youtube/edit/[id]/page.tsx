@@ -55,17 +55,6 @@ export default function EditYoutubePage() {
   const [storeUrl, setStoreUrl] = useState("");
   const [thumbnail, setThumbnail] = useState("");
   const [isPublished, setIsPublished] = useState(false);
-  const [showOnHome, setShowOnHome] = useState(false);
-  const [cardTitle, setCardTitle] = useState("");
-  const [cardDescription, setCardDescription] = useState("");
-  const [cardThumbnail, setCardThumbnail] = useState("");
-  const [cardTitleColor, setCardTitleColor] = useState("#ffffff");
-  const [cardDescriptionColor, setCardDescriptionColor] = useState("#ffffff");
-  const [titleColor, setTitleColor] = useState("#000000");
-  const [summaryColor, setSummaryColor] = useState("#000000");
-  const [cardBackgroundColor, setCardBackgroundColor] = useState("#ffffff");
-  const [homeCardBackgroundColor, setHomeCardBackgroundColor] = useState("#3b82f6");
-  const [cardTextPosition, setCardTextPosition] = useState(4); // 0-75, 기본값 4 (하단)
   const [saving, setSaving] = useState(false);
   
   // 오류 모달 상태
@@ -175,17 +164,6 @@ export default function EditYoutubePage() {
         setStoreUrl(articleData.storeUrl || '');
         setThumbnail(articleData.thumbnail || '');
         setIsPublished(articleData.isPublished);
-        setShowOnHome(articleData.showOnHome || false);
-        setCardTitle(articleData.cardTitle || '');
-        setCardDescription(articleData.cardDescription || '');
-        setCardThumbnail(articleData.cardThumbnail || '');
-        setCardTitleColor(articleData.cardTitleColor || '#ffffff');
-        setCardDescriptionColor(articleData.cardDescriptionColor || '#ffffff');
-        setCardBackgroundColor(articleData.cardBackgroundColor || '#ffffff');
-        setHomeCardBackgroundColor(articleData.homeCardBackgroundColor || '#3b82f6');
-        setCardTextPosition(articleData.textPosition || 4);
-        setTitleColor(articleData.titleColor || '#000000');
-        setSummaryColor(articleData.summaryColor || '#000000');
       } else {
         setErrorMessage('글이 존재하지 않습니다.');
         setShowErrorModal(true);
@@ -259,20 +237,6 @@ export default function EditYoutubePage() {
     });
   };
 
-  const handleCardThumbnailUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      try {
-        // 이미지 압축 (최대 800px, 품질 80%)
-        const compressedImage = await compressImage(file, 800, 0.8);
-        setCardThumbnail(compressedImage);
-      } catch (error) {
-        console.error('이미지 압축 실패:', error);
-        setErrorMessage('이미지 업로드 중 오류가 발생했습니다.');
-        setShowErrorModal(true);
-      }
-    }
-  };
 
   // 태그 배열로 변환
 
@@ -312,17 +276,7 @@ export default function EditYoutubePage() {
         storeUrl: storeUrl.trim() || '',
         tags: [],
         isPublished: true,
-        showOnHome: showOnHome,
-        cardTitle: cardTitle.trim() || '',
-        cardDescription: cardDescription.trim() || '',
         thumbnail: thumbnail || '',
-        cardTitleColor: cardTitleColor,
-        cardDescriptionColor: cardDescriptionColor,
-        cardBackgroundColor: cardBackgroundColor,
-        homeCardBackgroundColor: homeCardBackgroundColor,
-        textPosition: cardTextPosition,
-        titleColor: titleColor,
-        summaryColor: summaryColor,
         authorNickname: userNickname,
         updatedAt: new Date()
       };
@@ -331,46 +285,6 @@ export default function EditYoutubePage() {
       const articleRef = doc(db, 'youtubeItems', article.id);
       await updateDoc(articleRef, articleData);
       
-      // 홈 카드 정보 업데이트 (홈카드 정보가 완전할 때만)
-      if (showOnHome && cardTitle.trim() && cardDescription.trim() && cardThumbnail) {
-        // 기존 홈 카드 찾기
-        const { query, where, getDocs, addDoc, updateDoc, collection } = await import("firebase/firestore");
-        const homeCardsQuery = query(
-          collection(db, 'homeCards'),
-          where('source', '==', 'youtubeItems'),
-          where('sourceId', '==', article.id)
-        );
-        const homeCardsSnapshot = await getDocs(homeCardsQuery);
-        
-        const homeCardData = {
-          source: 'youtubeItems',
-          sourceId: article.id,
-          cardTitle: cardTitle.trim() || '',
-          cardDescription: cardDescription.trim() || '',
-          cardThumbnail: cardThumbnail || '',
-          cardTitleColor: cardTitleColor,
-          cardDescriptionColor: cardDescriptionColor,
-          cardBackgroundColor: cardBackgroundColor,
-          textPosition: cardTextPosition,
-          isVisible: true,
-          updatedAt: new Date()
-        };
-        
-        if (homeCardsSnapshot.empty) {
-          // 홈 카드가 없으면 새로 생성
-          await addDoc(collection(db, 'homeCards'), {
-            ...homeCardData,
-            order: 0,
-            createdAt: new Date()
-          });
-          console.log('홈 카드 생성 완료');
-        } else {
-          // 홈 카드가 있으면 업데이트
-          const homeCardRef = homeCardsSnapshot.docs[0].ref;
-          await updateDoc(homeCardRef, homeCardData);
-          console.log('홈 카드 업데이트 완료');
-        }
-      }
       
       setSuccessMessage('영상이 성공적으로 수정되었습니다!');
       setShowSuccessModal(true);
@@ -479,21 +393,6 @@ export default function EditYoutubePage() {
                       placeholder="영상 카드에 표시될 제목"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] mb-3 bg-white"
                     />
-                    <div className="flex gap-2">
-                      <input 
-                        type="color" 
-                        value={titleColor}
-                        onChange={(e) => setTitleColor(e.target.value)}
-                        className="w-12 h-10 border-0 rounded-md cursor-pointer"
-                      />
-                      <input 
-                        type="text" 
-                        value={titleColor}
-                        onChange={(e) => setTitleColor(e.target.value)}
-                        placeholder="#000000"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
-                      />
-                    </div>
                   </div>
                 </div>
 
@@ -510,21 +409,6 @@ export default function EditYoutubePage() {
                       rows={3}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] mb-2 bg-white"
                     />
-                    <div className="flex gap-2">
-                      <input 
-                        type="color" 
-                        value={summaryColor}
-                        onChange={(e) => setSummaryColor(e.target.value)}
-                        className="w-12 h-10 border-0 rounded-md cursor-pointer"
-                      />
-                      <input 
-                        type="text" 
-                        value={summaryColor}
-                        onChange={(e) => setSummaryColor(e.target.value)}
-                        placeholder="#000000"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
-                      />
-                    </div>
                   </div>
                 </div>
 
@@ -573,29 +457,6 @@ export default function EditYoutubePage() {
                   </div>
                 </div>
 
-                {/* 영상 배경 색상 */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-800 mb-2">
-                    영상 배경 색상
-                  </label>
-                  <div className="bg-transparent p-4 rounded-lg border border-gray-300">
-                    <div className="flex gap-2">
-                      <input 
-                        type="color" 
-                        value={cardBackgroundColor}
-                        onChange={(e) => setCardBackgroundColor(e.target.value)}
-                        className="w-12 h-10 border-0 rounded-md cursor-pointer"
-                      />
-                      <input 
-                        type="text" 
-                        value={cardBackgroundColor}
-                        onChange={(e) => setCardBackgroundColor(e.target.value)}
-                        placeholder="#ffffff"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
-                      />
-                    </div>
-                  </div>
-                </div>
 
                 </div>
 
@@ -603,7 +464,7 @@ export default function EditYoutubePage() {
                 <div className="flex justify-center">
                   <div 
                     className="group shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden w-[325px] rounded-2xl relative"
-                    style={{ backgroundColor: cardBackgroundColor || 'rgba(255, 255, 255, 0.97)' }}
+                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.97)' }}
                   >
                     {/* 썸네일 */}
                     {thumbnail && (
@@ -621,7 +482,7 @@ export default function EditYoutubePage() {
                       <h4 
                         className="text-lg font-semibold mb-4 mt-2"
                         style={{ 
-                          color: titleColor,
+                          color: '#000000',
                           display: '-webkit-box',
                           WebkitLineClamp: 1,
                           WebkitBoxOrient: 'vertical',
@@ -644,7 +505,7 @@ export default function EditYoutubePage() {
                       {summary && (
                         <p 
                           className="text-[15px] mb-3 whitespace-pre-wrap"
-                          style={{ color: summaryColor, lineHeight: '1.6' }}
+                          style={{ color: '#000000', lineHeight: '1.6' }}
                         >
                           {summary}
                         </p>
@@ -657,235 +518,6 @@ export default function EditYoutubePage() {
 
 
 
-            {/* 홈 카드 노출 옵션 */}
-            <div className="pt-6">
-              <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
-                <div className="mb-4">
-                  <h3 className="font-medium text-gray-800 mb-4" style={{ fontSize: '16px' }}>
-                    홈 카드 정보
-                  </h3>
-                  
-                  {/* 홈카드 노출 토글 스위치 */}
-                  <div className="flex items-center justify-between mb-6">
-                    <label className="text-sm font-medium text-gray-700">
-                      홈카드에 노출하기
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => setShowOnHome(!showOnHome)}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                        showOnHome ? 'bg-blue-600' : 'bg-gray-200'
-                      }`}
-                    >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                          showOnHome ? 'translate-x-6' : 'translate-x-1'
-                        }`}
-                      />
-                    </button>
-                  </div>
-                </div>
-
-                {/* 홈카드 정보 입력 필드들 - 토글이 켜졌을 때만 활성화 */}
-                {showOnHome && (
-                  <div className="space-y-4 p-4 bg-blue-50 rounded-lg">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                      {/* 입력 폼 */}
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-800 mb-2">
-                            홈카드 제목
-                          </label>
-                          <div className="bg-transparent p-4 rounded-lg border border-gray-300">
-                            <input 
-                              type="text" 
-                              value={cardTitle}
-                              onChange={(e) => setCardTitle(e.target.value)}
-                              placeholder="홈 카드에 표시될 제목을 입력하세요"
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] mb-3 bg-white"
-                              required={showOnHome}
-                            />
-                            <div className="flex gap-2">
-                              <input 
-                                type="color" 
-                                value={cardTitleColor}
-                                onChange={(e) => setCardTitleColor(e.target.value)}
-                                className="w-12 h-10 border-0 rounded-md cursor-pointer"
-                              />
-                              <input 
-                                type="text" 
-                                value={cardTitleColor}
-                                onChange={(e) => setCardTitleColor(e.target.value)}
-                                placeholder="#ffffff"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-800 mb-2">
-                            홈카드 설명
-                          </label>
-                          <div className="bg-transparent p-4 rounded-lg border border-gray-300">
-                            <textarea 
-                              value={cardDescription}
-                              onChange={(e) => setCardDescription(e.target.value)}
-                              placeholder="홈 카드에 표시될 설명을 입력하세요"
-                              rows={3}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] mb-2 bg-white"
-                              required={showOnHome}
-                            />
-                            <div className="flex gap-2">
-                              <input 
-                                type="color" 
-                                value={cardDescriptionColor}
-                                onChange={(e) => setCardDescriptionColor(e.target.value)}
-                                className="w-12 h-10 border-0 rounded-md cursor-pointer"
-                              />
-                              <input 
-                                type="text" 
-                                value={cardDescriptionColor}
-                                onChange={(e) => setCardDescriptionColor(e.target.value)}
-                                placeholder="#ffffff"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* 텍스트 위치 조절 */}
-                        <div>
-                          <label className="block text-sm font-medium text-gray-800 mb-2">텍스트 위치</label>
-                          <div className="bg-transparent p-4 rounded-lg border border-gray-300">
-                            <div className="flex items-center gap-3">
-                              <span className="text-sm text-gray-600 w-12">위</span>
-                              <input
-                                type="range"
-                                min="0"
-                                max="75"
-                                value={cardTextPosition}
-                                onChange={(e) => setCardTextPosition(Number(e.target.value))}
-                                className="flex-1 h-2 appearance-none cursor-pointer"
-                                style={{
-                                  background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(cardTextPosition / 75) * 100}%, #e5e7eb ${(cardTextPosition / 75) * 100}%, #e5e7eb 100%)`,
-                                  borderRadius: '8px'
-                                }}
-                              />
-                              <span className="text-sm text-gray-600 w-12">아래</span>
-                            </div>
-                            <div className="text-center mt-2">
-                              <span className="text-xs text-gray-500">{cardTextPosition}%</span>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* 홈카드 배경 색상 */}
-                        <div className="mt-6">
-                          <label className="block text-sm font-medium text-gray-700 mb-2">홈카드 배경 색상</label>
-                          <div className="bg-transparent p-4 rounded-lg border border-gray-300">
-                            <div className="flex gap-2">
-                              <input 
-                                type="color" 
-                                value={homeCardBackgroundColor || '#3b82f6'}
-                                onChange={(e) => setHomeCardBackgroundColor(e.target.value)}
-                                className="w-[58px] h-10 border-0 rounded-md cursor-pointer"
-                              />
-                              <input 
-                                type="text" 
-                                value={homeCardBackgroundColor || '#3b82f6'}
-                                onChange={(e) => setHomeCardBackgroundColor(e.target.value)}
-                                placeholder="#3b82f6"
-                                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => setHomeCardBackgroundColor('transparent')}
-                                className={`px-3 py-2 text-sm rounded-md border flex-shrink-0 ${
-                                  homeCardBackgroundColor === 'transparent' 
-                                    ? 'bg-blue-100 border-blue-300 text-blue-700' 
-                                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                                }`}
-                              >
-                                투명
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div>
-                          <label className="block text-sm font-medium text-gray-800 mb-2">
-                            홈카드 썸네일 (홈카드 배경 이미지)
-                          </label>
-                          <div className="flex gap-2">
-                            <input 
-                              type="file" 
-                              accept="image/*"
-                              onChange={handleCardThumbnailUpload}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
-                              required={showOnHome}
-                            />
-                            {cardThumbnail && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  console.log('카드 썸네일 삭제 전:', cardThumbnail);
-                                  setCardThumbnail('');
-                                  console.log('카드 썸네일 삭제 후:', '');
-                                }}
-                                className="px-3 py-2 bg-sky-500 hover:bg-sky-600 text-white text-sm rounded-md transition-colors whitespace-nowrap flex-shrink-0"
-                              >
-                                삭제
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                  </div>
-
-                  {/* 미리보기 */}
-                  <div className="flex justify-center">
-                    <Card className="group hover:shadow-xl transition-all duration-300 border-0 border-green-300/50 shadow-2xl break-inside-avoid mb-4 relative overflow-hidden bg-transparent w-[325px] h-[480px] flex flex-col justify-end cursor-pointer">
-                      {/* 배경 이미지 */}
-                      <div className="absolute inset-0 overflow-hidden">
-                        {cardThumbnail ? (
-                          <img
-                            src={cardThumbnail}
-                            alt="홈카드 배경"
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-                          />
-                        ) : (
-                          <div 
-                            className="w-full h-full"
-                            style={{ 
-                              backgroundColor: homeCardBackgroundColor === 'transparent' ? 'transparent' : homeCardBackgroundColor,
-                              background: homeCardBackgroundColor === 'transparent' ? 'transparent' : `linear-gradient(135deg, ${homeCardBackgroundColor} 0%, ${homeCardBackgroundColor} 100%)`
-                            }}
-                          />
-                        )}
-                      </div>
-                      <CardHeader 
-                        className="text-center pt-1 pb-2 relative z-10"
-                        style={{
-                          position: 'absolute',
-                          bottom: `${cardTextPosition}%`,
-                          left: '50%',
-                          transform: 'translateX(-50%)',
-                          width: '100%'
-                        }}
-                      >
-                        <CardTitle className="text-[24px] font-bold mb-1 font-cookie-run" style={{ color: cardTitleColor }}>
-                          {cardTitle || "카드 제목"}
-                        </CardTitle>
-                        <p className="leading-relaxed" style={{ fontSize: '14px', whiteSpace: 'pre-line', color: cardDescriptionColor }}>
-                          {cardDescription || "카드 설명이 여기에 표시됩니다.\n최대 2줄까지 권장됩니다."}
-                        </p>
-                      </CardHeader>
-                    </Card>
-                  </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
 
 
           </CardContent>
