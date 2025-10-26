@@ -28,17 +28,6 @@ export default function WriteStoryPage() {
   const [summary, setSummary] = useState("");
   const [thumbnail, setThumbnail] = useState("");
   const [isPublished, setIsPublished] = useState(false);
-  const [showOnHome, setShowOnHome] = useState(false);
-  const [cardTitle, setCardTitle] = useState("");
-  const [cardDescription, setCardDescription] = useState("");
-  const [cardThumbnail, setCardThumbnail] = useState("");
-  const [cardTitleColor, setCardTitleColor] = useState("#ffffff");
-  const [cardDescriptionColor, setCardDescriptionColor] = useState("#ffffff");
-  const [titleColor, setTitleColor] = useState("#000000");
-  const [summaryColor, setSummaryColor] = useState("#000000");
-  const [cardBackgroundColor, setCardBackgroundColor] = useState("#ffffff");
-  const [homeCardBackgroundColor, setHomeCardBackgroundColor] = useState("#3b82f6");
-  const [cardTextPosition, setCardTextPosition] = useState(4); // 0-75, 기본값 4 (하단)
   const [viewTopImage, setViewTopImage] = useState("");
   const [saving, setSaving] = useState(false);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);

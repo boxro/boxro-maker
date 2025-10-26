@@ -364,11 +364,6 @@ export default function AdminPage() {
   const [popularityTotalPages, setPopularityTotalPages] = useState(0);
   const [popularityAllItems, setPopularityAllItems] = useState<any[]>([]);
 
-  // 홈카드 필터링 관련 state
-  const [filterSource, setFilterSource] = useState('');
-  const [filterDateFrom, setFilterDateFrom] = useState('');
-  const [filterDateTo, setFilterDateTo] = useState('');
-  const [filterSearch, setFilterSearch] = useState('');
   
   // 별도 숨겨진 카드 섹션용 필터링 상태
   const [separateHiddenFilterSource, setSeparateHiddenFilterSource] = useState('');
@@ -376,46 +371,6 @@ export default function AdminPage() {
   const [separateHiddenFilterDateTo, setSeparateHiddenFilterDateTo] = useState('');
   const [separateHiddenFilterSearch, setSeparateHiddenFilterSearch] = useState('');
 
-  // 홈카드 필터링 함수 (보이는 카드)
-  const getFilteredHomeCards = () => {
-    let filtered = homeCards.filter(card => card.showOnHome === true);
-
-    // 출처 필터
-    if (filterSource) {
-      filtered = filtered.filter(card => card.source === filterSource);
-    }
-
-    // 날짜 필터
-    if (filterDateFrom) {
-      const fromDate = new Date(filterDateFrom);
-      filtered = filtered.filter(card => {
-        const cardDate = new Date(card.createdAt?.toDate?.() || card.createdAt);
-        return cardDate >= fromDate;
-      });
-    }
-
-    if (filterDateTo) {
-      const toDate = new Date(filterDateTo);
-      toDate.setHours(23, 59, 59, 999); // 하루 끝까지
-      filtered = filtered.filter(card => {
-        const cardDate = new Date(card.createdAt?.toDate?.() || card.createdAt);
-        return cardDate <= toDate;
-      });
-    }
-
-    // 검색 필터
-    if (filterSearch.trim()) {
-      const searchTerm = filterSearch.toLowerCase();
-      filtered = filtered.filter(card => 
-        (card.title && card.title.toLowerCase().includes(searchTerm)) ||
-        (card.cardTitle && card.cardTitle.toLowerCase().includes(searchTerm)) ||
-        (card.description && card.description.toLowerCase().includes(searchTerm)) ||
-        (card.cardDescription && card.cardDescription.toLowerCase().includes(searchTerm))
-      );
-    }
-
-    return filtered;
-  };
 
 
   // 별도 숨겨진 카드 섹션용 필터링 함수
@@ -1501,41 +1456,10 @@ export default function AdminPage() {
       console.log('홈카드 노출 순서 탭 - 데이터 불러오기 시작...');
       
       // storyArticles, storeItems, homeCards 세 컬렉션에서 모두 가져오기
-      const [storyQuery, storeQuery, homeCardsQuery] = await Promise.all([
-        getDocs(query(collection(db, 'storyArticles'), orderBy('createdAt', 'desc'))),
-        getDocs(query(collection(db, 'storeItems'), orderBy('createdAt', 'desc'))),
-        getDocs(query(collection(db, 'homeCards'), orderBy('createdAt', 'desc')))
-      ]);
+      // homeCards 컬렉션에서만 가져오기
+      const homeCardsQuery = await getDocs(query(collection(db, 'homeCards'), orderBy('createdAt', 'desc')));
       
-      console.log('storyArticles 개수:', storyQuery.docs.length);
-      console.log('storeItems 개수:', storeQuery.docs.length);
       console.log('homeCards 개수:', homeCardsQuery.docs.length);
-      
-      // storyArticles 데이터 변환 (유효한 데이터만)
-      const storyCards = storyQuery.docs
-        .filter(doc => doc.exists())
-        .map(doc => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            ...data,
-            source: 'storyArticles', // 출처 구분용
-            createdAt: data.createdAt?.toDate?.() || new Date()
-          };
-        }) as (HomeCard & { source: string })[];
-      
-      // storeItems 데이터 변환 (유효한 데이터만)
-      const storeCards = storeQuery.docs
-        .filter(doc => doc.exists())
-        .map(doc => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            ...data,
-            source: 'storeItems', // 출처 구분용
-            createdAt: data.createdAt?.toDate?.() || new Date()
-          };
-        }) as (HomeCard & { source: string })[];
       
       // homeCards 데이터 변환 (유효한 데이터만)
       const homeCards = homeCardsQuery.docs
@@ -1545,20 +1469,18 @@ export default function AdminPage() {
           return {
             id: doc.id,
             ...data,
-            source: 'homeCards', // 출처 구분용
+            source: 'admin', // 홈카드관리에서 등록한 것
             createdAt: data.createdAt?.toDate?.() || new Date()
           };
         }) as (HomeCard & { source: string })[];
       
-      console.log('storyCards:', storyCards);
-      console.log('storeCards:', storeCards);
       console.log('homeCards:', homeCards);
       
-      // 세 컬렉션 데이터 합치기
-      const allCards = [...storyCards, ...storeCards, ...homeCards];
+      // 홈카드관리에서 등록한 카드만 사용
+      const allCards = [...homeCards];
       console.log('전체 카드 개수:', allCards.length);
       
-      // 클라이언트에서 showOnHome이 true인 것만 필터링하고 homeOrder로 정렬
+      // 홈카드관리에서 등록한 카드들을 homeOrder로 정렬
       const visibleCards = allCards
         .filter(card => {
           // 유효한 카드인지 확인
@@ -1572,16 +1494,8 @@ export default function AdminPage() {
             return false;
           }
           
-          // 홈 카드 정보가 있는지 확인
-          // cardTitle과 cardDescription이 모두 있어야 홈에 표시
-          const hasCardInfo = card.cardTitle && card.cardTitle.trim() && 
-                             card.cardDescription && card.cardDescription.trim();
-          
-          // 또는 일반 썸네일이 있어도 표시 (기존 호환성)
-          const hasThumbnail = card.cardThumbnail && card.cardThumbnail.trim();
-          
-          console.log(`카드 "${card.title}" - showOnHome: ${card.showOnHome}, hasCardInfo: ${hasCardInfo}, hasThumbnail: ${hasThumbnail}`);
-          return hasCardInfo || hasThumbnail;
+          console.log(`카드 "${card.title}" - showOnHome: ${card.showOnHome}`);
+          return true;
         })
         .sort((a, b) => {
           // homeOrder가 있는 카드들을 먼저 정렬
@@ -1607,14 +1521,7 @@ export default function AdminPage() {
           
           // showOnHome이 false인 카드들만 확인
           if (card.showOnHome === false) {
-            // 토글 OFF인 게시물(storyArticles, storeItems)은 숨겨진 카드에 포함하지 않음
-            if (card.source === 'storyArticles' || card.source === 'storeItems') {
-              console.log('🔍 토글 OFF 게시물 제외:', card.title, card.source, card.showOnHome);
-              return false;
-            }
-            
-            // 수동으로 생성한 홈카드만 숨겨진 카드에 포함
-            console.log('🔍 숨겨진 카드 포함:', card.title, card.source, card.showOnHome);
+            console.log('🔍 숨겨진 카드 포함:', card.title, card.showOnHome);
             return true;
           }
           
@@ -5707,24 +5614,9 @@ export default function AdminPage() {
             saving={saving}
             homeCards={homeCards}
             hiddenCards={hiddenCards}
-            filterSource={filterSource}
-            setFilterSource={setFilterSource}
-            filterDateFrom={filterDateFrom}
-            setFilterDateFrom={setFilterDateFrom}
-            filterDateTo={filterDateTo}
-            setFilterDateTo={setFilterDateTo}
-            filterSearch={filterSearch}
-            setFilterSearch={setFilterSearch}
-            getFilteredHomeCards={getFilteredHomeCards}
             moveCard={moveCard}
             saveOrder={saveOrder}
             toggleCardVisibility={toggleCardVisibility}
-            resetFilters={() => {
-              setFilterSource('');
-              setFilterDateFrom('');
-              setFilterDateTo('');
-              setFilterSearch('');
-            }}
             onDragEnd={onDragEnd}
           />
         )}
