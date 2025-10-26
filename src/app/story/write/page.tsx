@@ -456,21 +456,6 @@ export default function WriteStoryPage() {
                       placeholder="이야기 카드에 표시될 제목"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] mb-3 bg-white"
                     />
-                    <div className="flex gap-2">
-                      <input 
-                        type="color" 
-                        value={titleColor}
-                        onChange={(e) => setTitleColor(e.target.value)}
-                        className="w-12 h-10 border-0 rounded-md cursor-pointer"
-                      />
-                      <input 
-                        type="text" 
-                        value={titleColor}
-                        onChange={(e) => setTitleColor(e.target.value)}
-                        placeholder="#000000"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
-                      />
-                    </div>
                   </div>
                 </div>
 
@@ -487,21 +472,6 @@ export default function WriteStoryPage() {
                       rows={3}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] mb-2 bg-white"
                     />
-                    <div className="flex gap-2">
-                      <input 
-                        type="color" 
-                        value={summaryColor}
-                        onChange={(e) => setSummaryColor(e.target.value)}
-                        className="w-12 h-10 border-0 rounded-md cursor-pointer"
-                      />
-                      <input 
-                        type="text" 
-                        value={summaryColor}
-                        onChange={(e) => setSummaryColor(e.target.value)}
-                        placeholder="#000000"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
-                      />
-                    </div>
                   </div>
                 </div>
 
@@ -533,29 +503,6 @@ export default function WriteStoryPage() {
                   </div>
                 </div>
 
-                {/* 이야기 목록 카드 색상 */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-800 mb-2">
-                    이야기 배경 색상
-                  </label>
-                  <div className="bg-transparent p-4 rounded-lg border border-gray-300">
-                    <div className="flex gap-2">
-                      <input 
-                        type="color" 
-                        value={cardBackgroundColor}
-                        onChange={(e) => setCardBackgroundColor(e.target.value)}
-                        className="w-12 h-10 border-0 rounded-md cursor-pointer"
-                      />
-                      <input 
-                        type="text" 
-                        value={cardBackgroundColor}
-                        onChange={(e) => setCardBackgroundColor(e.target.value)}
-                        placeholder="#ffffff"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
-                      />
-                    </div>
-                  </div>
-                </div>
 
                 </div>
 
@@ -563,7 +510,7 @@ export default function WriteStoryPage() {
                 <div className="flex justify-center">
                   <div 
                     className="group shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden w-[325px] rounded-2xl relative"
-                    style={{ backgroundColor: cardBackgroundColor || 'rgba(255, 255, 255, 0.97)' }}
+                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.97)' }}
                   >
                     {/* 썸네일 */}
                     {thumbnail && (
@@ -581,7 +528,7 @@ export default function WriteStoryPage() {
                       <h4 
                         className="text-lg font-semibold mb-4 mt-2"
                         style={{ 
-                          color: titleColor,
+                          color: '#000000',
                           display: '-webkit-box',
                           WebkitLineClamp: 1,
                           WebkitBoxOrient: 'vertical',
@@ -604,7 +551,7 @@ export default function WriteStoryPage() {
                       {summary && (
                         <p 
                           className="text-[15px] mb-3 whitespace-pre-wrap"
-                          style={{ color: summaryColor, lineHeight: '1.6' }}
+                          style={{ color: '#000000', lineHeight: '1.6' }}
                         >
                           {summary}
                         </p>
