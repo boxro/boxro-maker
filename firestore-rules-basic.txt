@@ -1,0 +1,67 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 사용자 프로필 정보 - 모든 사용자 읽기 가능
+    match /users/{userId} {
+      allow read, list: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // 박스카 이야기 글 - 모든 사용자 읽기 가능
+    match /storyArticles/{document} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    // 스토어 아이템 - 모든 사용자 읽기 가능
+    match /storeItems/{document} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    // 갤러리 디자인 - 모든 사용자 읽기 가능
+    match /communityDesigns/{document} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    // 박스로 톡 - 모든 사용자 읽기 가능
+    match /boxroTalks/{document} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    match /storyBoxroTalks/{document} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    match /storeBoxroTalks/{document} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    // 댓글 - 모든 사용자 읽기 가능
+    match /storyComments/{document} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    // 홈카드 - 모든 사용자 읽기 가능
+    match /homeCards/{document} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    // 사용자 상호작용 - 본인만 접근 가능
+    match /userInteractions/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // 도안 다운로드 - 로그인된 사용자만 생성 가능
+    match /blueprintDownloads/{document} {
+      allow create: if request.auth != null;
+      allow read, update, delete: if request.auth != null;
+    }
+  }
+}

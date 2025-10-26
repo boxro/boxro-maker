@@ -5194,7 +5194,7 @@ export default function DrawPage() {
                       {selectedItem === 'wheel' && '타이어 휠 선택'}
                     </h3>
                     {/* 안내 문구 */}
-                    <p className="text-xs text-gray-600 mt-3">
+                    <p className="text-sm text-gray-600 mt-3">
                       아이템을 다시 선택하면 원래 모습으로 돌아가요. 마음에 들 때까지 바꿔보세요!
                     </p>
                   </div>
