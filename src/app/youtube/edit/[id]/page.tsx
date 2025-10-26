@@ -31,11 +31,6 @@ interface StoryArticle {
   views: number;
   likes: number;
   isPublished: boolean;
-  showOnHome?: boolean;
-  cardTitle?: string;
-  cardDescription?: string;
-  cardThumbnail?: string;
-  cardBackgroundColor?: string;
   viewTopImage?: string;
   createdAt: any;
   updatedAt: any;
