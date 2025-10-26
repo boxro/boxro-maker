@@ -1236,8 +1236,8 @@ export default function GalleryPage() {
 
   // ===== 파일 업로드 관련 함수들 =====
   
-  // 이미지 압축 함수 (400px 리사이즈, 1.0 품질)
-  const compressImage = (file: File, maxWidth: number = 400, quality: number = 1.0): Promise<string> => {
+  // 이미지 압축 함수 (400px 리사이즈, 0.8 품질)
+  const compressImage = (file: File, maxWidth: number = 400, quality: number = 0.8): Promise<string> => {
     return new Promise((resolve, reject) => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
@@ -1266,10 +1266,10 @@ export default function GalleryPage() {
           // 투명도가 있으면 PNG, 없으면 JPG 사용 (원본 포맷 유지)
           const format = hasTransparency ? 'image/png' : 'image/jpeg';
           
-          // 1.0 품질로 압축 (원본 품질 유지)
-          const dataUrl = canvas.toDataURL(format, 1.0);
+          // 0.8 품질로 압축
+          const dataUrl = canvas.toDataURL(format, 0.8);
           
-          console.log(`갤러리 압축 완료: 품질 1.0, 크기 ${(dataUrl.length / 1024).toFixed(1)}KB`);
+          console.log(`갤러리 압축 완료: 품질 0.8, 크기 ${(dataUrl.length / 1024).toFixed(1)}KB`);
           
           resolve(dataUrl);
           const compressImageRecursive = (currentQuality: number): string => {
@@ -1287,7 +1287,7 @@ export default function GalleryPage() {
             return dataUrl;
           };
           
-          resolve(compressImageRecursive(startQuality));
+          resolve(compressImageRecursive(0.8));
         } catch (error) {
           console.error('❌ 압축 처리 중 오류:', error);
           reject(new Error(`이미지 압축 중 오류가 발생했습니다: ${error.message}`));
