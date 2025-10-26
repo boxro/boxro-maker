@@ -302,7 +302,7 @@ const HomeCardManagement: React.FC<HomeCardManagementProps> = ({
                       if (file) {
                         try {
                           // 이미지 압축 적용
-                          const compressedImage = await compressHomeCardThumbnail(file, 450, 0.8);
+                          const compressedImage = await compressHomeCardThumbnail(file, 400, 1.0);
                           setHomeCardThumbnail(compressedImage);
                         } catch (error) {
                           console.error('홈카드 썸네일 압축 실패:', error);

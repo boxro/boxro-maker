@@ -29,8 +29,7 @@ interface HomeCard {
   title: string;
   cardDescription?: string;
   description?: string;
-  thumbnail: string;
-  cardThumbnail?: string;
+  cardThumbnail: string;
   url: string;
   openInNewTab: boolean;
   titleColor: string;

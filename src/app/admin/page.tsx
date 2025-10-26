@@ -120,8 +120,7 @@ interface HomeCard {
   title: string;
   cardTitle?: string;
   cardDescription?: string;
-  cardThumbnail?: string;
-  thumbnail: string;
+  cardThumbnail: string;
   url?: string;
   openInNewTab?: boolean;
   showOnHome: boolean;
@@ -739,7 +738,7 @@ export default function AdminPage() {
   const startEditBanner = (banner: any) => {
     setBannerTitle(banner.title);
     setBannerDescription(banner.description);
-    setBannerThumbnail(banner.thumbnail);
+    setBannerThumbnail(banner.cardThumbnail);
     setBannerUrl(banner.url || '');
     setBannerOpenInNewTab(banner.openInNewTab || false);
     setBannerTargetPages(banner.targetPages || []);
@@ -1406,7 +1405,7 @@ export default function AdminPage() {
     setIsEditMode(true);
     setHomeCardTitle(card.title);
     setHomeCardDescription(card.cardDescription || card.description);
-    setHomeCardThumbnail(card.cardThumbnail || card.thumbnail);
+    setHomeCardThumbnail(card.cardThumbnail);
     setHomeCardUrl(card.url || '');
     setHomeCardOpenInNewTab(card.openInNewTab || false);
     setHomeCardTitleColor(card.titleColor || '#ffffff');
@@ -1579,7 +1578,7 @@ export default function AdminPage() {
                              card.cardDescription && card.cardDescription.trim();
           
           // 또는 일반 썸네일이 있어도 표시 (기존 호환성)
-          const hasThumbnail = card.thumbnail && card.thumbnail.trim();
+          const hasThumbnail = card.cardThumbnail && card.cardThumbnail.trim();
           
           console.log(`카드 "${card.title}" - showOnHome: ${card.showOnHome}, hasCardInfo: ${hasCardInfo}, hasThumbnail: ${hasThumbnail}`);
           return hasCardInfo || hasThumbnail;

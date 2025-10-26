@@ -8,7 +8,7 @@ interface Banner {
   id: string;
   title: string;
   description: string;
-  thumbnail: string;
+  cardThumbnail: string;
   url: string;
   openInNewTab: boolean;
   height: number;
@@ -319,7 +319,7 @@ const BannerManagement: React.FC<BannerManagementProps> = ({
                       if (file) {
                         try {
                           // 이미지 압축 적용
-                          const compressedImage = await compressBannerThumbnail(file, 450, 0.8);
+                          const compressedImage = await compressBannerThumbnail(file, 400, 1.0);
                           setBannerThumbnail(compressedImage);
                         } catch (error) {
                           console.error('배너 썸네일 압축 실패:', error);
@@ -528,9 +528,9 @@ const BannerManagement: React.FC<BannerManagementProps> = ({
               getFilteredBannerList().map((banner, index) => (
                 <div key={banner.id} className="flex flex-col md:flex-row items-start md:items-center gap-4 px-6 py-6 bg-gray-50 rounded-lg border border-gray-200">
                   <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
-                    {banner.thumbnail ? (
+                    {banner.cardThumbnail ? (
                       <img 
-                        src={banner.thumbnail} 
+                        src={banner.cardThumbnail} 
                         alt={banner.title}
                         className="w-full h-full object-cover"
                       />
