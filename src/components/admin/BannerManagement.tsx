@@ -130,7 +130,7 @@ const BannerManagement: React.FC<BannerManagementProps> = ({
     }
   }, [bannerThumbnail]);
   // 배너 썸네일 압축 함수 (450px, 800KB)
-  const compressBannerThumbnail = (file: File, maxWidth: number = 450, quality: number = 0.8): Promise<string> => {
+  const compressBannerThumbnail = (file: File, maxWidth: number = 400, quality: number = 1.0): Promise<string> => {
     return new Promise((resolve, reject) => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
@@ -143,8 +143,8 @@ const BannerManagement: React.FC<BannerManagementProps> = ({
       
       img.onload = () => {
         try {
-        // 450px로 강제 리사이즈 (가로 기준)
-        const maxWidth = 450;
+        // 400px로 강제 리사이즈 (가로 기준)
+        const maxWidth = 400;
         const ratio = maxWidth / img.width;
         canvas.width = maxWidth;
         canvas.height = img.height * ratio;
@@ -156,27 +156,15 @@ const BannerManagement: React.FC<BannerManagementProps> = ({
         const imageData = ctx?.getImageData(0, 0, canvas.width, canvas.height);
         const hasTransparency = imageData?.data.some((_, index) => index % 4 === 3 && imageData.data[index] < 255);
         
-        // 투명도가 있으면 PNG, 없으면 JPG 사용
+        // 투명도가 있으면 PNG, 없으면 JPG 사용 (원본 포맷 유지)
         const format = hasTransparency ? 'image/png' : 'image/jpeg';
-        let startQuality = hasTransparency ? 0.7 : 0.6;
         
-        // 파일 크기가 800KB 이하가 될 때까지 품질을 낮춤
-        const compressImageRecursive = (currentQuality: number): string => {
-          const dataUrl = canvas.toDataURL(format, currentQuality);
-          const sizeKB = dataUrl.length / 1024;
-          
-          console.log(`배너 압축 시도: 품질 ${currentQuality.toFixed(1)}, 크기 ${sizeKB.toFixed(1)}KB`);
-          
-          // 크기가 여전히 800KB보다 크고 품질을 더 낮출 수 있다면 재귀 호출
-          if (sizeKB > 800 && currentQuality > 0.05) {
-            return compressImageRecursive(currentQuality - 0.05);
-          }
-          
-          console.log(`배너 최종 압축: 품질 ${currentQuality.toFixed(1)}, 크기 ${sizeKB.toFixed(1)}KB`);
-          return dataUrl;
-        };
+        // 1.0 품질로 압축 (원본 품질 유지)
+        const dataUrl = canvas.toDataURL(format, 1.0);
         
-        resolve(compressImageRecursive(startQuality));
+        console.log(`배너 압축 완료: 품질 1.0, 크기 ${(dataUrl.length / 1024).toFixed(1)}KB`);
+        
+        resolve(dataUrl);
         } catch (error) {
           console.error('❌ 압축 처리 중 오류:', error);
           reject(new Error(`이미지 압축 중 오류가 발생했습니다: ${error.message}`));

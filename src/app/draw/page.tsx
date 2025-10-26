@@ -3960,9 +3960,9 @@ export default function DrawPage() {
       const img = new Image();
       
       img.onload = () => {
-        // 이미지 크기를 줄임 (최대 800px 너비)
-        const maxWidth = 800;
-        const maxHeight = 600;
+        // 이미지 크기를 줄임 (최대 400px 너비)
+        const maxWidth = 400;
+        const maxHeight = 300;
         let { width, height } = img;
         
         if (width > maxWidth) {
@@ -3983,10 +3983,10 @@ export default function DrawPage() {
         const imageData = ctx?.getImageData(0, 0, width, height);
         const hasTransparency = imageData?.data.some((_, index) => index % 4 === 3 && imageData.data[index] < 255);
         
-        // 투명도가 있으면 PNG, 없으면 JPG 사용
+        // 투명도가 있으면 PNG, 없으면 JPG 사용 (1.0 품질)
         const compressedDataUrl = hasTransparency 
           ? canvas.toDataURL('image/png', 1.0)
-          : canvas.toDataURL('image/jpeg', quality);
+          : canvas.toDataURL('image/jpeg', 1.0);
         resolve(compressedDataUrl);
       };
       

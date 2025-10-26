@@ -1236,8 +1236,8 @@ export default function GalleryPage() {
 
   // ===== 파일 업로드 관련 함수들 =====
   
-  // 이미지 압축 함수 (450px 리사이즈, 800KB 제한)
-  const compressImage = (file: File, maxWidth: number = 450, quality: number = 0.8): Promise<string> => {
+  // 이미지 압축 함수 (400px 리사이즈, 1.0 품질)
+  const compressImage = (file: File, maxWidth: number = 400, quality: number = 1.0): Promise<string> => {
     return new Promise((resolve, reject) => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
@@ -1250,8 +1250,8 @@ export default function GalleryPage() {
       
       img.onload = () => {
         try {
-          // 450px로 강제 리사이즈 (가로 기준)
-          const maxWidth = 450;
+          // 400px로 강제 리사이즈 (가로 기준)
+          const maxWidth = 400;
           const ratio = maxWidth / img.width;
           canvas.width = maxWidth;
           canvas.height = img.height * ratio;
@@ -1263,11 +1263,15 @@ export default function GalleryPage() {
           const imageData = ctx?.getImageData(0, 0, canvas.width, canvas.height);
           const hasTransparency = imageData?.data.some((_, index) => index % 4 === 3 && imageData.data[index] < 255);
           
-          // 투명도가 있으면 PNG, 없으면 JPG 사용
+          // 투명도가 있으면 PNG, 없으면 JPG 사용 (원본 포맷 유지)
           const format = hasTransparency ? 'image/png' : 'image/jpeg';
-          let startQuality = hasTransparency ? 0.7 : 0.6;
           
-          // 파일 크기가 800KB 이하가 될 때까지 품질을 낮춤
+          // 1.0 품질로 압축 (원본 품질 유지)
+          const dataUrl = canvas.toDataURL(format, 1.0);
+          
+          console.log(`갤러리 압축 완료: 품질 1.0, 크기 ${(dataUrl.length / 1024).toFixed(1)}KB`);
+          
+          resolve(dataUrl);
           const compressImageRecursive = (currentQuality: number): string => {
             const dataUrl = canvas.toDataURL(format, currentQuality);
             const sizeKB = dataUrl.length / 1024;
