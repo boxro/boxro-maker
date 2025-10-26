@@ -305,21 +305,6 @@ export default function EditStoryPage() {
     }
   }, [id]);
 
-  // 이미지 업로드 처리
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      try {
-        // 이미지 압축 (400px, 1.0 품질)
-        const compressedImage = await compressImage(file, 400, 1.0);
-        setThumbnail(compressedImage);
-      } catch (error) {
-        console.error('이미지 압축 실패:', error);
-        setErrorMessage('이미지 업로드 중 오류가 발생했습니다.');
-        setShowErrorModal(true);
-      }
-    }
-  };
 
   // 뷰 상단 이미지 업로드 처리
   const handleViewTopImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -459,7 +444,7 @@ export default function EditStoryPage() {
     });
   };
 
-  const handleCardThumbnailUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       try {
