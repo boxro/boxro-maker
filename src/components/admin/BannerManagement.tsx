@@ -8,7 +8,7 @@ interface Banner {
   id: string;
   title: string;
   description: string;
-  cardThumbnail: string;
+  thumbnail: string;
   url: string;
   openInNewTab: boolean;
   height: number;
@@ -421,26 +421,45 @@ const BannerManagement: React.FC<BannerManagementProps> = ({
               >
                 {/* 배경 이미지 */}
                 {bannerThumbnail && (
-                  <img
-                    src={bannerThumbnail}
-                    alt="배너 배경"
-                    className="w-full h-auto object-contain"
-                  />
+                  <div className="w-full overflow-hidden">
+                    <img
+                      src={bannerThumbnail}
+                      alt="배너 배경"
+                      className="w-full h-auto object-contain transition-transform duration-300 group-hover:scale-[1.03]"
+                    />
+                  </div>
                 )}
                 
                 {/* 배너 내용 */}
                 <div 
-                  className="p-6 flex flex-col justify-center items-start text-left"
+                  className="px-7 py-4 flex flex-col items-start text-left"
                   style={{ 
                     marginTop: `${bannerTextPosition}%`
                   }}
                 >
-                  <h3 className="text-lg font-bold mb-2" style={{ color: bannerTitleColor }}>
+                  <h3 
+                    className="text-lg font-bold mb-2"
+                    style={{ 
+                      color: bannerTitleColor || '#1f2937',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 1,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      lineHeight: '1.4',
+                      maxHeight: '1.4em'
+                    }}
+                  >
                     {bannerTitle || '배너 제목'}
                   </h3>
-                  <p className="opacity-90" style={{ color: bannerDescriptionColor, whiteSpace: 'pre-line', fontSize: '14px' }}>
-                    {bannerDescription || '배너 설명을 입력하세요'}
-                  </p>
+                  {bannerDescription && (
+                    <p 
+                      className="opacity-90"
+                      style={{ color: bannerDescriptionColor || '#6b7280', whiteSpace: 'pre-line', fontSize: '15px', lineHeight: '1.6' }}
+                    >
+                      {bannerDescription}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -528,9 +547,9 @@ const BannerManagement: React.FC<BannerManagementProps> = ({
               getFilteredBannerList().map((banner, index) => (
                 <div key={banner.id} className="flex flex-col md:flex-row items-start md:items-center gap-4 px-6 py-6 bg-gray-50 rounded-lg border border-gray-200">
                   <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
-                    {banner.cardThumbnail ? (
+                    {banner.thumbnail ? (
                       <img 
-                        src={banner.cardThumbnail} 
+                        src={banner.thumbnail} 
                         alt={banner.title}
                         className="w-full h-full object-cover"
                       />

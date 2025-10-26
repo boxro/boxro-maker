@@ -32,6 +32,21 @@ export default function WriteStoryPage() {
   const [saving, setSaving] = useState(false);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   
+  // 색상 관련 상태
+  const [titleColor, setTitleColor] = useState("#000000");
+  const [summaryColor, setSummaryColor] = useState("#000000");
+  const [cardBackgroundColor, setCardBackgroundColor] = useState("#ffffff");
+  
+  // 홈카드 관련 상태
+  const [showOnHome, setShowOnHome] = useState(false);
+  const [cardTitle, setCardTitle] = useState("");
+  const [cardDescription, setCardDescription] = useState("");
+  const [cardThumbnail, setCardThumbnail] = useState("");
+  const [cardTitleColor, setCardTitleColor] = useState("#ffffff");
+  const [cardDescriptionColor, setCardDescriptionColor] = useState("#ffffff");
+  const [homeCardBackgroundColor, setHomeCardBackgroundColor] = useState("#3b82f6");
+  const [cardTextPosition, setCardTextPosition] = useState(0);
+  
   // 오류 모달 상태
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -59,8 +74,8 @@ export default function WriteStoryPage() {
       
       img.onload = () => {
         try {
-        // 800px로 강제 리사이즈 (가로 기준)
-        const maxWidth = 800;
+        // 400px로 강제 리사이즈 (가로 기준)
+        const maxWidth = 400;
         const ratio = maxWidth / img.width;
         canvas.width = maxWidth;
         canvas.height = img.height * ratio;
@@ -104,7 +119,7 @@ export default function WriteStoryPage() {
   };
 
   // 이미지 리사이즈 함수 (투명도 감지)
-  const resizeImage = (file: File, maxWidth: number = 800): Promise<string> => {
+  const resizeImage = (file: File, maxWidth: number = 400): Promise<string> => {
     return new Promise((resolve) => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
@@ -404,7 +419,7 @@ export default function WriteStoryPage() {
         showOnHome: showOnHome,
         cardTitle: cardTitle.trim() || '',
         cardDescription: cardDescription.trim() || '',
-        cardThumbnail: cardThumbnail || '',
+        thumbnail: thumbnail || '',
         cardTitleColor: cardTitleColor,
         cardDescriptionColor: cardDescriptionColor,
         titleColor: titleColor,
@@ -414,7 +429,6 @@ export default function WriteStoryPage() {
         textPosition: cardTextPosition,
         viewTopImage: viewTopImage || '',
         authorId: user.uid,
-        thumbnail: thumbnail || '',
         tags: [],
         views: 0,
         likes: 0,

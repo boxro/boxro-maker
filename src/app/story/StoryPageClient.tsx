@@ -917,10 +917,10 @@ export default function StoryPageClient() {
                 }}
               >
                 {/* 썸네일 */}
-                {(article.cardThumbnail || article.thumbnail) && (
+                {article.thumbnail && (
                   <div className="w-full overflow-hidden">
                     <img 
-                      src={article.cardThumbnail || article.thumbnail} 
+                      src={article.thumbnail} 
                       alt={article.title}
                       className="w-full h-auto object-contain transition-transform duration-300 group-hover:scale-[1.03]"
                     />

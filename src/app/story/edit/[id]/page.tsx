@@ -28,7 +28,6 @@ interface StoryArticle {
   author: string;
   authorEmail: string;
   authorId: string;
-  thumbnail: string;
   summary: string;
   tags: string[];
   views: number;
@@ -395,7 +394,7 @@ export default function EditStoryPage() {
   };
 
   // 뷰 상단 이미지 압축 함수 (800px, 80%)
-  const compressViewTopImage = (file: File, maxWidth: number = 800, quality: number = 0.8): Promise<string> => {
+  const compressViewTopImage = (file: File, maxWidth: number = 400, quality: number = 1.0): Promise<string> => {
     return new Promise((resolve, reject) => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
@@ -408,8 +407,8 @@ export default function EditStoryPage() {
       
       img.onload = () => {
         try {
-        // 800px로 강제 리사이즈 (가로 기준)
-        const maxWidth = 800;
+        // 400px로 강제 리사이즈 (가로 기준)
+        const maxWidth = 400;
         const ratio = maxWidth / img.width;
         canvas.width = maxWidth;
         canvas.height = img.height * ratio;
@@ -421,27 +420,15 @@ export default function EditStoryPage() {
         const imageData = ctx?.getImageData(0, 0, canvas.width, canvas.height);
         const hasTransparency = imageData?.data.some((_, index) => index % 4 === 3 && imageData.data[index] < 255);
         
-        // 투명도가 있으면 PNG, 없으면 JPG 사용 (고품질)
+        // 투명도가 있으면 PNG, 없으면 JPG 사용 (원본 포맷 유지)
         const format = hasTransparency ? 'image/png' : 'image/jpeg';
-        let startQuality = hasTransparency ? 0.8 : 0.8; // 80% 품질
         
-        // 파일 크기가 800KB 이하가 될 때까지 품질을 낮춤 (제한 완화)
-        const compressImageRecursive = (currentQuality: number): string => {
-          const dataUrl = canvas.toDataURL(format, currentQuality);
-          const sizeKB = dataUrl.length / 1024;
-          
-          console.log(`뷰상단 압축 시도: 품질 ${currentQuality.toFixed(1)}, 크기 ${sizeKB.toFixed(1)}KB`);
-          
-          // 크기가 여전히 800KB보다 크고 품질을 더 낮출 수 있다면 재귀 호출
-          if (sizeKB > 800 && currentQuality > 0.1) {
-            return compressImageRecursive(currentQuality - 0.05);
-          }
-          
-          console.log(`뷰상단 최종 압축: 품질 ${currentQuality.toFixed(1)}, 크기 ${sizeKB.toFixed(1)}KB`);
-          return dataUrl;
-        };
+        // 1.0 품질로 압축 (원본 품질 유지)
+        const dataUrl = canvas.toDataURL(format, 1.0);
         
-        resolve(compressImageRecursive(startQuality));
+        console.log(`뷰상단 압축 완료: 품질 1.0, 크기 ${(dataUrl.length / 1024).toFixed(1)}KB`);
+        
+        resolve(dataUrl);
         } catch (error) {
           console.error('❌ 압축 처리 중 오류:', error);
           reject(new Error(`이미지 압축 중 오류가 발생했습니다: ${error.message}`));
@@ -545,13 +532,12 @@ export default function EditStoryPage() {
         title: title.trim(),
         content: content.trim() || '',
         summary: summary.trim() || '',
-        thumbnail: thumbnail || '',
         tags: [],
         isPublished: true,
         showOnHome: showOnHome,
         cardTitle: cardTitle.trim() || '',
         cardDescription: cardDescription.trim() || '',
-        cardThumbnail: cardThumbnail || '',
+        thumbnail: thumbnail || '',
         cardTitleColor: cardTitleColor,
         cardDescriptionColor: cardDescriptionColor,
         cardBackgroundColor: cardBackgroundColor,

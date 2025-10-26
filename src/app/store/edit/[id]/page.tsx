@@ -27,7 +27,6 @@ interface StoryArticle {
   author: string;
   authorEmail: string;
   authorId: string;
-  thumbnail: string;
   summary: string;
   tags: string[];
   views: number;
@@ -508,13 +507,12 @@ export default function EditStoryPage() {
         summary: summary.trim() || '',
         price: price.trim() || '',
         storeUrl: storeUrl.trim() || '',
-        thumbnail: thumbnail || '',
         tags: [],
         isPublished: true,
         showOnHome: showOnHome,
         cardTitle: cardTitle.trim() || '',
         cardDescription: cardDescription.trim() || '',
-        cardThumbnail: cardThumbnail || '',
+        thumbnail: thumbnail || '',
         cardTitleColor: cardTitleColor,
         cardDescriptionColor: cardDescriptionColor,
         cardBackgroundColor: cardBackgroundColor,

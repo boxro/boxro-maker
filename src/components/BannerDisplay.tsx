@@ -162,7 +162,7 @@ const BannerDisplay: React.FC<BannerDisplayProps> = ({ currentPage }) => {
           
           {/* 배너 내용 */}
           <div
-            className="px-7 py-4 flex-1 flex flex-col justify-center items-start text-left"
+            className="px-7 py-4 flex flex-col items-start text-left"
             style={{
               marginTop: `${banner.textPosition}%`
             }}

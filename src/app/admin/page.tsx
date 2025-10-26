@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { collection, getDocs, query, orderBy, where, updateDoc, doc, addDoc, serverTimestamp, deleteDoc, getDoc, limit, startAfter } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, where, updateDoc, doc, addDoc, serverTimestamp, deleteDoc, getDoc, limit, startAfter, deleteField } from 'firebase/firestore';
 import { db, storage, auth } from '@/lib/firebase';
 import { getAuth } from 'firebase/auth';
 import CommonHeader from '@/components/CommonHeader';
@@ -233,6 +233,10 @@ export default function AdminPage() {
   const [userStatsCurrentPage, setUserStatsCurrentPage] = useState(1);
   const [userStatsPageSize, setUserStatsPageSize] = useState(20); // 회원통계 페이지당 아이템 수
   const [userStatsTotalPages, setUserStatsTotalPages] = useState(0);
+  
+  // 중복 썸네일 정리 상태
+  const [cleaningThumbnails, setCleaningThumbnails] = useState(false);
+  const [thumbnailCleanupResult, setThumbnailCleanupResult] = useState<string>('');
   const [adminStats, setAdminStats] = useState<AdminStats>({
     totalUsers: 0,
     totalDesigns: 0,
@@ -429,7 +433,6 @@ export default function AdminPage() {
         cardTitle: homeCardTitle,
         cardDescription: homeCardDescription,
         cardThumbnail: homeCardThumbnail,
-        thumbnail: homeCardThumbnail,
         url: homeCardUrl,
         openInNewTab: homeCardOpenInNewTab,
         titleColor: homeCardTitleColor,
@@ -693,7 +696,7 @@ export default function AdminPage() {
   const startEditBanner = (banner: any) => {
     setBannerTitle(banner.title);
     setBannerDescription(banner.description);
-    setBannerThumbnail(banner.cardThumbnail);
+    setBannerThumbnail(banner.thumbnail);
     setBannerUrl(banner.url || '');
     setBannerOpenInNewTab(banner.openInNewTab || false);
     setBannerTargetPages(banner.targetPages || []);
@@ -905,6 +908,154 @@ export default function AdminPage() {
     setBannerFilterSearch('');
     setBannerSortBy('createdAt');
     setBannerSortOrder('desc');
+  };
+
+  // 중복 썸네일 정리 함수
+  const cleanupDuplicateThumbnails = async () => {
+    try {
+      setCleaningThumbnails(true);
+      setThumbnailCleanupResult('');
+      
+      let totalCleanedCount = 0;
+      const results = [];
+
+      // 1. storyArticles 컬렉션 정리
+      console.log('📝 storyArticles 컬렉션 정리 중...');
+      const storyArticlesRef = collection(db, 'storyArticles');
+      const storySnapshot = await getDocs(storyArticlesRef);
+      
+      let storyCleanedCount = 0;
+      const storyBatch = [];
+      
+      storySnapshot.forEach(doc => {
+        const data = doc.data();
+        if (data.thumbnail && data.cardThumbnail) {
+          console.log(`📋 이야기 ID: ${doc.id} - cardThumbnail 필드 제거`);
+          storyBatch.push(updateDoc(doc.ref, {
+            cardThumbnail: deleteField()
+          }));
+          storyCleanedCount++;
+        }
+      });
+      
+      if (storyBatch.length > 0) {
+        await Promise.all(storyBatch);
+        results.push(`✅ storyArticles 정리 완료: ${storyCleanedCount}개 문서에서 cardThumbnail 필드 제거`);
+      }
+      totalCleanedCount += storyCleanedCount;
+
+      // 2. homeCards 컬렉션 정리
+      console.log('🏠 homeCards 컬렉션 정리 중...');
+      const homeCardsRef = collection(db, 'homeCards');
+      const homeCardsSnapshot = await getDocs(homeCardsRef);
+      
+      let homeCardsCleanedCount = 0;
+      const homeCardsBatch = [];
+      
+      homeCardsSnapshot.forEach(doc => {
+        const data = doc.data();
+        if (data.thumbnail && data.cardThumbnail) {
+          console.log(`📋 홈카드 ID: ${doc.id} - thumbnail 필드 제거`);
+          homeCardsBatch.push(updateDoc(doc.ref, {
+            thumbnail: deleteField()
+          }));
+          homeCardsCleanedCount++;
+        }
+      });
+      
+      if (homeCardsBatch.length > 0) {
+        await Promise.all(homeCardsBatch);
+        results.push(`✅ homeCards 정리 완료: ${homeCardsCleanedCount}개 문서에서 thumbnail 필드 제거`);
+      }
+      totalCleanedCount += homeCardsCleanedCount;
+
+      // 3. banners 컬렉션 정리
+      console.log('🎯 banners 컬렉션 정리 중...');
+      const bannersRef = collection(db, 'banners');
+      const bannersSnapshot = await getDocs(bannersRef);
+      
+      let bannersCleanedCount = 0;
+      const bannersBatch = [];
+      
+      bannersSnapshot.forEach(doc => {
+        const data = doc.data();
+        if (data.thumbnail && data.cardThumbnail) {
+          console.log(`📋 배너 ID: ${doc.id} - cardThumbnail 필드 제거`);
+          bannersBatch.push(updateDoc(doc.ref, {
+            cardThumbnail: deleteField()
+          }));
+          bannersCleanedCount++;
+        }
+      });
+      
+      if (bannersBatch.length > 0) {
+        await Promise.all(bannersBatch);
+        results.push(`✅ banners 정리 완료: ${bannersCleanedCount}개 문서에서 cardThumbnail 필드 제거`);
+      }
+      totalCleanedCount += bannersCleanedCount;
+
+      // 4. youtubeItems 컬렉션 정리
+      console.log('📺 youtubeItems 컬렉션 정리 중...');
+      const youtubeItemsRef = collection(db, 'youtubeItems');
+      const youtubeItemsSnapshot = await getDocs(youtubeItemsRef);
+      
+      let youtubeItemsCleanedCount = 0;
+      const youtubeItemsBatch = [];
+      
+      youtubeItemsSnapshot.forEach(doc => {
+        const data = doc.data();
+        if (data.thumbnail && data.cardThumbnail) {
+          console.log(`📋 유튜브 ID: ${doc.id} - cardThumbnail 필드 제거`);
+          youtubeItemsBatch.push(updateDoc(doc.ref, {
+            cardThumbnail: deleteField()
+          }));
+          youtubeItemsCleanedCount++;
+        }
+      });
+      
+      if (youtubeItemsBatch.length > 0) {
+        await Promise.all(youtubeItemsBatch);
+        results.push(`✅ youtubeItems 정리 완료: ${youtubeItemsCleanedCount}개 문서에서 cardThumbnail 필드 제거`);
+      }
+      totalCleanedCount += youtubeItemsCleanedCount;
+
+      // 5. storeItems 컬렉션 정리
+      console.log('🛒 storeItems 컬렉션 정리 중...');
+      const storeItemsRef = collection(db, 'storeItems');
+      const storeItemsSnapshot = await getDocs(storeItemsRef);
+      
+      let storeItemsCleanedCount = 0;
+      const storeItemsBatch = [];
+      
+      storeItemsSnapshot.forEach(doc => {
+        const data = doc.data();
+        if (data.thumbnail && data.cardThumbnail) {
+          console.log(`📋 스토어 ID: ${doc.id} - cardThumbnail 필드 제거`);
+          storeItemsBatch.push(updateDoc(doc.ref, {
+            cardThumbnail: deleteField()
+          }));
+          storeItemsCleanedCount++;
+        }
+      });
+      
+      if (storeItemsBatch.length > 0) {
+        await Promise.all(storeItemsBatch);
+        results.push(`✅ storeItems 정리 완료: ${storeItemsCleanedCount}개 문서에서 cardThumbnail 필드 제거`);
+      }
+      totalCleanedCount += storeItemsCleanedCount;
+
+      if (totalCleanedCount > 0) {
+        setThumbnailCleanupResult(`🎉 전체 정리 완료! 총 ${totalCleanedCount}개 문서에서 중복 cardThumbnail 필드를 제거했습니다.\n\n${results.join('\n')}`);
+      } else {
+        setThumbnailCleanupResult('✅ 정리할 중복 cardThumbnail 필드가 없습니다.');
+      }
+
+    } catch (error) {
+      console.error('❌ 중복 썸네일 정리 중 오류:', error);
+      setThumbnailCleanupResult(`❌ 정리 중 오류가 발생했습니다: ${error.message}`);
+    } finally {
+      setCleaningThumbnails(false);
+    }
   };
 
   // 인기도 관리 데이터 가져오기 (페이징)
@@ -1397,7 +1548,6 @@ export default function AdminPage() {
         cardTitle: homeCardTitle,
         cardDescription: homeCardDescription,
         cardThumbnail: homeCardThumbnail,
-        thumbnail: homeCardThumbnail,
         url: homeCardUrl,
         openInNewTab: homeCardOpenInNewTab,
         titleColor: homeCardTitleColor,
@@ -1410,7 +1560,7 @@ export default function AdminPage() {
       // 로컬 상태 업데이트
       setHomeCardList(prev => prev.map(card => 
         card.id === editingCard 
-          ? { ...card, title: homeCardTitle, cardDescription: homeCardDescription, cardThumbnail: homeCardThumbnail, thumbnail: homeCardThumbnail, url: homeCardUrl, openInNewTab: homeCardOpenInNewTab, titleColor: homeCardTitleColor, descriptionColor: homeCardDescriptionColor, textPosition: homeCardTextPosition, backgroundColor: homeCardBackgroundColor }
+          ? { ...card, title: homeCardTitle, cardDescription: homeCardDescription, cardThumbnail: homeCardThumbnail, url: homeCardUrl, openInNewTab: homeCardOpenInNewTab, titleColor: homeCardTitleColor, descriptionColor: homeCardDescriptionColor, textPosition: homeCardTextPosition, backgroundColor: homeCardBackgroundColor }
           : card
       ));
 
@@ -2555,7 +2705,7 @@ export default function AdminPage() {
             type: 'gallery',
             id: design.id,
             title: design.title || design.name || '제목 없음',
-            thumbnail: design.thumbnail || design.thumbnailUrl,
+            cardThumbnail: design.thumbnail || design.thumbnailUrl,
             author: design.authorNickname || design.author || design.authorName || design.creator || design.userId || '작가 정보 없음',
             likes: design.likes || 0,
             createdAt: design.createdAt
@@ -2571,7 +2721,7 @@ export default function AdminPage() {
             type: 'story',
             id: story.id,
             title: story.title || '제목 없음',
-            thumbnail: story.thumbnail || story.cardThumbnail,
+            cardThumbnail: story.cardThumbnail,
             author: story.authorNickname || story.author || story.authorName || story.creator || story.userId || '작가 정보 없음',
             likes: story.likes || 0,
             createdAt: story.createdAt
@@ -2587,7 +2737,7 @@ export default function AdminPage() {
             type: 'store',
             id: storeItem.id,
             title: storeItem.title || '제목 없음',
-            thumbnail: storeItem.thumbnail || storeItem.cardThumbnail,
+            cardThumbnail: storeItem.cardThumbnail,
             author: storeItem.authorNickname || storeItem.author || storeItem.authorName || storeItem.creator || storeItem.userId || '작가 정보 없음',
             likes: storeItem.likes || 0,
             createdAt: storeItem.createdAt
@@ -2603,7 +2753,7 @@ export default function AdminPage() {
             type: 'youtube',
             id: youtubeItem.id,
             title: youtubeItem.title || '제목 없음',
-            thumbnail: youtubeItem.thumbnail || youtubeItem.cardThumbnail,
+            cardThumbnail: youtubeItem.cardThumbnail,
             author: youtubeItem.authorNickname || youtubeItem.author || youtubeItem.authorName || youtubeItem.creator || youtubeItem.userId || '작가 정보 없음',
             likes: youtubeItem.likes || 0,
             createdAt: youtubeItem.createdAt
@@ -2648,7 +2798,7 @@ export default function AdminPage() {
             type: 'blueprint',
             id: doc.id,
             title: `도안 다운로드 (${downloadData.downloadType})`,
-            thumbnail: null,
+            cardThumbnail: null,
             author: getDisplayName(downloadData.userDisplayName || '', downloadData.userNickname || '', userEmail),
             downloads: 1,
             fileName: downloadData.fileName,
@@ -2697,7 +2847,7 @@ export default function AdminPage() {
             type: 'design',
             id: design.id,
             title: design.title || design.name || '제목 없음',
-            thumbnail: design.thumbnail || design.thumbnailUrl,
+            cardThumbnail: design.thumbnail || design.thumbnailUrl,
             author: design.authorNickname || design.author || design.authorName || design.creator || design.userId || '작가 정보 없음',
             shares: design.shares || 0,
             createdAt: design.createdAt
@@ -2713,7 +2863,7 @@ export default function AdminPage() {
             type: 'story',
             id: story.id,
             title: story.title || '제목 없음',
-            thumbnail: story.thumbnail || story.cardThumbnail,
+            cardThumbnail: story.cardThumbnail,
             author: story.authorNickname || story.author || story.authorName || story.creator || story.userId || '작가 정보 없음',
             shares: story.shares || 0,
             createdAt: story.createdAt
@@ -2729,7 +2879,7 @@ export default function AdminPage() {
             type: 'store',
             id: storeItem.id,
             title: storeItem.title || '제목 없음',
-            thumbnail: storeItem.thumbnail || storeItem.cardThumbnail,
+            cardThumbnail: storeItem.cardThumbnail,
             author: storeItem.authorNickname || storeItem.author || storeItem.authorName || storeItem.creator || storeItem.userId || '작가 정보 없음',
             shares: storeItem.shares || 0,
             createdAt: storeItem.createdAt
@@ -2782,7 +2932,7 @@ export default function AdminPage() {
             type: 'story',
             id: story.id,
             title: story.title || '제목 없음',
-            thumbnail: story.thumbnail || story.cardThumbnail,
+            cardThumbnail: story.cardThumbnail,
             author: story.authorNickname || story.author || story.authorName || story.creator || story.userId || '작가 정보 없음',
             views: story.views || 0,
             createdAt: story.createdAt
@@ -2798,7 +2948,7 @@ export default function AdminPage() {
             type: 'store',
             id: storeItem.id,
             title: storeItem.title || '제목 없음',
-            thumbnail: storeItem.thumbnail || storeItem.cardThumbnail,
+            cardThumbnail: storeItem.cardThumbnail,
             author: storeItem.authorNickname || storeItem.author || storeItem.authorName || storeItem.creator || storeItem.userId || '작가 정보 없음',
             views: storeItem.views || 0,
             createdAt: storeItem.createdAt
@@ -2830,7 +2980,7 @@ export default function AdminPage() {
             type: 'youtube',
             id: youtubeItem.id,
             title: youtubeItem.title || '제목 없음',
-            thumbnail: youtubeItem.thumbnail || youtubeItem.cardThumbnail,
+            cardThumbnail: youtubeItem.cardThumbnail,
             author: youtubeItem.authorNickname || youtubeItem.author || youtubeItem.authorName || youtubeItem.creator || youtubeItem.userId || '작가 정보 없음',
             views: youtubeItem.views || 0,
             createdAt: youtubeItem.createdAt
@@ -2880,7 +3030,7 @@ export default function AdminPage() {
             type: 'store',
             id: storeItem.id,
             title: storeItem.title || '제목 없음',
-            thumbnail: storeItem.thumbnail || storeItem.cardThumbnail,
+            cardThumbnail: storeItem.cardThumbnail,
             author: storeItem.authorNickname || storeItem.author || storeItem.authorName || storeItem.creator || storeItem.userId || '작가 정보 없음',
             storeRedirects: storeItem.storeRedirects || 0,
             createdAt: storeItem.createdAt,
@@ -5622,45 +5772,76 @@ export default function AdminPage() {
         )}
 
         {activeTab === 'home-card-management' && (
-          <HomeCardManagement
-            homeCardTitle={homeCardTitle}
-            setHomeCardTitle={setHomeCardTitle}
-            homeCardDescription={homeCardDescription}
-            setHomeCardDescription={setHomeCardDescription}
-            homeCardThumbnail={homeCardThumbnail}
-            setHomeCardThumbnail={setHomeCardThumbnail}
-            homeCardUrl={homeCardUrl}
-            setHomeCardUrl={setHomeCardUrl}
-            homeCardOpenInNewTab={homeCardOpenInNewTab}
-            setHomeCardOpenInNewTab={setHomeCardOpenInNewTab}
-            homeCardTitleColor={homeCardTitleColor}
-            setHomeCardTitleColor={setHomeCardTitleColor}
-            homeCardDescriptionColor={homeCardDescriptionColor}
-            setHomeCardDescriptionColor={setHomeCardDescriptionColor}
-            homeCardTextPosition={homeCardTextPosition}
-            setHomeCardTextPosition={setHomeCardTextPosition}
-            homeCardBackgroundColor={homeCardBackgroundColor}
-            setHomeCardBackgroundColor={setHomeCardBackgroundColor}
-            isEditMode={isEditMode}
-            addingCard={addingCard}
-            deletingCard={deletingCard}
-            editingCard={editingCard}
-            addHomeCard={addHomeCard}
-            saveEditCard={saveEditCard}
-            startEditCard={startEditCard}
-            deleteHomeCard={deleteHomeCard}
-            cancelEdit={cancelEdit}
-            resetForm={resetForm}
-            homeCardList={homeCardList}
-            getFilteredHomeCardList={getFilteredHomeCardList}
-            homeCardFilterDateFrom={homeCardFilterDateFrom}
-            setHomeCardFilterDateFrom={setHomeCardFilterDateFrom}
-            homeCardFilterDateTo={homeCardFilterDateTo}
-            setHomeCardFilterDateTo={setHomeCardFilterDateTo}
-            homeCardFilterSearch={homeCardFilterSearch}
-            setHomeCardFilterSearch={setHomeCardFilterSearch}
-            resetHomeCardFilters={resetHomeCardFilters}
-          />
+          <div>
+            <HomeCardManagement
+              homeCardTitle={homeCardTitle}
+              setHomeCardTitle={setHomeCardTitle}
+              homeCardDescription={homeCardDescription}
+              setHomeCardDescription={setHomeCardDescription}
+              homeCardThumbnail={homeCardThumbnail}
+              setHomeCardThumbnail={setHomeCardThumbnail}
+              homeCardUrl={homeCardUrl}
+              setHomeCardUrl={setHomeCardUrl}
+              homeCardOpenInNewTab={homeCardOpenInNewTab}
+              setHomeCardOpenInNewTab={setHomeCardOpenInNewTab}
+              homeCardTitleColor={homeCardTitleColor}
+              setHomeCardTitleColor={setHomeCardTitleColor}
+              homeCardDescriptionColor={homeCardDescriptionColor}
+              setHomeCardDescriptionColor={setHomeCardDescriptionColor}
+              homeCardTextPosition={homeCardTextPosition}
+              setHomeCardTextPosition={setHomeCardTextPosition}
+              homeCardBackgroundColor={homeCardBackgroundColor}
+              setHomeCardBackgroundColor={setHomeCardBackgroundColor}
+              isEditMode={isEditMode}
+              addingCard={addingCard}
+              deletingCard={deletingCard}
+              editingCard={editingCard}
+              addHomeCard={addHomeCard}
+              saveEditCard={saveEditCard}
+              startEditCard={startEditCard}
+              deleteHomeCard={deleteHomeCard}
+              cancelEdit={cancelEdit}
+              resetForm={resetForm}
+              homeCardList={homeCardList}
+              getFilteredHomeCardList={getFilteredHomeCardList}
+              homeCardFilterDateFrom={homeCardFilterDateFrom}
+              setHomeCardFilterDateFrom={setHomeCardFilterDateFrom}
+              homeCardFilterDateTo={homeCardFilterDateTo}
+              setHomeCardFilterDateTo={setHomeCardFilterDateTo}
+              homeCardFilterSearch={homeCardFilterSearch}
+              setHomeCardFilterSearch={setHomeCardFilterSearch}
+              resetHomeCardFilters={resetHomeCardFilters}
+            />
+            
+            {/* 중복 썸네일 정리 섹션 */}
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold text-gray-800">중복 썸네일 정리</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <p className="text-sm text-gray-600">
+                    Firestore에서 중복된 thumbnail 필드를 정리하여 저장 공간을 절약합니다.
+                  </p>
+                  <Button
+                    onClick={cleanupDuplicateThumbnails}
+                    disabled={cleaningThumbnails}
+                    className="bg-red-500 hover:bg-red-600 text-white"
+                  >
+                    {cleaningThumbnails ? '정리 중...' : '중복 썸네일 정리'}
+                  </Button>
+                  
+                  {thumbnailCleanupResult && (
+                    <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                      <pre className="text-sm text-gray-700 whitespace-pre-wrap">
+                        {thumbnailCleanupResult}
+                      </pre>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         )}
 
         {activeTab === 'popularity-management' && (
