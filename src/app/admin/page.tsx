@@ -5062,7 +5062,7 @@ export default function AdminPage() {
                                       </div>
                                     </div>
                                     <a 
-                                      href={`/gallery#${design.id}`} 
+                                      href={`/gallery#card-${design.id}`} 
                                       target="_blank" 
                                       rel="noopener noreferrer"
                                       className="text-gray-800 hover:text-gray-600 hover:underline"
@@ -5187,7 +5187,7 @@ export default function AdminPage() {
                                        작품
                           </div>
                                     <a 
-                                      href={boxroTalk.designId ? `/gallery#${boxroTalk.designId}` : `/story/${boxroTalk.articleId}`} 
+                                      href={boxroTalk.designId ? `/gallery#card-${boxroTalk.designId}` : `/story#card-${boxroTalk.articleId}`} 
                                       target="_blank" 
                                       rel="noopener noreferrer"
                                       className="text-gray-800 hover:text-gray-600 hover:underline"
@@ -5289,7 +5289,7 @@ export default function AdminPage() {
                                       작품
                                     </div>
                                     <a 
-                                      href={like.articleId ? `/story/${like.articleId}` : `/gallery#${like.id}`} 
+                                      href={like.articleId ? `/story#card-${like.articleId}` : `/gallery#card-${like.id}`} 
                                       target="_blank" 
                                       rel="noopener noreferrer"
                                       className="text-gray-800 hover:text-gray-600 hover:underline"
@@ -5393,7 +5393,7 @@ export default function AdminPage() {
                                       작품
                                     </div>
                                     <a 
-                                      href={download.type === 'blueprint' ? `/draw` : `/gallery#${download.id}`} 
+                                      href={download.type === 'blueprint' ? `/draw` : `/gallery#card-${download.id}`} 
                                       target="_blank" 
                                       rel="noopener noreferrer"
                                       className="text-gray-800 hover:text-gray-600 hover:underline"
@@ -5497,7 +5497,7 @@ export default function AdminPage() {
                                       작품
                                     </div>
                                     <a 
-                                      href={share.articleId ? `/story/${share.articleId}` : `/gallery#${share.id}`} 
+                                      href={share.articleId ? `/story#card-${share.articleId}` : `/gallery#card-${share.id}`} 
                                       target="_blank" 
                                       rel="noopener noreferrer"
                                       className="text-gray-800 hover:text-gray-600 hover:underline"
@@ -5607,7 +5607,7 @@ export default function AdminPage() {
                                       작품
                                     </div>
                                     <a 
-                                      href={view.type === 'story' ? `/story/${view.id}` : view.type === 'store' ? `/store/${view.id}` : `/gallery#${view.id}`} 
+                                      href={view.type === 'story' ? `/story#card-${view.id}` : view.type === 'store' ? `/store#card-${view.id}` : view.type === 'youtube' ? `/youtube#card-${view.id}` : `/gallery#card-${view.id}`} 
                                       target="_blank" 
                                       rel="noopener noreferrer"
                                       className="text-gray-800 hover:text-gray-600 hover:underline"
@@ -5694,7 +5694,7 @@ export default function AdminPage() {
                                       </div>
                                     </div>
                                     <a 
-                                      href={`/store/${redirect.id}`} 
+                                      href={`/store#card-${redirect.id}`} 
                                       target="_blank" 
                                       rel="noopener noreferrer"
                                       className="text-gray-800 hover:text-gray-600 hover:underline truncate max-w-xs"
