@@ -5918,7 +5918,7 @@ export default function DrawPage() {
       <div className="mb-6 mt-10 px-4 md:px-0">
         <PageHeader 
           title="박스카 도안 완성!"
-          description="내가 그린 자동차가 도안으로 바뀌었어요. 파일을 내려받아 인쇄하면, 진짜 박스카 만들 준비 완료!"
+          description="파일을 내려받아 인쇄하면, 진짜 박스카 만들 준비 완료!"
         />
       </div>
 

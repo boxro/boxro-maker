@@ -46,7 +46,7 @@ const tutorialSteps = [
   {
     id: 4,
     title: "박스카 도안 완성!",
-    mainText: "내가 그린 자동차가 도안으로 쏙!",
+    mainText: "파일을 내려받아 인쇄하면, 진짜 박스카 만들 준비 완료!",
     subText: "인쇄해서 조립하면 진짜 박스카 완성!",
     detailText: "친구들과 공유하고 자랑해보세요.",
     visual: "📄✂️",
