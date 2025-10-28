@@ -172,7 +172,7 @@ export default function EditStoryPage() {
         };
         
         resolve(compressImageRecursive(startQuality));
-        } catch (error) {
+        } catch (error: any) {
           console.error('❌ 압축 처리 중 오류:', error);
           reject(new Error(`이미지 압축 중 오류가 발생했습니다: ${error.message}`));
         }
@@ -339,14 +339,14 @@ export default function EditStoryPage() {
         });
         
         setViewTopImage(compressedImage);
-      } catch (error) {
+      } catch (error: any) {
         console.error('❌ 이미지 압축 실패:', error);
         console.error('파일 정보:', {
           name: file.name,
           size: file.size,
           type: file.type
         });
-        setErrorMessage(`이미지 업로드 중 오류가 발생했습니다: ${error.message}`);
+        setErrorMessage(`이미지 업로드 중 오류가 발생했습니다: ${error instanceof Error ? error.message : String(error)}`);
         setShowErrorModal(true);
       }
     }
@@ -388,7 +388,7 @@ export default function EditStoryPage() {
         console.log(`뷰상단 압축 완료: 품질 1.0, 크기 ${(dataUrl.length / 1024).toFixed(1)}KB`);
         
         resolve(dataUrl);
-        } catch (error) {
+        } catch (error: any) {
           console.error('❌ 압축 처리 중 오류:', error);
           reject(new Error(`이미지 압축 중 오류가 발생했습니다: ${error.message}`));
         }
@@ -434,7 +434,7 @@ export default function EditStoryPage() {
         console.log(`압축 완료: 품질 1.0, 크기 ${(dataUrl.length / 1024).toFixed(1)}KB`);
         
         resolve(dataUrl);
-        } catch (error) {
+        } catch (error: any) {
           console.error('❌ 압축 처리 중 오류:', error);
           reject(new Error(`이미지 압축 중 오류가 발생했습니다: ${error.message}`));
         }
@@ -820,7 +820,7 @@ export default function EditStoryPage() {
                                       document.body.removeChild(textArea);
                                       alert('이미지 URL이 클립보드에 복사되었습니다!');
                                     }
-                                  } catch (error) {
+                                  } catch (error: any) {
                                     console.error('클립보드 복사 실패:', error);
                                     alert('복사에 실패했습니다. 다시 시도해주세요.');
                                   }

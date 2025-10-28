@@ -32,10 +32,10 @@ if (!firebaseConfig.apiKey || !firebaseConfig.authDomain || !firebaseConfig.proj
 }
 
 // Firebase 앱 초기화
-let app;
-let auth;
-let db;
-let storage;
+let app: any;
+let auth: any;
+let db: any;
+let storage: any;
 
 // Firebase 연결 상태 확인 함수
 export const checkFirebaseConnection = () => {

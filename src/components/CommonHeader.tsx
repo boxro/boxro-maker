@@ -150,7 +150,17 @@ export default function CommonHeader({ className = "" }: CommonHeaderProps) {
                         <span>박스카 그리기</span>
                       </div>
                     </Link>
-                    <Link href="/gallery" onClick={() => setIsMenuOpen(false)} className="block px-6 py-2 rounded-full transition-colors text-gray-900 hover:bg-purple-100">
+                    <Link 
+                      href="/community" 
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        // 해시 제거하여 일반 목록으로 이동
+                        window.history.replaceState(null, '', '/community');
+                        // hashchange 이벤트 수동 발생
+                        window.dispatchEvent(new HashChangeEvent('hashchange'));
+                      }}
+                      className="block px-6 py-2 rounded-full transition-colors text-gray-900 hover:bg-purple-100"
+                    >
                       <div className="flex items-center gap-3">
                         <Users className="w-4 h-4" />
                         <span>박스카 갤러리</span>
@@ -162,13 +172,33 @@ export default function CommonHeader({ className = "" }: CommonHeaderProps) {
                         <span>박스카 이야기</span>
                       </div>
                     </Link>
-                    <Link href="/youtube" onClick={() => setIsMenuOpen(false)} className="block px-6 py-2 rounded-full transition-colors text-gray-900 hover:bg-purple-100">
+                    <Link 
+                      href="/youtube" 
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        // 해시 제거하여 일반 목록으로 이동
+                        window.history.replaceState(null, '', '/youtube');
+                        // hashchange 이벤트 수동 발생
+                        window.dispatchEvent(new HashChangeEvent('hashchange'));
+                      }} 
+                      className="block px-6 py-2 rounded-full transition-colors text-gray-900 hover:bg-purple-100"
+                    >
                       <div className="flex items-center gap-3">
                         <Play className="w-4 h-4" />
                         <span>박스로 유튜브</span>
                       </div>
                     </Link>
-                    <Link href="/store" onClick={() => setIsMenuOpen(false)} className="block px-6 py-2 rounded-full transition-colors text-gray-900 hover:bg-purple-100">
+                    <Link 
+                      href="/store" 
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        // 해시 제거하여 일반 목록으로 이동
+                        window.history.replaceState(null, '', '/store');
+                        // hashchange 이벤트 수동 발생
+                        window.dispatchEvent(new HashChangeEvent('hashchange'));
+                      }} 
+                      className="block px-6 py-2 rounded-full transition-colors text-gray-900 hover:bg-purple-100"
+                    >
                       <div className="flex items-center gap-3">
                         <ShoppingBag className="w-4 h-4" />
                         <span>박스로 스토어</span>

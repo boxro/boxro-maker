@@ -10,13 +10,6 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [],
   },
-  // 캐시 비활성화
-  experimental: {
-    staleTimes: {
-      dynamic: 0,
-      static: 0,
-    },
-  },
   async redirects() {
     return [
       {
@@ -32,6 +25,10 @@ const nextConfig: NextConfig = {
     ];
   },
   experimental: {
+    staleTimes: {
+      dynamic: 0,
+      static: 0,
+    },
     turbo: {
       rules: {
         '*.svg': {

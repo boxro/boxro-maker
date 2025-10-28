@@ -934,7 +934,7 @@ export default function StoryArticlePage() {
                 </Button>
                 <Button
                   onClick={async () => {
-                    const shareUrl = `${window.location.origin}/store/${article?.id}`;
+                    const shareUrl = `${window.location.origin}/store#card-${article?.id}`;
                     try {
                       if (navigator.clipboard && navigator.clipboard.writeText) {
                         await navigator.clipboard.writeText(shareUrl);

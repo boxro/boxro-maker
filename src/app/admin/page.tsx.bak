@@ -936,10 +936,7 @@ export default function AdminPage() {
 
       // 1. storyArticles 컬렉션 정리
       console.log('📝 storyArticles 컬렉션 정리 중...');
-      if (!db) {
-        throw new Error("Firebase가 초기화되지 않았습니다.");
-      }
-      const storyArticlesRef = collection(db, 'storyArticles');
+      const storyArticlesRef = if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'storyArticles');
       const storySnapshot = await getDocs(storyArticlesRef);
       
       let storyCleanedCount = 0;
@@ -964,10 +961,7 @@ export default function AdminPage() {
 
       // 2. homeCards 컬렉션 정리
       console.log('🏠 homeCards 컬렉션 정리 중...');
-      if (!db) {
-        throw new Error("Firebase가 초기화되지 않았습니다.");
-      }
-      const homeCardsRef = collection(db, 'homeCards');
+      const homeCardsRef = if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'homeCards');
       const homeCardsSnapshot = await getDocs(homeCardsRef);
       
       let homeCardsCleanedCount = 0;
@@ -992,10 +986,7 @@ export default function AdminPage() {
 
       // 3. banners 컬렉션 정리
       console.log('🎯 banners 컬렉션 정리 중...');
-      if (!db) {
-        throw new Error("Firebase가 초기화되지 않았습니다.");
-      }
-      const bannersRef = collection(db, 'banners');
+      const bannersRef = if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'banners');
       const bannersSnapshot = await getDocs(bannersRef);
       
       let bannersCleanedCount = 0;
@@ -1020,10 +1011,7 @@ export default function AdminPage() {
 
       // 4. youtubeItems 컬렉션 정리
       console.log('📺 youtubeItems 컬렉션 정리 중...');
-      if (!db) {
-        throw new Error("Firebase가 초기화되지 않았습니다.");
-      }
-      const youtubeItemsRef = collection(db, 'youtubeItems');
+      const youtubeItemsRef = if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'youtubeItems');
       const youtubeItemsSnapshot = await getDocs(youtubeItemsRef);
       
       let youtubeItemsCleanedCount = 0;
@@ -1048,10 +1036,7 @@ export default function AdminPage() {
 
       // 5. storeItems 컬렉션 정리
       console.log('🛒 storeItems 컬렉션 정리 중...');
-      if (!db) {
-        throw new Error("Firebase가 초기화되지 않았습니다.");
-      }
-      const storeItemsRef = collection(db, 'storeItems');
+      const storeItemsRef = if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'storeItems');
       const storeItemsSnapshot = await getDocs(storeItemsRef);
       
       let storeItemsCleanedCount = 0;
@@ -1094,14 +1079,11 @@ export default function AdminPage() {
       setPopularityLoading(true);
       console.log('인기도 관리 데이터 불러오기 시작...');
       
-      if (!db) {
-        throw new Error("Firebase가 초기화되지 않았습니다.");
-      }
       const [communityQuery, storyQuery, storeQuery, youtubeQuery] = await Promise.all([
-        getDocs(query(collection(db, 'communityDesigns'), orderBy('createdAt', 'desc'))),
-        getDocs(query(collection(db, 'storyArticles'), orderBy('createdAt', 'desc'))),
-        getDocs(query(collection(db, 'storeItems'), orderBy('createdAt', 'desc'))),
-        getDocs(query(collection(db, 'youtubeItems'), orderBy('createdAt', 'desc')))
+        getDocs(query(if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'communityDesigns'), orderBy('createdAt', 'desc'))),
+        getDocs(query(if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'storyArticles'), orderBy('createdAt', 'desc'))),
+        getDocs(query(if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'storeItems'), orderBy('createdAt', 'desc'))),
+        getDocs(query(if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'youtubeItems'), orderBy('createdAt', 'desc')))
       ]);
 
       console.log('각 컬렉션별 문서 개수:');
@@ -1601,10 +1583,7 @@ export default function AdminPage() {
       ));
 
       // 홈카드 컬렉션만 다시 조회 (빠른 반영)
-      if (!db) {
-        throw new Error("Firebase가 초기화되지 않았습니다.");
-      }
-      const homeCardsQuery = await getDocs(query(collection(db, 'homeCards'), orderBy('createdAt', 'desc')));
+      const homeCardsQuery = await getDocs(query(if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'homeCards'), orderBy('createdAt', 'desc')));
       const updatedHomeCards = homeCardsQuery.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
@@ -1646,10 +1625,7 @@ export default function AdminPage() {
       
       // storyArticles, storeItems, homeCards 세 컬렉션에서 모두 가져오기
       // homeCards 컬렉션에서만 가져오기
-      if (!db) {
-        throw new Error("Firebase가 초기화되지 않았습니다.");
-      }
-      const homeCardsQuery = await getDocs(query(collection(db, 'homeCards'), orderBy('createdAt', 'desc')));
+      const homeCardsQuery = await getDocs(query(if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'homeCards'), orderBy('createdAt', 'desc')));
       
       console.log('homeCards 개수:', homeCardsQuery.docs.length);
       
@@ -2120,10 +2096,7 @@ export default function AdminPage() {
       let dbConnected = false;
       try {
         // communityDesigns 컬렉션에 접근하여 연결 확인
-        if (!db) {
-          throw new Error("Firebase가 초기화되지 않았습니다.");
-        }
-        const testQuery = query(collection(db, 'communityDesigns'), limit(1));
+        const testQuery = query(if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'communityDesigns'), limit(1));
         await getDocs(testQuery);
         dbConnected = true;
       } catch (error: unknown) {
@@ -2212,17 +2185,14 @@ export default function AdminPage() {
       today.setHours(0, 0, 0, 0);
       
       // 오늘 생성된 작품이나 박스로톡이 있는 사용자 수 계산
-      if (!db) {
-        throw new Error("Firebase가 초기화되지 않았습니다.");
-      }
       const todayDesignsQuery = query(
-        collection(db, 'communityDesigns'),
+        if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'communityDesigns'),
         where('createdAt', '>=', today)
       );
       const todayDesignsSnapshot = await getDocs(todayDesignsQuery);
       
       const todayBoxroTalksQuery = query(
-        collection(db, 'boxroTalks'),
+        if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'boxroTalks'),
         where('createdAt', '>=', today)
       );
       const todayBoxroTalksSnapshot = await getDocs(todayBoxroTalksQuery);
@@ -2262,11 +2232,8 @@ export default function AdminPage() {
       yesterday.setDate(yesterday.getDate() - 1);
       
       // 갤러리 활동 (작품 생성, 좋아요, 공유, 다운로드)
-      if (!db) {
-        throw new Error("Firebase가 초기화되지 않았습니다.");
-      }
       const designsQuery = query(
-        collection(db, 'communityDesigns'),
+        if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'communityDesigns'),
         where('createdAt', '>=', yesterday)
       );
       const designsSnapshot = await getDocs(designsQuery);
@@ -2274,7 +2241,7 @@ export default function AdminPage() {
       
       // 박스로 톡 활동
       const boxroTalksQuery = query(
-        collection(db, 'boxroTalks'),
+        if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'boxroTalks'),
         where('createdAt', '>=', yesterday)
       );
       const boxroTalksSnapshot = await getDocs(boxroTalksQuery);
@@ -2291,10 +2258,7 @@ export default function AdminPage() {
   const getPWAInstallCount = async (): Promise<number> => {
     try {
       // PWA 설치 데이터 가져오기
-      if (!db) {
-        throw new Error("Firebase가 초기화되지 않았습니다.");
-      }
-      const pwaInstallsQuery = query(collection(db, 'pwaInstalls'), orderBy('timestamp', 'desc'));
+      const pwaInstallsQuery = query(if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'pwaInstalls'), orderBy('timestamp', 'desc'));
       const pwaInstallsSnapshot = await getDocs(pwaInstallsQuery);
       const pwaInstalls = pwaInstallsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       
@@ -2344,10 +2308,7 @@ export default function AdminPage() {
       
       for (const collectionName of collections) {
         try {
-          if (!db) {
-            throw new Error("Firebase가 초기화되지 않았습니다.");
-          }
-          const snapshot = await getDocs(collection(db, collectionName));
+          const snapshot = await getDocs(if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, collectionName));
           const docCount = snapshot.docs.length;
           totalDocs += docCount;
           
@@ -2415,11 +2376,8 @@ export default function AdminPage() {
       let authSignups = 0;
       
       // 오늘 생성된 작품 수
-      if (!db) {
-        throw new Error("Firebase가 초기화되지 않았습니다.");
-      }
       const todayDesignsQuery = query(
-        collection(db, 'communityDesigns'),
+        if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'communityDesigns'),
         where('createdAt', '>=', today)
       );
       const todayDesignsSnapshot = await getDocs(todayDesignsQuery);
@@ -2427,7 +2385,7 @@ export default function AdminPage() {
       
       // 오늘 생성된 박스로톡 수
       const todayBoxroTalksQuery = query(
-        collection(db, 'boxroTalks'),
+        if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'boxroTalks'),
         where('createdAt', '>=', today)
       );
       const todayBoxroTalksSnapshot = await getDocs(todayBoxroTalksQuery);
@@ -2435,7 +2393,7 @@ export default function AdminPage() {
       
       // 오늘 생성된 스토리 수
       const todayStoriesQuery = query(
-        collection(db, 'storyArticles'),
+        if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'storyArticles'),
         where('createdAt', '>=', today)
       );
       const todayStoriesSnapshot = await getDocs(todayStoriesQuery);
@@ -2443,7 +2401,7 @@ export default function AdminPage() {
       
       // 오늘 생성된 스토어 아이템 수
       const todayStoreQuery = query(
-        collection(db, 'storeItems'),
+        if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'storeItems'),
         where('createdAt', '>=', today)
       );
       const todayStoreSnapshot = await getDocs(todayStoreQuery);
@@ -2451,7 +2409,7 @@ export default function AdminPage() {
       
       // 오늘 생성된 유튜브 아이템 수
       const todayYoutubeQuery = query(
-        collection(db, 'youtubeItems'),
+        if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'youtubeItems'),
         where('createdAt', '>=', today)
       );
       const todayYoutubeSnapshot = await getDocs(todayYoutubeQuery);
@@ -2459,7 +2417,7 @@ export default function AdminPage() {
       
       // 오늘 생성된 사용자 수 (회원가입)
       const todayUsersQuery = query(
-        collection(db, 'users'),
+        if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'users'),
         where('createdAt', '>=', today)
       );
       const todayUsersSnapshot = await getDocs(todayUsersQuery);
@@ -2472,10 +2430,7 @@ export default function AdminPage() {
       const allCollections = ['communityDesigns', 'boxroTalks', 'storyArticles', 'storeItems', 'youtubeItems', 'users'];
       for (const collectionName of allCollections) {
         try {
-          if (!db) {
-            throw new Error("Firebase가 초기화되지 않았습니다.");
-          }
-          const snapshot = await getDocs(collection(db, collectionName));
+          const snapshot = await getDocs(if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, collectionName));
           const docCount = snapshot.docs.length;
           
           // 오늘 생성된 문서와 기존 문서를 구분
@@ -2548,15 +2503,12 @@ export default function AdminPage() {
       }
 
       // 사용자 정보 가져오기 (박스로톡 등을 위해 필요)
-      if (!db) {
-        throw new Error("Firebase가 초기화되지 않았습니다.");
-      }
-      const usersQuery = query(collection(db, 'users'));
+      const usersQuery = query(if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'users'));
       const usersSnapshot = await getDocs(usersQuery);
       const users = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
       // 사용자의 작품 가져오기
-      const designsQuery = query(collection(db, 'communityDesigns'), orderBy('createdAt', 'desc'));
+      const designsQuery = query(if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'communityDesigns'), orderBy('createdAt', 'desc'));
       const designsSnapshot = await getDocs(designsQuery);
       const userDesigns = designsSnapshot.docs
         .map(doc => ({ id: doc.id, ...doc.data() }))
@@ -2568,7 +2520,7 @@ export default function AdminPage() {
         }));
 
       // 사용자의 박스카 이야기 가져오기
-      const storiesQuery = query(collection(db, 'storyArticles'), orderBy('createdAt', 'desc'));
+      const storiesQuery = query(if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'storyArticles'), orderBy('createdAt', 'desc'));
       const storiesSnapshot = await getDocs(storiesQuery);
       const userStories = storiesSnapshot.docs
         .map(doc => ({ id: doc.id, ...doc.data() }))
@@ -2594,7 +2546,7 @@ export default function AdminPage() {
       }));
 
       // 사용자의 스토어 작품 가져오기
-      const storeItemsQuery = query(collection(db, 'storeItems'), orderBy('createdAt', 'desc'));
+      const storeItemsQuery = query(if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'storeItems'), orderBy('createdAt', 'desc'));
       const storeItemsSnapshot = await getDocs(storeItemsQuery);
       const userStoreItems = storeItemsSnapshot.docs
         .map(doc => ({ id: doc.id, ...doc.data() }))
@@ -2606,7 +2558,7 @@ export default function AdminPage() {
         }));
 
       // 사용자의 박스로 톡 가져오기 (갤러리 박스로 톡)
-      const boxroTalksQuery = query(collection(db, 'boxroTalks'), orderBy('createdAt', 'desc'));
+      const boxroTalksQuery = query(if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'boxroTalks'), orderBy('createdAt', 'desc'));
       const boxroTalksSnapshot = await getDocs(boxroTalksQuery);
       const userGalleryBoxroTalks = boxroTalksSnapshot.docs
         .map(doc => ({ id: doc.id, ...doc.data(), source: 'gallery' }))
@@ -2617,7 +2569,7 @@ export default function AdminPage() {
         );
 
       // 사용자의 박스로 톡 가져오기 (스토리 박스로 톡 - 스토어 관련 제외)
-      const storyBoxroTalksQuery = query(collection(db, 'storyBoxroTalks'), orderBy('createdAt', 'desc'));
+      const storyBoxroTalksQuery = query(if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'storyBoxroTalks'), orderBy('createdAt', 'desc'));
       const storyBoxroTalksSnapshot = await getDocs(storyBoxroTalksQuery);
       const userStoryBoxroTalks = storyBoxroTalksSnapshot.docs
         .map(doc => ({ id: doc.id, ...doc.data(), source: 'story' }))
@@ -2633,7 +2585,7 @@ export default function AdminPage() {
         );
 
       // 사용자의 박스로 톡 가져오기 (스토어 박스로 톡)
-      const storeBoxroTalksQuery = query(collection(db, 'storeBoxroTalks'), orderBy('createdAt', 'desc'));
+      const storeBoxroTalksQuery = query(if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'storeBoxroTalks'), orderBy('createdAt', 'desc'));
       const storeBoxroTalksSnapshot = await getDocs(storeBoxroTalksQuery);
       const userStoreBoxroTalks = storeBoxroTalksSnapshot.docs
         .map(doc => ({ id: doc.id, ...doc.data(), source: 'store' }))
@@ -2748,19 +2700,16 @@ export default function AdminPage() {
       const validBoxroTalks = boxroTalksWithDesignInfo.filter((boxroTalk: any) => !boxroTalk.isOrphaned);
 
       // 모든 콘텐츠 가져오기 (사용자가 좋아요한 다른 사람의 콘텐츠 찾기 위해)
-      if (!db) {
-        throw new Error("Firebase가 초기화되지 않았습니다.");
-      }
-      const allDesignsSnapshot = await getDocs(collection(db, 'communityDesigns'));
+      const allDesignsSnapshot = await getDocs(if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'communityDesigns'));
       const allDesigns = allDesignsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-      const allStoriesSnapshot = await getDocs(collection(db, 'storyArticles'));
+      const allStoriesSnapshot = await getDocs(if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'storyArticles'));
       const allStories = allStoriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-      const allStoreItemsSnapshot = await getDocs(collection(db, 'storeItems'));
+      const allStoreItemsSnapshot = await getDocs(if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'storeItems'));
       const allStoreItems = allStoreItemsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-      const allYoutubeItemsSnapshot = await getDocs(collection(db, 'youtubeItems'));
+      const allYoutubeItemsSnapshot = await getDocs(if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'youtubeItems'));
       const allYoutubeItems = allYoutubeItemsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
       // 사용자가 좋아요한 콘텐츠 찾기 (다른 사람 콘텐츠에 누른 좋아요)
@@ -2855,10 +2804,7 @@ export default function AdminPage() {
       // 갤러리 작품 다운로드 로직 제거됨 - 도안 다운로드만 추적
 
       // 도안 다운로드 가져오기 (사용자가 다운로드한 도안)
-      if (!db) {
-        throw new Error("Firebase가 초기화되지 않았습니다.");
-      }
-      const blueprintDownloadsQuery = query(collection(db, 'blueprintDownloads'));
+      const blueprintDownloadsQuery = query(if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'blueprintDownloads'));
       const blueprintDownloadsSnapshot = await getDocs(blueprintDownloadsQuery);
       
       // 현재 사용자의 도안 다운로드만 필터링
@@ -3200,15 +3146,12 @@ export default function AdminPage() {
       console.log('🔗 Firebase 연결 상태:', connectionStatus);
       
       // 갤러리 디자인 데이터 가져오기 (communityDesigns 컬렉션)
-      if (!db) {
-        throw new Error("Firebase가 초기화되지 않았습니다.");
-      }
-      const designsQuery = query(collection(db, 'communityDesigns'), orderBy('createdAt', 'desc'));
+      const designsQuery = query(if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'communityDesigns'), orderBy('createdAt', 'desc'));
       const designsSnapshot = await getDocs(designsQuery);
       const designs = designsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
       // 박스로 톡 데이터 가져오기
-      const boxroTalksQuery = query(collection(db, 'boxroTalks'), orderBy('createdAt', 'desc'));
+      const boxroTalksQuery = query(if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'boxroTalks'), orderBy('createdAt', 'desc'));
       const boxroTalksSnapshot = await getDocs(boxroTalksQuery);
       const boxroTalks = boxroTalksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       
@@ -3218,12 +3161,12 @@ export default function AdminPage() {
       let stories: any[] = [];
       let storyBoxroTalks: any[] = [];
       try {
-        const storiesQuery = query(collection(db, 'storyArticles'), orderBy('createdAt', 'desc'));
+        const storiesQuery = query(if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'storyArticles'), orderBy('createdAt', 'desc'));
         const storiesSnapshot = await getDocs(storiesQuery);
         stories = storiesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
         // 스토리 박스로 톡 데이터 가져오기
-        const storyBoxroTalksQuery = query(collection(db, 'storyBoxroTalks'), orderBy('createdAt', 'desc'));
+        const storyBoxroTalksQuery = query(if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'storyBoxroTalks'), orderBy('createdAt', 'desc'));
         const storyBoxroTalksSnapshot = await getDocs(storyBoxroTalksQuery);
         storyBoxroTalks = storyBoxroTalksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         
@@ -3249,7 +3192,7 @@ export default function AdminPage() {
       // 사용자 정보 가져오기 (권한 오류 시 빈 배열로 처리)
       let users: any[] = [];
       try {
-        const usersQuery = query(collection(db, 'users'));
+        const usersQuery = query(if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'users'));
         const usersSnapshot = await getDocs(usersQuery);
         users = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       } catch (error: unknown) {
@@ -3260,7 +3203,7 @@ export default function AdminPage() {
       // PWA 설치 데이터 가져오기
       let pwaInstalls: any[] = [];
       try {
-        const pwaInstallsQuery = query(collection(db, 'pwaInstalls'), orderBy('timestamp', 'desc'));
+        const pwaInstallsQuery = query(if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'pwaInstalls'), orderBy('timestamp', 'desc'));
         const pwaInstallsSnapshot = await getDocs(pwaInstallsQuery);
         pwaInstalls = pwaInstallsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         console.log('📱 PWA 설치 데이터 로드:', pwaInstalls.length);
@@ -3421,7 +3364,7 @@ export default function AdminPage() {
       });
 
       // 스토어 아이템 통계 추가
-      const storeItemsQuery = query(collection(db, 'storeItems'));
+      const storeItemsQuery = query(if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'storeItems'));
       const storeItemsSnapshot = await getDocs(storeItemsQuery);
       const storeItems = storeItemsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
@@ -3464,7 +3407,7 @@ export default function AdminPage() {
       
       // 1. storeBoxroTalks 컬렉션 확인
       try {
-        const storeBoxroTalksQuery = query(collection(db, 'storeBoxroTalks'));
+        const storeBoxroTalksQuery = query(if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'storeBoxroTalks'));
         const storeBoxroTalksSnapshot = await getDocs(storeBoxroTalksQuery);
         storeBoxroTalks = storeBoxroTalksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         console.log('🔍 storeBoxroTalks 컬렉션:', storeBoxroTalks.length);
@@ -3475,7 +3418,7 @@ export default function AdminPage() {
       // 2. store 컬렉션 확인 (박스로 톡이 여기에 저장될 수 있음)
       let storeBoxroTalksFromStore: any[] = [];
       try {
-        const storeQuery = query(collection(db, 'store'));
+        const storeQuery = query(if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'store'));
         const storeSnapshot = await getDocs(storeQuery);
         const storeItems = storeSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         
@@ -3502,7 +3445,7 @@ export default function AdminPage() {
       
       for (const collectionName of possibleCollections) {
         try {
-          const q = query(collection(db, collectionName));
+          const q = query(if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, collectionName));
           const snapshot = await getDocs(q);
           const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
           
@@ -3975,7 +3918,7 @@ export default function AdminPage() {
       });
 
       // 유튜브 아이템에서 사용자 활동 추적
-      const youtubeItemsQuery = query(collection(db, 'youtubeItems'));
+      const youtubeItemsQuery = query(if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'youtubeItems'));
       const youtubeItemsSnapshot = await getDocs(youtubeItemsQuery);
       const youtubeItems = youtubeItemsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
@@ -4190,7 +4133,7 @@ export default function AdminPage() {
       const storyShares = stories.reduce((sum, story: any) => sum + (story.shares || 0), 0);
       
       // 도안 다운로드 통계 가져오기
-      const blueprintDownloadsQuery = query(collection(db, 'blueprintDownloads'));
+      const blueprintDownloadsQuery = query(if (!db) { throw new Error("Firebase가 초기화되지 않았습니다."); } collection(db, 'blueprintDownloads'));
       const blueprintDownloadsSnapshot = await getDocs(blueprintDownloadsQuery);
       const blueprintDownloads = blueprintDownloadsSnapshot.size;
       

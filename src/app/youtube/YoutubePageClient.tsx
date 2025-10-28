@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { collection, getDocs, doc, deleteDoc, query, orderBy, updateDoc, increment, arrayUnion, where, addDoc, getDoc, limit, startAfter } from "firebase/firestore";
@@ -63,6 +63,12 @@ interface StoryArticle {
   summaryColor?: string;
   cardBackgroundColor?: string;
   viewTopImage?: string;
+  // 유튜브 관련 필드들
+  storeUrl?: string;
+  popularityBoost?: {
+    likes?: number;
+    shares?: number;
+  };
 }
 
 // 프로필 이미지 컴포넌트
@@ -249,6 +255,7 @@ export default function YoutubePageClient() {
   // 로그인 유도 모달 상태
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loginModalType, setLoginModalType] = useState<'like' | 'share' | 'boxroTalk'>('like');
+  const [isClient, setIsClient] = useState(false);
   const [loginModalArticleId, setLoginModalArticleId] = useState<string | null>(null);
   
   // 삭제 확인 모달 상태
@@ -273,16 +280,272 @@ export default function YoutubePageClient() {
   // 모달이 열릴 때 배경 스크롤 방지
   useScrollLock(showBoxroTalksModal);
 
+  // 전역 중복 실행 방지 ref
+  const isFetchingRef = useRef(false);
+  const isHashLoadingRef = useRef(false);
+  const hasInitializedRef = useRef(false);
+  const isStrictModeRef = useRef(false);
+  const fetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // 전역 인덱싱 캐시 (사용자와 무관)
+  if (typeof window !== 'undefined') {
+    (window as any).__youtubeIndexCache = (window as any).__youtubeIndexCache || new Map();
+    (window as any).__youtubeIndexLoaded = (window as any).__youtubeIndexLoaded || false;
+  }
+
+  // 인덱싱 생성 (한 번만, 전역)
+  const createIndex = async () => {
+    if (typeof window !== 'undefined' && (window as any).__youtubeIndexLoaded) {
+      console.log('📚 인덱싱 이미 로드됨, 전역 캐시 사용');
+      return;
+    }
+    
+    try {
+      console.log('📚 인덱싱 생성 시작');
+      const articlesRef = collection(db, 'youtubeItems');
+      const q = query(articlesRef, orderBy('createdAt', 'desc'));
+      const querySnapshot = await getDocs(q);
+      
+      // 인덱싱 정보만 저장 (전역)
+      const indexInfo = new Map();
+      let index = 0;
+      querySnapshot.forEach((doc) => {
+        console.log(`📝 인덱싱 저장: ${doc.id} -> ${index}`);
+        indexInfo.set(doc.id, { id: doc.id, index });
+        index++;
+      });
+      
+      // 전역 변수에 저장
+      if (typeof window !== 'undefined') {
+        (window as any).__youtubeIndexCache = indexInfo;
+        (window as any).__youtubeIndexLoaded = true;
+      }
+      
+      console.log('📚 인덱싱 생성 완료, 총 카드 수:', indexInfo.size);
+    } catch (error) {
+      console.error('인덱싱 생성 실패:', error);
+    }
+  };
+
   // 박스로 유튜브 글 목록 가져오기
   const fetchArticles = async () => {
+    if (isFetchingRef.current) {
+      console.log('🔄 fetchArticles 중복 실행 방지');
+      return;
+    }
+    
+    // URL 해시가 있으면 로딩 상태 유지
+    const hash = typeof window !== 'undefined' ? window.location.hash : '';
+    const hasHash = hash && hash.startsWith('#card-');
+    
     try {
+      isFetchingRef.current = true;
+      
+      // 로딩 상태 설정
       setLoading(true);
       setArticles([]);
       setHasMore(true);
       
+      // 인덱싱이 없으면 먼저 생성
+      if (typeof window !== 'undefined' && !(window as any).__youtubeIndexLoaded) {
+        await createIndex();
+      }
       
       const articlesRef = collection(db, 'youtubeItems');
-      const q = query(articlesRef, orderBy('createdAt', 'desc'), limit(15)); // 원래대로 복구
+      const q = query(articlesRef, orderBy('createdAt', 'desc'), limit(15));
+      const querySnapshot = await getDocs(q);
+      
+      // URL 해시 확인하여 초기 정렬
+      const currentHash = typeof window !== 'undefined' ? window.location.hash : '';
+      console.log('🔍 URL 해시 확인:', { 
+        currentHash, 
+        hasHash: currentHash && currentHash.startsWith('#card-'),
+        fullUrl: typeof window !== 'undefined' ? window.location.href : ''
+      });
+      
+      if (currentHash && currentHash.startsWith('#card-')) {
+        const cardId = currentHash.replace('#card-', '');
+        
+        // 전역 인덱싱 정보에서 해당 카드 찾기
+        const cardInfo = typeof window !== 'undefined' ? (window as any).__youtubeIndexCache.get(cardId) : null;
+        console.log('🔍 전역 인덱싱에서 카드 찾기:', { 
+          cardId, 
+          cardInfo, 
+          indexCacheSize: typeof window !== 'undefined' ? (window as any).__youtubeIndexCache.size : 0,
+          allKeys: typeof window !== 'undefined' ? Array.from((window as any).__youtubeIndexCache.keys()) : []
+        });
+        
+        if (cardInfo) {
+          console.log('🎯 인덱싱에서 해시 카드 발견, 해당 카드 포함하여 로드');
+          
+          // 해당 카드가 포함된 범위를 로드
+          const endIndex = Math.min(cardInfo.index + 15, (window as any).__youtubeIndexCache.size);
+          
+          // 해당 범위의 카드들만 로드
+          const articlesRef = collection(db, 'youtubeItems');
+          const q = query(articlesRef, orderBy('createdAt', 'desc'), limit(endIndex));
+          const querySnapshot = await getDocs(q);
+          
+          // 해당 카드를 찾아서 첫 번째로 배치
+          const targetDoc = querySnapshot.docs.find(doc => doc.id === cardId);
+          if (targetDoc) {
+            const targetData = targetDoc.data();
+            const targetCard = {
+              id: targetDoc.id,
+              ...targetData,
+              isLiked: user ? (targetData.likedBy?.includes(user.uid) || false) : false,
+              isShared: user ? (targetData.sharedBy?.includes(user.uid) || false) : false,
+              isBoxroTalked: user ? (targetData.boxroTalkedBy?.includes(user.uid) || false) : false,
+              isViewed: user ? (targetData.viewedBy?.includes(user.uid) || false) : false
+            } as StoryArticle;
+            
+            // 나머지 카드들도 로드 (최대 14개)
+            const otherCards: StoryArticle[] = [];
+            querySnapshot.docs.forEach((doc) => {
+              if (doc.id !== cardId && otherCards.length < 14) {
+                const data = doc.data();
+                otherCards.push({
+                  id: doc.id,
+                  ...data,
+                  isLiked: user ? (data.likedBy?.includes(user.uid) || false) : false,
+                  isShared: user ? (data.sharedBy?.includes(user.uid) || false) : false,
+                  isBoxroTalked: user ? (data.boxroTalkedBy?.includes(user.uid) || false) : false,
+                  isViewed: user ? (data.viewedBy?.includes(user.uid) || false) : false
+                } as StoryArticle);
+              }
+            });
+            
+            // 특정 카드를 첫 번째로 배치하고 나머지는 랜덤 배치
+            const shuffledOtherCards = otherCards.sort(() => Math.random() - 0.5);
+            const reorderedArticles = [targetCard, ...shuffledOtherCards];
+            setArticles(reorderedArticles);
+            
+            console.log('✅ 해시 카드 첫 번째 배치 완료, 총 카드 수:', reorderedArticles.length);
+          } else {
+            // 일반 로딩으로 fallback
+            const articlesData: StoryArticle[] = [];
+            querySnapshot.docs.slice(0, 15).forEach((doc) => {
+              const data = doc.data();
+              articlesData.push({
+                id: doc.id,
+                ...data,
+                isLiked: user ? (data.likedBy?.includes(user.uid) || false) : false,
+                isShared: user ? (data.sharedBy?.includes(user.uid) || false) : false,
+                isBoxroTalked: user ? (data.boxroTalkedBy?.includes(user.uid) || false) : false,
+                isViewed: user ? (data.viewedBy?.includes(user.uid) || false) : false
+              } as StoryArticle);
+            });
+            setArticles(articlesData);
+          }
+        } else {
+          console.log('❌ 인덱싱에서 해시 카드를 찾을 수 없음, 직접 검색 시도');
+          // 인덱싱에서 찾지 못한 경우 직접 검색
+          const targetDoc = querySnapshot.docs.find(doc => doc.id === cardId);
+          if (targetDoc) {
+            console.log('🎯 직접 검색으로 해시 카드 발견');
+            const targetData = targetDoc.data();
+            const targetCard = {
+              id: targetDoc.id,
+              ...targetData,
+              isLiked: user ? (targetData.likedBy?.includes(user.uid) || false) : false,
+              isShared: user ? (targetData.sharedBy?.includes(user.uid) || false) : false,
+              isBoxroTalked: user ? (targetData.boxroTalkedBy?.includes(user.uid) || false) : false,
+              isViewed: user ? (targetData.viewedBy?.includes(user.uid) || false) : false
+            } as StoryArticle;
+            
+            // 나머지 카드들도 로드 (랜덤 처리용)
+            const otherCards: StoryArticle[] = [];
+            querySnapshot.docs.forEach((doc) => {
+              if (doc.id !== cardId) {
+                const data = doc.data();
+                otherCards.push({
+                  id: doc.id,
+                  ...data,
+                  isLiked: user ? (data.likedBy?.includes(user.uid) || false) : false,
+                  isShared: user ? (data.sharedBy?.includes(user.uid) || false) : false,
+                  isBoxroTalked: user ? (data.boxroTalkedBy?.includes(user.uid) || false) : false,
+                  isViewed: user ? (data.viewedBy?.includes(user.uid) || false) : false
+                } as StoryArticle);
+              }
+            });
+            
+            // 특정 카드를 첫 번째로 배치하고 나머지는 랜덤 배치
+            const shuffledOtherCards = otherCards.sort(() => Math.random() - 0.5);
+            const reorderedArticles = [targetCard, ...shuffledOtherCards];
+            setArticles(reorderedArticles);
+          } else {
+            console.log('❌ 직접 검색에서도 해시 카드를 찾을 수 없음, 일반 로딩');
+            // 일반 로딩
+            const articlesData: StoryArticle[] = [];
+            querySnapshot.docs.slice(0, 15).forEach((doc) => {
+              const data = doc.data();
+              articlesData.push({
+                id: doc.id,
+                ...data,
+                isLiked: user ? (data.likedBy?.includes(user.uid) || false) : false,
+                isShared: user ? (data.sharedBy?.includes(user.uid) || false) : false,
+                isBoxroTalked: user ? (data.boxroTalkedBy?.includes(user.uid) || false) : false,
+                isViewed: user ? (data.viewedBy?.includes(user.uid) || false) : false
+              } as StoryArticle);
+            });
+            setArticles(articlesData);
+          }
+        }
+      } else {
+        // 일반 로딩 (랜덤 순서)
+        const articlesRef = collection(db, 'youtubeItems');
+        const q = query(articlesRef, orderBy('createdAt', 'desc'), limit(15));
+        const querySnapshot = await getDocs(q);
+        
+        const articlesData: StoryArticle[] = [];
+        querySnapshot.docs.forEach((doc) => {
+          const data = doc.data();
+          articlesData.push({
+            id: doc.id,
+            ...data,
+            isLiked: user ? (data.likedBy?.includes(user.uid) || false) : false,
+            isShared: user ? (data.sharedBy?.includes(user.uid) || false) : false,
+            isBoxroTalked: user ? (data.boxroTalkedBy?.includes(user.uid) || false) : false,
+            isViewed: user ? (data.viewedBy?.includes(user.uid) || false) : false
+          } as StoryArticle);
+        });
+        
+        // 랜덤 정렬 적용
+        const shuffledArticles = articlesData.sort(() => Math.random() - 0.5);
+        setArticles(shuffledArticles);
+      }
+      
+      // 마지막 문서 저장
+      if (querySnapshot.docs.length > 0) {
+        setLastDoc(querySnapshot.docs[querySnapshot.docs.length - 1]);
+      }
+      
+      // 더 이상 데이터가 없으면 hasMore를 false로 설정
+      if (querySnapshot.docs.length < 15) {
+        setHasMore(false);
+      } else {
+        // 15개 이상이면 더 로드할 수 있음
+        setHasMore(true);
+      }
+    } catch (error) {
+      console.error('박스로 유튜브 글 목록 로드 실패:', error);
+    } finally {
+      setLoading(false);
+      isFetchingRef.current = false;
+    }
+  };
+
+  // 해시를 위한 더 많은 글 로드
+  const loadMoreArticlesForHash = async (targetCardId: string) => {
+    if (isHashLoadingRef.current) {
+      console.log('🔄 loadMoreArticlesForHash 중복 실행 방지');
+      return;
+    }
+    
+    try {
+      isHashLoadingRef.current = true;
+      const articlesRef = collection(db, 'youtubeItems');
+      const q = query(articlesRef, orderBy('createdAt', 'desc'), limit(50)); // 더 많이 로드
       const querySnapshot = await getDocs(q);
       
       const articlesData: StoryArticle[] = [];
@@ -298,25 +561,40 @@ export default function YoutubePageClient() {
         } as StoryArticle);
       });
       
-      console.log('유튜브 페이지에서 가져온 데이터 개수:', articlesData.length);
-      console.log('유튜브 데이터:', articlesData);
+      // 인덱스 생성하여 빠른 검색
+      const index = new Map();
+      articlesData.forEach((article, articleIndex) => {
+        index.set(article.id, { article, index: articleIndex });
+      });
       
-      setArticles(articlesData);
+      const cardData = index.get(targetCardId);
       
-      
-      // 마지막 문서 저장
-      if (querySnapshot.docs.length > 0) {
-        setLastDoc(querySnapshot.docs[querySnapshot.docs.length - 1]);
-      }
-      
-      // 더 이상 데이터가 없으면 hasMore를 false로 설정
-      if (querySnapshot.docs.length < 15) {
-        setHasMore(false);
+      if (cardData) {
+        const { article: targetCard } = cardData;
+        console.log('🎯 해시 카드 발견, 재정렬하여 표시');
+        const otherCards = articlesData.filter(article => article.id !== targetCardId);
+        const shuffledOtherCards = otherCards.sort(() => Math.random() - 0.5);
+        const reorderedArticles = [targetCard, ...shuffledOtherCards];
+        setArticles(reorderedArticles);
+        
+        // 마지막 문서 저장
+        if (querySnapshot.docs.length > 0) {
+          setLastDoc(querySnapshot.docs[querySnapshot.docs.length - 1]);
+        }
+        
+        // 하이라이트 효과는 useEffect에서 처리하므로 여기서는 제거
+      } else {
+        console.log('❌ 해시 카드를 찾을 수 없음, 일반 정렬');
+        setArticles(articlesData);
       }
     } catch (error) {
-      console.error('박스로 유튜브 글 목록 로드 실패:', error);
+      console.error('해시 카드 로드 실패:', error);
+      setArticles([]);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
+      setHasMore(true); // 해시 카드를 찾지 못했을 때 무한 스크롤 가능하도록
+      isHashLoadingRef.current = false;
     }
   };
 
@@ -349,7 +627,9 @@ export default function YoutubePageClient() {
         } as StoryArticle);
       });
       
-      setArticles(prev => [...prev, ...newArticles]);
+      // 새로 로드된 카드들을 랜덤 정렬
+      const shuffledNewArticles = newArticles.sort(() => Math.random() - 0.5);
+      setArticles(prev => [...prev, ...shuffledNewArticles]);
       
       // 마지막 문서 업데이트
       if (querySnapshot.docs.length > 0) {
@@ -357,7 +637,7 @@ export default function YoutubePageClient() {
       }
       
       // 더 이상 데이터가 없으면 hasMore를 false로 설정
-      if (querySnapshot.docs.length < 10) {
+      if (querySnapshot.docs.length < 15) {
         setHasMore(false);
       }
     } catch (error) {
@@ -536,7 +816,7 @@ export default function YoutubePageClient() {
   // 박스로톡 토글
   const toggleBoxroTalk = async (articleId: string) => {
     if (!user) {
-      openLoginModal('comment', articleId);
+      openLoginModal('boxroTalk', articleId);
       return;
     }
 
@@ -614,7 +894,7 @@ export default function YoutubePageClient() {
         } : a
       ));
       
-      const shareUrl = `${window.location.origin}/youtube/${article.id}`;
+      const shareUrl = `${window.location.origin}/youtube#card-${article.id}`;
       
       // 모든 디바이스에서 공유 모달 표시
       setSelectedArticle(article);
@@ -652,7 +932,7 @@ export default function YoutubePageClient() {
           id: doc.id,
           ...doc.data()
         }))
-        .sort((a, b) => {
+        .sort((a: any, b: any) => {
           // 클라이언트에서 정렬 (createdAt 기준 내림차순)
           const aTime = a.createdAt?.toDate?.() || a.createdAt || new Date(0);
           const bTime = b.createdAt?.toDate?.() || b.createdAt || new Date(0);
@@ -758,7 +1038,7 @@ export default function YoutubePageClient() {
           id: doc.id,
           ...doc.data()
         }))
-        .sort((a, b) => {
+        .sort((a: any, b: any) => {
           // 클라이언트에서 정렬 (createdAt 기준 내림차순)
           const aTime = a.createdAt?.toDate?.() || a.createdAt || new Date(0);
           const bTime = b.createdAt?.toDate?.() || b.createdAt || new Date(0);
@@ -838,6 +1118,17 @@ export default function YoutubePageClient() {
   };
 
   useEffect(() => {
+    // 클라이언트 사이드 체크
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    // 컴포넌트 마운트 시에만 실행
+    if (hasInitializedRef.current) {
+      return;
+    }
+    
+    hasInitializedRef.current = true;
     fetchArticles();
   }, [user]);
 
@@ -851,7 +1142,7 @@ export default function YoutubePageClient() {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [hasMore, loadingMore, lastDoc]);
+  }, [hasMore, loadingMore, lastDoc, loadMoreArticles]);
 
   // 드롭다운 메뉴 외부 클릭 시 닫기
   useEffect(() => {
@@ -871,7 +1162,215 @@ export default function YoutubePageClient() {
     };
   }, []);
 
+  // 카드 ID 인덱스 생성 (성능 최적화)
+  const cardIndex = useMemo(() => {
+    console.log('🔄 cardIndex 생성 시작, articles 수:', articles.length);
+    const index = new Map();
+    articles.forEach((article, articleIndex) => {
+      console.log(`📝 인덱스 추가: ${article.id} -> ${articleIndex}`);
+      index.set(article.id, { article, index: articleIndex });
+    });
+    console.log('✅ cardIndex 생성 완료, 총 인덱스 수:', index.size);
+    return index;
+  }, [articles]);
+
+  // 해시 카드 처리 함수
+  const processHashCard = useCallback((forceReload = false) => {
+    const hash = typeof window !== 'undefined' ? window.location.hash : '';
+    console.log('🔍 processHashCard 실행:', { hash, articlesLength: articles.length });
+    
+    // 해시가 없으면 아무것도 하지 않음
+    if (!hash || !hash.startsWith('#card-')) {
+      console.log('ℹ️ 해시가 없음, 현재 순서 유지');
+      return;
+    }
+    
+    const cardId = hash.replace('#card-', '');
+    console.log('🎯 카드 ID 추출:', { cardId });
+    
+    // 해시 카드를 첫 번째로 재배치
+    const targetCard = articles.find(article => article.id === cardId);
+    if (targetCard) {
+      console.log('🔄 해시 카드 재배치 시작');
+      const otherCards = articles.filter(article => article.id !== cardId);
+      const reorderedArticles = [targetCard, ...otherCards];
+      setArticles(reorderedArticles);
+      console.log('✅ 해시 카드 첫 번째로 재배치 완료');
+      
+      // 즉시 스크롤 위치 복원
+      requestAnimationFrame(() => {
+        window.scrollTo(0, 0);
+      });
+    } else {
+      if (forceReload) {
+        console.log('❌ 해시 카드가 현재 목록에 없음, 데이터 재로드 필요');
+        // 해시 카드가 현재 목록에 없으면 fetchArticles() 호출하여 해당 카드 포함하여 로드
+        fetchArticles();
+        return;
+      } else {
+        console.log('❌ 해시 카드가 현재 목록에 없음, 현재 순서 유지');
+        // 같은 페이지에서 카드 클릭 시에는 아무것도 하지 않음 (순서 유지)
+        return;
+      }
+    }
+    
+    // 하이라이트 효과 (지연 시간 증가) - 한 번만 실행
+    setTimeout(() => {
+      console.log('🎨 하이라이트 효과 시작');
+      
+      const cardElement = document.getElementById(`card-${cardId}`);
+      if (cardElement) {
+        console.log('✅ 카드 엘리먼트 찾음, 스타일 적용');
+        // 초기 스타일 설정
+        cardElement.style.border = '6px solid #ffaa00';
+        cardElement.style.transform = 'scale(1.04)';
+        cardElement.style.transition = 'all 0.3s ease';
+        cardElement.style.zIndex = '1000';
+        
+        // 깜박이는 효과
+        let blinkCount = 0;
+        const blinkInterval = setInterval(() => {
+          if (blinkCount % 2 === 0) {
+            cardElement.style.border = '6px solid #ffaa00';
+          } else {
+            cardElement.style.border = '6px solid rgba(255, 170, 0, 0.3)';
+          }
+          blinkCount++;
+          
+          if (blinkCount >= 8) { // 4번 깜박임 (8번 토글)
+            clearInterval(blinkInterval);
+            
+            // 바로 원위치로 돌아가기
+            setTimeout(() => {
+              cardElement.style.border = '';
+              cardElement.style.transform = '';
+              cardElement.style.zIndex = '';
+              cardElement.style.transition = '';
+            }, 500);
+          }
+        }, 300);
+      } else {
+        console.log('❌ 카드 엘리먼트를 찾을 수 없음:', `card-${cardId}`);
+        // DOM이 준비될 때까지 재시도
+        setTimeout(() => {
+          const retryElement = document.getElementById(`card-${cardId}`);
+          if (retryElement) {
+            console.log('✅ 재시도로 카드 엘리먼트 찾음');
+            // 하이라이트 효과 적용
+            retryElement.style.border = '6px solid #ffaa00';
+            retryElement.style.transform = 'scale(1.04)';
+            retryElement.style.transition = 'all 0.3s ease';
+            retryElement.style.zIndex = '1000';
+            
+            // 깜박임 효과
+            let blinkCount = 0;
+            const blinkInterval = setInterval(() => {
+              if (blinkCount % 2 === 0) {
+                retryElement.style.border = '6px solid #ffaa00';
+              } else {
+                retryElement.style.border = '6px solid rgba(255, 170, 0, 0.3)';
+              }
+              blinkCount++;
+              
+              if (blinkCount >= 8) {
+                clearInterval(blinkInterval);
+                setTimeout(() => {
+                  retryElement.style.border = '';
+                  retryElement.style.transform = '';
+                  retryElement.style.zIndex = '';
+                  retryElement.style.transition = '';
+                  console.log('🎨 재시도 하이라이트 효과 완료');
+                }, 500);
+              }
+            }, 300);
+          }
+        }, 1000);
+      }
+    }, 500); // 지연 시간 증가
+  }, [articles]);
+
+  // articles가 로드된 후에만 해시 확인
+  useEffect(() => {
+    // articles가 없으면 실행하지 않음
+    if (articles.length === 0) {
+      return;
+    }
+
+    console.log('🔍 URL 해시 처리 useEffect 실행:', { 
+      articlesLength: articles.length, 
+      hash: typeof window !== 'undefined' ? window.location.hash : '',
+      firstArticleId: articles[0]?.id 
+    });
+
+    // articles가 로드된 후에만 해시 확인 (강제 재로드 허용)
+    processHashCard(true);
+  }, [articles.length]); // articles 길이가 변경될 때만 실행
+
+  // 해시 변경 이벤트 리스너
+  useEffect(() => {
+    const handleHashChange = () => {
+      console.log('🔄 해시 변경 이벤트 발생');
+      const currentHash = typeof window !== 'undefined' ? window.location.hash : '';
+      console.log('🔍 현재 해시:', { currentHash, articlesLength: articles.length });
+      
+      // 해시가 제거된 경우 (일반 목록으로 이동)
+      if (!currentHash || !currentHash.startsWith('#card-')) {
+        console.log('🔄 해시 제거됨, 일반 목록으로 재로드');
+        fetchArticles();
+        return;
+      }
+      
+      // 해시가 있는 경우 - 기존 데이터에서 재배치만 수행 (강제 재로드 허용)
+      console.log('🔄 해시 있음, 기존 데이터에서 재배치');
+      processHashCard(true);
+    };
+    
+    window.addEventListener('hashchange', handleHashChange);
+    
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+    };
+  }, []); // 한 번만 실행
+
   console.log('YoutubePageClient render:', { loading, articlesCount: articles.length });
+
+  // 로딩 상태 완전 제거 (화면 반짝임 방지)
+  // if (loading) {
+  //   return (
+  //     <CommonBackground>
+  //       <CommonHeader />
+  //       <div className="max-w-7xl mx-auto px-4 md:px-8">
+  //         <div className="mt-10 px-0 md:px-0">
+  //           <PageHeader 
+  //             title="박스로 유튜브"
+  //             description="박스카와 함께하는 즐거운 영상들을 만나보세요!"
+  //           />
+  //         </div>
+  //         <Card className="bg-transparent border-0 shadow-none transition-all duration-300 overflow-hidden py-5 w-full rounded-2xl">
+  //           <CardContent className="text-center py-12">
+  //             {/* 점프 애니메이션 (더 역동적인 뛰는 효과) */}
+  //             <div className="w-24 h-24 mx-auto mb-6 flex items-center justify-center">
+  //               <img 
+  //                 src="/logo_remoteonly.png" 
+  //                 alt="박스로 로고" 
+  //                 className="w-20 h-20 animate-bounce"
+  //                 style={{ 
+  //                   animationDuration: '0.6s',
+  //                   animationIterationCount: 'infinite',
+  //                   animationTimingFunction: 'cubic-bezier(0.68, -0.55, 0.265, 1.55)'
+  //                 }}
+  //               />
+  //             </div>
+  //             <h3 className="text-lg font-semibold text-white mb-2">
+  //               박스로 유튜브를 불러오는 중...
+  //             </h3>
+  //             <p className="text-sm text-white/80">멋진 박스카 영상들을 준비하고 있어요!</p>
+  //           </CardContent>
+  //         </Card>
+  //       </div>
+  //     </CommonBackground>
+  //   );
+  // }
 
   if (loading) {
     return (
@@ -902,7 +1401,7 @@ export default function YoutubePageClient() {
               <h3 className="text-lg font-semibold text-white mb-2">
                 박스로 유튜브를 불러오는 중...
               </h3>
-              <p className="text-sm text-white/80">멋진 박스카 영상들을 준비하고 있어요!</p>
+              <p className="text-sm text-white/80">멋진 박스카 영상들을 준비하고 있어요! 🎬✨</p>
             </CardContent>
           </Card>
         </div>
@@ -937,7 +1436,7 @@ export default function YoutubePageClient() {
           </div>
         </div>
         
-        {articles.length === 0 ? (
+        {isClient && articles.length === 0 && !window.location.hash.startsWith('#card-') ? (
           <Card className="bg-white border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden py-5 w-full rounded-2xl">
             <CardContent className="text-center py-12">
               <Play className="w-16 h-16 text-gray-400 mx-auto mb-4" />
@@ -947,23 +1446,22 @@ export default function YoutubePageClient() {
               </p>
             </CardContent>
           </Card>
-        ) : (
+        ) : isClient && articles.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {/* 배너 표시 - 카드들과 섞여서 표시 */}
-            <BannerDisplay currentPage="youtube" />
+            {/* 링크된 카드가 없을 때만 배너 표시 */}
+            {isClient && !window.location.hash.startsWith('#card-') && <BannerDisplay currentPage="youtube" />}
             
             {articles.filter((article, index, self) => 
               index === self.findIndex(a => a.id === article.id)
             ).map((article, index) => (
               <div 
                 key={`${article.id}-${index}`} 
+                id={`card-${article.id}`}
                 className="group shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden w-full rounded-2xl relative cursor-pointer flex flex-col"
                 style={{ backgroundColor: article.cardBackgroundColor || 'rgba(255, 255, 255, 0.97)' }}
                 onClick={async () => {
                   await incrementView(article.id);
-                  if (article.storeUrl) {
-                    window.open(article.storeUrl, '_blank', 'noopener,noreferrer');
-                  }
+                  // 조회수만 증가, 해시 설정하지 않음
                 }}
               >
                 {/* 썸네일 */}
@@ -1126,7 +1624,14 @@ export default function YoutubePageClient() {
               </div>
             ))}
           </div>
-        )}
+        ) : !isClient ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+              <p className="text-gray-600">로딩 중...</p>
+            </div>
+          </div>
+        ) : null}
 
         {/* 모바일 플로팅 메뉴 */}
         {user && isAdminUser && (
@@ -1183,7 +1688,7 @@ export default function YoutubePageClient() {
                 </Button>
                 <Button
                   onClick={async () => {
-                    const shareUrl = `${window.location.origin}/youtube/${selectedArticle.id}`;
+                    const shareUrl = `${window.location.origin}/youtube#card-${selectedArticle.id}`;
                     try {
                       if (navigator.clipboard && navigator.clipboard.writeText) {
                         await navigator.clipboard.writeText(shareUrl);
@@ -1500,12 +2005,12 @@ export default function YoutubePageClient() {
         </div>
       )}
       
-            {/* 더 이상 데이터가 없을 때 */}
-            {!hasMore && articles.length > 0 && (
-              <div className="col-span-full flex justify-center py-8">
-                <span className="text-white text-sm">준비된 영상을 모두 보여드렸어요!</span>
-              </div>
-            )}
+      {/* 더 이상 데이터가 없을 때 */}
+      {!hasMore && articles.length > 0 && (
+        <div className="col-span-full flex justify-center py-8">
+          <span className="text-white text-sm">준비된 영상을 모두 보여드렸어요!</span>
+        </div>
+      )}
     </CommonBackground>
   );
 }

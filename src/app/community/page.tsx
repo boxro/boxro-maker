@@ -2,7 +2,7 @@
 
 // 갤러리 페이지 - 박스카 갤러리
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import Head from "next/head";
 import { Button } from "@/components/ui/button";
@@ -322,6 +322,78 @@ export default function GalleryPage() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showEmojiPicker]);
+
+  // URL 해시를 통한 카드 재정렬
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash && hash.startsWith('#card-') && designs.length > 0) {
+      const cardId = hash.replace('#card-', '');
+      const targetCard = designs.find(design => design.id === cardId);
+      
+      if (targetCard) {
+        const otherCards = designs.filter(design => design.id !== cardId);
+        const shuffledOtherCards = otherCards.sort(() => Math.random() - 0.5);
+        const reorderedDesigns = [targetCard, ...shuffledOtherCards];
+        setDesigns(reorderedDesigns);
+      }
+    }
+  }, [designs.length]); // designs.length가 변경될 때만 실행
+
+  // URL 해시를 통한 특정 카드 하이라이트
+  useEffect(() => {
+    const highlightCard = (cardId: string) => {
+      const cardElement = document.getElementById(`card-${cardId}`);
+      if (cardElement) {
+        // 하이라이트 효과만 적용 (스크롤 없음)
+        cardElement.style.border = '3px solid rgba(249, 115, 22, 0.6)';
+        cardElement.style.transform = 'scale(1.02)';
+        cardElement.style.transition = 'all 0.3s ease';
+        
+        setTimeout(() => {
+          cardElement.style.border = '';
+          cardElement.style.transform = '';
+          cardElement.style.transition = '';
+        }, 3000);
+        return true;
+      }
+      return false;
+    };
+
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (hash && hash.startsWith('#card-')) {
+        const cardId = hash.replace('#card-', '');
+        
+        // 카드가 이미 로딩되어 있는지 확인
+        if (highlightCard(cardId)) {
+          return;
+        }
+        
+        // 카드가 아직 로딩되지 않은 경우, 로딩될 때까지 기다림
+        const checkForCard = () => {
+          if (highlightCard(cardId)) {
+            return;
+          }
+          
+          // 카드가 아직 없으면 100ms 후 다시 시도 (최대 10초)
+          setTimeout(checkForCard, 100);
+        };
+        
+        // 초기 지연 후 카드 확인 시작
+        setTimeout(checkForCard, 200);
+      }
+    };
+
+    // 초기 로드 시 해시 확인
+    handleHashChange();
+    
+    // 해시 변경 이벤트 리스너
+    window.addEventListener('hashchange', handleHashChange);
+    
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+    };
+  }, [designs]);
   const [boxroTalks, setBoxroTalks] = useState<BoxroTalk[]>([]);
   const [editingBoxroTalk, setEditingBoxroTalk] = useState<string | null>(null);
   const [editBoxroTalkText, setEditBoxroTalkText] = useState('');
@@ -349,6 +421,22 @@ export default function GalleryPage() {
   
   // 스와이프 상태 관리 (0: 3D 렌더링, 1: 캔버스 스냅샷)
   const [swipeStates, setSwipeStates] = useState<{[key: string]: number}>({});
+  
+  // 클라이언트 사이드 렌더링 확인
+  const [isClient, setIsClient] = useState(false);
+  
+  // 전역 중복 실행 방지 ref
+  const isFetchingRef = useRef(false);
+  const isHashLoadingRef = useRef(false);
+  const hasInitializedRef = useRef(false);
+  const isStrictModeRef = useRef(false);
+  const fetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // 전역 인덱싱 캐시 (사용자와 무관)
+  if (typeof window !== 'undefined') {
+    (window as any).__galleryIndexCache = (window as any).__galleryIndexCache || new Map();
+    (window as any).__galleryIndexLoaded = (window as any).__galleryIndexLoaded || false;
+  }
   
   // 스와이프 핸들러 함수들 (한 방향 무한 루프)
   const handleSwipe = (designId: string, direction: 'left' | 'right') => {
@@ -421,92 +509,280 @@ export default function GalleryPage() {
 
 
 
+  // 인덱싱 생성 (한 번만, 전역)
+  const createIndex = async () => {
+    if (typeof window !== 'undefined' && (window as any).__galleryIndexLoaded) {
+      console.log('📚 갤러리 인덱싱 이미 로드됨, 전역 캐시 사용');
+      return;
+    }
+    
+    try {
+      console.log('📚 갤러리 인덱싱 생성 시작');
+      const designsRef = collection(db, 'communityDesigns');
+      const q = query(designsRef, orderBy('createdAt', 'desc'));
+      const querySnapshot = await getDocs(q);
+      
+      // 인덱싱 정보만 저장 (전역)
+      const indexInfo = new Map();
+      querySnapshot.docs.forEach((doc, index) => {
+        indexInfo.set(doc.id, { design: doc.data(), index });
+        console.log(`📝 인덱싱 저장: ${doc.id} -> ${index}`);
+      });
+      
+      if (typeof window !== 'undefined') {
+        (window as any).__galleryIndexCache = indexInfo;
+        (window as any).__galleryIndexLoaded = true;
+      }
+      
+      console.log('📚 갤러리 인덱싱 생성 완료, 총 카드 수:', indexInfo.size);
+    } catch (error) {
+      console.error('갤러리 인덱싱 생성 실패:', error);
+    }
+  };
+
   // Firebase에서 작품 데이터 가져오기 (첫 로딩)
   const fetchDesigns = useCallback(async () => {
+    if (isFetchingRef.current) {
+      console.log('🔄 fetchDesigns 중복 실행 방지');
+      return;
+    }
+    
+    // URL 해시가 있으면 로딩 상태 유지
+    const hash = typeof window !== 'undefined' ? window.location.hash : '';
+    const hasHash = hash && hash.startsWith('#card-');
+    
     try {
+      isFetchingRef.current = true;
+      
+      // 로딩 상태 설정
       setLoading(true);
       setDesigns([]);
       setLastDoc(null);
       setHasMore(true);
       
+      // 인덱싱이 없으면 먼저 생성
+      if (typeof window !== 'undefined' && !(window as any).__galleryIndexLoaded) {
+        await createIndex();
+      }
+      
       const designsRef = collection(db, 'communityDesigns');
-      const q = query(designsRef, orderBy('createdAt', 'desc'), limit(15)); // 원래대로 복구
+      const q = query(designsRef, orderBy('createdAt', 'desc'), limit(15));
       const querySnapshot = await getDocs(q);
       
-      const designsData: GalleryDesign[] = [];
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        
-        // 디버깅: canvasSnapshot 데이터 확인
-        console.log('🔍 갤러리 데이터 로드:', {
-          id: doc.id,
-          name: data.name,
-          hasCanvasSnapshot: !!data.canvasSnapshot,
-          canvasSnapshotLength: data.canvasSnapshot?.length || 0,
-          canvasSnapshotPreview: data.canvasSnapshot?.substring(0, 50) || '없음'
-        });
-        
-        const currentUserId = user?.uid || null;
-        designsData.push({
-          id: doc.id,
-          name: data.name || 'Untitled',
-          type: data.type || 'sedan',
-          author: data.author || (data.authorEmail ? data.authorEmail.split('@')[0] : 'Anonymous'),
-          authorNickname: data.authorNickname || '',
-          authorEmail: data.authorEmail || '',
-          authorId: data.authorId || '',
-          thumbnail: data.thumbnail || '/api/placeholder/300/200',
-          canvasSnapshot: data.canvasSnapshot, // 그리기 캔버스 스냅샷 추가
-          likes: data.likes || 0,
-          downloads: data.downloads || 0,
-          views: data.views || 0,
-          boxroTalks: data.boxroTalks || 0,
-          shares: data.shares || 0,
-          popularityBoost: data.popularityBoost || null,
-          createdAt: data.createdAt?.toDate?.() || new Date(data.createdAt),
-          updatedAt: data.updatedAt?.toDate?.() || new Date(data.updatedAt),
-          
-          // ===== 버튼 활성화 상태 관리 =====
-          // 중요: 모든 버튼(좋아요, 공유, 다운로드, 박스로 톡)은 동일한 방식으로 처리됩니다
-          // 1. Firestore에 배열로 사용자 ID 저장 (likedBy, sharedBy, downloadedBy, commentedBy)
-          // 2. 클라이언트에서 현재 사용자가 해당 배열에 포함되어 있는지 확인하여 boolean 계산
-          // 3. UI에서 boolean 속성으로 버튼 활성화 상태 표시
-          // 4. 페이지 이동 후에도 Firestore에서 다시 로드되므로 상태 지속성 보장
-          
-          // 좋아요 상태
-          isLiked: currentUserId ? (data.likedBy?.includes(currentUserId) || false) : false,
-          likedBy: data.likedBy || [],
-          
-          // 공유 상태  
-          isShared: currentUserId ? (data.sharedBy?.includes(currentUserId) || false) : false,
-          sharedBy: data.sharedBy || [],
-          
-          // 다운로드 상태
-          isDownloaded: currentUserId ? (data.downloadedBy?.includes(currentUserId) || false) : false,
-          downloadedBy: data.downloadedBy || [],
-          
-          // 박스로 톡 상태
-          isBoxroTalked: currentUserId ? (data.boxroTalkedBy?.includes(currentUserId) || false) : false,
-          boxroTalkedBy: data.boxroTalkedBy || [],
-          
-          // 뷰 상태
-          isViewed: currentUserId ? (data.viewedBy?.includes(currentUserId) || false) : false,
-          viewedBy: data.viewedBy || [],
-          
-          description: data.description || '',
-          tags: data.tags || [],
-          blueprintImages: data.blueprintImages || []
-        });
+      // URL 해시 확인하여 초기 정렬
+      const currentHash = typeof window !== 'undefined' ? window.location.hash : '';
+      console.log('🔍 URL 해시 확인:', { 
+        currentHash, 
+        hasHash: currentHash && currentHash.startsWith('#card-'),
+        fullUrl: typeof window !== 'undefined' ? window.location.href : ''
       });
       
-      setDesigns(designsData);
+      if (currentHash && currentHash.startsWith('#card-')) {
+        const cardId = currentHash.replace('#card-', '');
+        
+        // 전역 인덱싱 정보에서 해당 카드 찾기
+        const cardInfo = typeof window !== 'undefined' ? (window as any).__galleryIndexCache.get(cardId) : null;
+        console.log('🔍 전역 인덱싱에서 카드 찾기:', { 
+          cardId, 
+          cardInfo, 
+          indexCacheSize: typeof window !== 'undefined' ? (window as any).__galleryIndexCache.size : 0,
+          allKeys: typeof window !== 'undefined' ? Array.from((window as any).__galleryIndexCache.keys()) : []
+        });
+        
+        if (cardInfo) {
+          console.log('🎯 인덱싱에서 해시 카드 발견, 해당 카드 포함하여 로드');
+          
+          // 해당 카드가 포함된 범위를 로드
+          const endIndex = Math.min(cardInfo.index + 15, (window as any).__galleryIndexCache.size);
+          
+          // 해당 범위의 카드들만 로드
+          const designsRef = collection(db, 'communityDesigns');
+          const q = query(designsRef, orderBy('createdAt', 'desc'), limit(endIndex));
+          const querySnapshot = await getDocs(q);
+          
+          // 해당 카드를 찾아서 첫 번째로 배치
+          const targetDoc = querySnapshot.docs.find(doc => doc.id === cardId);
+          if (targetDoc) {
+            const targetData = targetDoc.data();
+            const currentUserId = user?.uid || null;
+            const targetCard = {
+              id: targetDoc.id,
+              name: targetData.name || 'Untitled',
+              type: targetData.type || 'sedan',
+              author: targetData.author || (targetData.authorEmail ? targetData.authorEmail.split('@')[0] : 'Anonymous'),
+              authorNickname: targetData.authorNickname || '',
+              authorEmail: targetData.authorEmail || '',
+              authorId: targetData.authorId || '',
+              thumbnail: targetData.thumbnail || '/api/placeholder/300/200',
+              canvasSnapshot: targetData.canvasSnapshot,
+              likes: targetData.likes || 0,
+              downloads: targetData.downloads || 0,
+              views: targetData.views || 0,
+              boxroTalks: targetData.boxroTalks || 0,
+              shares: targetData.shares || 0,
+              popularityBoost: targetData.popularityBoost || null,
+              createdAt: targetData.createdAt?.toDate?.() || new Date(targetData.createdAt),
+              updatedAt: targetData.updatedAt?.toDate?.() || new Date(targetData.updatedAt),
+              isLiked: currentUserId ? (targetData.likedBy?.includes(currentUserId) || false) : false,
+              likedBy: targetData.likedBy || [],
+              isShared: currentUserId ? (targetData.sharedBy?.includes(currentUserId) || false) : false,
+              sharedBy: targetData.sharedBy || [],
+              isDownloaded: currentUserId ? (targetData.downloadedBy?.includes(currentUserId) || false) : false,
+              downloadedBy: targetData.downloadedBy || [],
+              isBoxroTalked: currentUserId ? (targetData.boxroTalkedBy?.includes(currentUserId) || false) : false,
+              boxroTalkedBy: targetData.boxroTalkedBy || [],
+              isViewed: currentUserId ? (targetData.viewedBy?.includes(currentUserId) || false) : false,
+              viewedBy: targetData.viewedBy || [],
+              description: targetData.description || '',
+              tags: targetData.tags || [],
+              blueprintImages: targetData.blueprintImages || []
+            } as GalleryDesign;
+            
+            // 나머지 카드들도 로드 (최대 14개)
+            const otherCards: GalleryDesign[] = [];
+            querySnapshot.docs.forEach((doc) => {
+              if (doc.id !== cardId && otherCards.length < 14) {
+                const data = doc.data();
+                const currentUserId = user?.uid || null;
+                otherCards.push({
+                  id: doc.id,
+                  name: data.name || 'Untitled',
+                  type: data.type || 'sedan',
+                  author: data.author || (data.authorEmail ? data.authorEmail.split('@')[0] : 'Anonymous'),
+                  authorNickname: data.authorNickname || '',
+                  authorEmail: data.authorEmail || '',
+                  authorId: data.authorId || '',
+                  thumbnail: data.thumbnail || '/api/placeholder/300/200',
+                  canvasSnapshot: data.canvasSnapshot,
+                  likes: data.likes || 0,
+                  downloads: data.downloads || 0,
+                  views: data.views || 0,
+                  boxroTalks: data.boxroTalks || 0,
+                  shares: data.shares || 0,
+                  popularityBoost: data.popularityBoost || null,
+                  createdAt: data.createdAt?.toDate?.() || new Date(data.createdAt),
+                  updatedAt: data.updatedAt?.toDate?.() || new Date(data.updatedAt),
+                  isLiked: currentUserId ? (data.likedBy?.includes(currentUserId) || false) : false,
+                  likedBy: data.likedBy || [],
+                  isShared: currentUserId ? (data.sharedBy?.includes(currentUserId) || false) : false,
+                  sharedBy: data.sharedBy || [],
+                  isDownloaded: currentUserId ? (data.downloadedBy?.includes(currentUserId) || false) : false,
+                  downloadedBy: data.downloadedBy || [],
+                  isBoxroTalked: currentUserId ? (data.boxroTalkedBy?.includes(currentUserId) || false) : false,
+                  boxroTalkedBy: data.boxroTalkedBy || [],
+                  isViewed: currentUserId ? (data.viewedBy?.includes(currentUserId) || false) : false,
+                  viewedBy: data.viewedBy || [],
+                  description: data.description || '',
+                  tags: data.tags || [],
+                  blueprintImages: data.blueprintImages || []
+                } as GalleryDesign);
+              }
+            });
+            
+            // 특정 카드를 첫 번째로 배치하고 나머지는 랜덤 배치
+            const shuffledOtherCards = otherCards.sort(() => Math.random() - 0.5);
+            const reorderedDesigns = [targetCard, ...shuffledOtherCards];
+            setDesigns(reorderedDesigns);
+            
+            console.log('✅ 해시 카드 첫 번째 배치 완료, 총 카드 수:', reorderedDesigns.length);
+          } else {
+            console.log('❌ 직접 검색에서도 해시 카드를 찾을 수 없음, 일반 로딩');
+            // 일반 로딩
+            const designsData: GalleryDesign[] = [];
+            querySnapshot.docs.slice(0, 15).forEach((doc) => {
+              const data = doc.data();
+              const currentUserId = user?.uid || null;
+              designsData.push({
+                id: doc.id,
+                name: data.name || 'Untitled',
+                type: data.type || 'sedan',
+                author: data.author || (data.authorEmail ? data.authorEmail.split('@')[0] : 'Anonymous'),
+                authorNickname: data.authorNickname || '',
+                authorEmail: data.authorEmail || '',
+                authorId: data.authorId || '',
+                thumbnail: data.thumbnail || '/api/placeholder/300/200',
+                canvasSnapshot: data.canvasSnapshot,
+                likes: data.likes || 0,
+                downloads: data.downloads || 0,
+                views: data.views || 0,
+                boxroTalks: data.boxroTalks || 0,
+                shares: data.shares || 0,
+                popularityBoost: data.popularityBoost || null,
+                createdAt: data.createdAt?.toDate?.() || new Date(data.createdAt),
+                updatedAt: data.updatedAt?.toDate?.() || new Date(data.updatedAt),
+                isLiked: currentUserId ? (data.likedBy?.includes(currentUserId) || false) : false,
+                likedBy: data.likedBy || [],
+                isShared: currentUserId ? (data.sharedBy?.includes(currentUserId) || false) : false,
+                sharedBy: data.sharedBy || [],
+                isDownloaded: currentUserId ? (data.downloadedBy?.includes(currentUserId) || false) : false,
+                downloadedBy: data.downloadedBy || [],
+                isBoxroTalked: currentUserId ? (data.boxroTalkedBy?.includes(currentUserId) || false) : false,
+                boxroTalkedBy: data.boxroTalkedBy || [],
+                isViewed: currentUserId ? (data.viewedBy?.includes(currentUserId) || false) : false,
+                viewedBy: data.viewedBy || [],
+                description: data.description || '',
+                tags: data.tags || [],
+                blueprintImages: data.blueprintImages || []
+              } as GalleryDesign);
+            });
+            
+            // 랜덤 정렬 적용
+            const shuffledDesigns = designsData.sort(() => Math.random() - 0.5);
+            setDesigns(shuffledDesigns);
+          }
+        }
+      } else {
+        // 일반 로딩 (랜덤 순서)
+        const designsData: GalleryDesign[] = [];
+        querySnapshot.docs.forEach((doc) => {
+          const data = doc.data();
+          const currentUserId = user?.uid || null;
+          designsData.push({
+            id: doc.id,
+            name: data.name || 'Untitled',
+            type: data.type || 'sedan',
+            author: data.author || (data.authorEmail ? data.authorEmail.split('@')[0] : 'Anonymous'),
+            authorNickname: data.authorNickname || '',
+            authorEmail: data.authorEmail || '',
+            authorId: data.authorId || '',
+            thumbnail: data.thumbnail || '/api/placeholder/300/200',
+            canvasSnapshot: data.canvasSnapshot,
+            likes: data.likes || 0,
+            downloads: data.downloads || 0,
+            views: data.views || 0,
+            boxroTalks: data.boxroTalks || 0,
+            shares: data.shares || 0,
+            popularityBoost: data.popularityBoost || null,
+            createdAt: data.createdAt?.toDate?.() || new Date(data.createdAt),
+            updatedAt: data.updatedAt?.toDate?.() || new Date(data.updatedAt),
+            isLiked: currentUserId ? (data.likedBy?.includes(currentUserId) || false) : false,
+            likedBy: data.likedBy || [],
+            isShared: currentUserId ? (data.sharedBy?.includes(currentUserId) || false) : false,
+            sharedBy: data.sharedBy || [],
+            isDownloaded: currentUserId ? (data.downloadedBy?.includes(currentUserId) || false) : false,
+            downloadedBy: data.downloadedBy || [],
+            isBoxroTalked: currentUserId ? (data.boxroTalkedBy?.includes(currentUserId) || false) : false,
+            boxroTalkedBy: data.boxroTalkedBy || [],
+            isViewed: currentUserId ? (data.viewedBy?.includes(currentUserId) || false) : false,
+            viewedBy: data.viewedBy || [],
+            description: data.description || '',
+            tags: data.tags || [],
+            blueprintImages: data.blueprintImages || []
+          } as GalleryDesign);
+        });
+        
+        // 랜덤 정렬 적용
+        const shuffledDesigns = designsData.sort(() => Math.random() - 0.5);
+        setDesigns(shuffledDesigns);
+      }
+      
       setLastDoc(querySnapshot.docs[querySnapshot.docs.length - 1] || null);
-      setHasMore(querySnapshot.docs.length === 10);
+      setHasMore(querySnapshot.docs.length === 15);
       setError(null);
       
       // 스와이프 상태 초기화 (모든 디자인을 3D 렌더링으로 설정)
       const initialSwipeStates: {[key: string]: number} = {};
-      designsData.forEach(design => {
+      designs.forEach(design => {
         // 내 작품 올리기로 업로드된 작품은 항상 0 (3D 렌더링)으로 고정
         if (design.isUploaded || design.type === 'uploaded' || design.blueprintImages?.length > 0) {
           initialSwipeStates[design.id] = 0; // 항상 3D 렌더링만 표시
@@ -520,6 +796,7 @@ export default function GalleryPage() {
       setError('작품을 불러오는데 실패했습니다.');
     } finally {
       setLoading(false);
+      isFetchingRef.current = false;
     }
   }, [user?.uid]);
 
@@ -581,7 +858,9 @@ export default function GalleryPage() {
         });
       });
       
-      setDesigns(prev => [...prev, ...newDesigns]);
+      // 새로 로드된 카드들을 랜덤 정렬
+      const shuffledNewDesigns = newDesigns.sort(() => Math.random() - 0.5);
+      setDesigns(prev => [...prev, ...shuffledNewDesigns]);
       setLastDoc(querySnapshot.docs[querySnapshot.docs.length - 1] || null);
       setHasMore(querySnapshot.docs.length === 10);
     } catch (err) {
@@ -591,10 +870,178 @@ export default function GalleryPage() {
     }
   }, [lastDoc, hasMore, loadingMore, user?.uid]);
 
-  // 컴포넌트 마운트 시 및 사용자 상태 변경 시 데이터 로드
+  // 해시 디자인 처리 함수
+  const processHashDesign = useCallback((forceReload = false) => {
+    const hash = typeof window !== 'undefined' ? window.location.hash : '';
+    console.log('🔍 processHashDesign 실행:', { hash, designsLength: designs.length });
+    
+    // 해시가 없으면 아무것도 하지 않음
+    if (!hash || !hash.startsWith('#card-')) {
+      console.log('ℹ️ 해시가 없음, 현재 순서 유지');
+      return;
+    }
+    
+    const cardId = hash.replace('#card-', '');
+    console.log('🎯 카드 ID 추출:', { cardId });
+    
+    // 해시 카드를 첫 번째로 재배치
+    const targetDesign = designs.find(design => design.id === cardId);
+    if (targetDesign) {
+      console.log('🔄 해시 카드 재배치 시작');
+      const otherDesigns = designs.filter(design => design.id !== cardId);
+      const reorderedDesigns = [targetDesign, ...otherDesigns];
+      setDesigns(reorderedDesigns);
+      console.log('✅ 해시 카드 첫 번째로 재배치 완료');
+      
+      // 즉시 스크롤 위치 복원
+      requestAnimationFrame(() => {
+        window.scrollTo(0, 0);
+      });
+    } else {
+      if (forceReload) {
+        console.log('❌ 해시 카드가 현재 목록에 없음, 데이터 재로드 필요');
+        // 해시 카드가 현재 목록에 없으면 fetchDesigns() 호출하여 해당 카드 포함하여 로드
+        fetchDesigns();
+        return;
+      } else {
+        console.log('❌ 해시 카드가 현재 목록에 없음, 현재 순서 유지');
+        // 같은 페이지에서 카드 클릭 시에는 아무것도 하지 않음 (순서 유지)
+        return;
+      }
+    }
+    
+    // 하이라이트 효과 (지연 시간 증가) - 한 번만 실행
+    setTimeout(() => {
+      console.log('🎨 하이라이트 효과 시작');
+      
+      const cardElement = document.getElementById(`card-${cardId}`);
+      if (cardElement) {
+        console.log('✅ 카드 엘리먼트 찾음, 스타일 적용');
+        // 초기 스타일 설정
+        cardElement.style.border = '6px solid #ffaa00';
+        cardElement.style.transform = 'scale(1.04)';
+        cardElement.style.transition = 'all 0.3s ease';
+        cardElement.style.zIndex = '1000';
+        
+        // 깜박이는 효과
+        let blinkCount = 0;
+        const blinkInterval = setInterval(() => {
+          if (blinkCount % 2 === 0) {
+            cardElement.style.border = '6px solid #ffaa00';
+          } else {
+            cardElement.style.border = '6px solid rgba(255, 170, 0, 0.3)';
+          }
+          blinkCount++;
+          
+          if (blinkCount >= 8) { // 4번 깜박임 (8번 토글)
+            clearInterval(blinkInterval);
+            
+            // 바로 원위치로 돌아가기
+            setTimeout(() => {
+              cardElement.style.border = '';
+              cardElement.style.transform = '';
+              cardElement.style.zIndex = '';
+              cardElement.style.transition = '';
+            }, 500);
+          }
+        }, 300);
+      } else {
+        console.log('❌ 카드 엘리먼트를 찾을 수 없음:', `card-${cardId}`);
+        // DOM이 준비될 때까지 재시도
+        setTimeout(() => {
+          const retryElement = document.getElementById(`card-${cardId}`);
+          if (retryElement) {
+            console.log('✅ 재시도로 카드 엘리먼트 찾음');
+            // 하이라이트 효과 적용
+            retryElement.style.border = '6px solid #ffaa00';
+            retryElement.style.transform = 'scale(1.04)';
+            retryElement.style.transition = 'all 0.3s ease';
+            retryElement.style.zIndex = '1000';
+            
+            // 깜박임 효과
+            let blinkCount = 0;
+            const blinkInterval = setInterval(() => {
+              if (blinkCount % 2 === 0) {
+                retryElement.style.border = '6px solid #ffaa00';
+              } else {
+                retryElement.style.border = '6px solid rgba(255, 170, 0, 0.3)';
+              }
+              blinkCount++;
+              
+              if (blinkCount >= 8) {
+                clearInterval(blinkInterval);
+                setTimeout(() => {
+                  retryElement.style.border = '';
+                  retryElement.style.transform = '';
+                  retryElement.style.zIndex = '';
+                  retryElement.style.transition = '';
+                  console.log('🎨 재시도 하이라이트 효과 완료');
+                }, 500);
+              }
+            }, 300);
+          }
+        }, 1000);
+      }
+    }, 500); // 지연 시간 증가
+  }, [designs]);
+
+  // 컴포넌트 마운트 시에만 실행
   useEffect(() => {
+    if (hasInitializedRef.current) {
+      return;
+    }
+    
+    hasInitializedRef.current = true;
     fetchDesigns();
-  }, [fetchDesigns]);
+  }, [user?.uid]);
+
+  // isClient 설정
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // designs가 로드된 후에만 해시 확인
+  useEffect(() => {
+    // designs가 없으면 실행하지 않음
+    if (designs.length === 0) {
+      return;
+    }
+
+    console.log('🔍 URL 해시 처리 useEffect 실행:', { 
+      designsLength: designs.length, 
+      hash: typeof window !== 'undefined' ? window.location.hash : '',
+      firstDesignId: designs[0]?.id 
+    });
+
+    // designs가 로드된 후에만 해시 확인 (강제 재로드 허용)
+    processHashDesign(true);
+  }, [designs.length]); // designs 길이가 변경될 때만 실행
+
+  // 해시 변경 이벤트 리스너
+  useEffect(() => {
+    const handleHashChange = () => {
+      console.log('🔄 해시 변경 이벤트 발생');
+      const currentHash = typeof window !== 'undefined' ? window.location.hash : '';
+      console.log('🔍 현재 해시:', { currentHash, designsLength: designs.length });
+      
+      // 해시가 제거된 경우 (일반 목록으로 이동)
+      if (!currentHash || !currentHash.startsWith('#card-')) {
+        console.log('🔄 해시 제거됨, 일반 목록으로 재로드');
+        fetchDesigns();
+        return;
+      }
+      
+      // 해시가 있는 경우 - 기존 데이터에서 재배치만 수행 (강제 재로드 허용)
+      console.log('🔄 해시 있음, 기존 데이터에서 재배치');
+      processHashDesign(true);
+    };
+    
+    window.addEventListener('hashchange', handleHashChange);
+    
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+    };
+  }, []); // 한 번만 실행
 
 
   // 무한 스크롤 이벤트 리스너
@@ -693,7 +1140,13 @@ export default function GalleryPage() {
       }
     })
     .sort((a, b) => {
-      // 최신순으로 정렬
+      // 해시가 있으면 정렬하지 않음 (해시 카드가 첫 번째로 유지됨)
+      const hasHash = typeof window !== 'undefined' && window.location.hash && window.location.hash.startsWith('#card-');
+      if (hasHash) {
+        return 0; // 정렬하지 않음
+      }
+      
+      // 해시가 없으면 최신순으로 정렬
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
 
@@ -751,7 +1204,7 @@ export default function GalleryPage() {
       );
 
       
-      const shareUrl = `${window.location.origin}/gallery#${designId}`;
+      const shareUrl = `${window.location.origin}/community#card-${designId}`;
       
       // 모든 디바이스에서 공유 모달 표시
       setShareDesignId(designId);
@@ -759,7 +1212,7 @@ export default function GalleryPage() {
     } catch (error) {
       console.error('공유 횟수 업데이트 실패:', error);
       // 에러가 발생해도 공유 기능은 계속 진행
-      const shareUrl = `${window.location.origin}/gallery#${designId}`;
+      const shareUrl = `${window.location.origin}/community#card-${designId}`;
       
       // 모든 디바이스에서 공유 모달 표시
       setShareDesignId(designId);
@@ -1660,14 +2113,15 @@ export default function GalleryPage() {
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {/* 배너 표시 - 로딩 완료 후에만 표시, 내가 만든 박스카 탭에서는 제외 */}
-            {!loading && !showMyDesigns && <BannerDisplay currentPage="gallery" />}
+            {/* 링크된 카드가 없을 때만 배너 표시 */}
+            {isClient && !window.location.hash.startsWith('#card-') && !showMyDesigns && <BannerDisplay currentPage="gallery" />}
             
             {filteredAndSortedDesigns.filter((design, index, self) => 
               index === self.findIndex(d => d.id === design.id)
             ).map((design, index) => (
               <Card 
                 key={`${design.id}-${index}`} 
+                id={`card-${design.id}`}
                 className="group bg-white/97 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden w-full rounded-2xl gap-2 flex flex-col [&>*:not(:first-child)]:mt-2 p-0 cursor-pointer"
                 onClick={() => {}}
               >
@@ -2168,7 +2622,7 @@ export default function GalleryPage() {
                 </Button>
                 <Button
                   onClick={async () => {
-                    const shareUrl = `${window.location.origin}/gallery#${shareDesignId}`;
+                    const shareUrl = `${window.location.origin}/community#card-${shareDesignId}`;
                     try {
                       if (navigator.clipboard && navigator.clipboard.writeText) {
                         await navigator.clipboard.writeText(shareUrl);
