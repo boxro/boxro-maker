@@ -213,7 +213,7 @@ export default function CommonHeader({ className = "" }: CommonHeaderProps) {
                     >
                       <div className="flex items-center gap-3">
                         <HelpCircle className="w-4 h-4" />
-                        <span>도움말</span>
+                        <span>이용 가이드</span>
                       </div>
                     </button>
                     {isAdmin && (
@@ -266,7 +266,7 @@ export default function CommonHeader({ className = "" }: CommonHeaderProps) {
         </div>
       </div>
       
-      {/* 도움말용 온보딩 (다시보지 않기 체크박스 없음) */}
+      {/* 이용 가이드용 온보딩 (다시보지 않기 체크박스 없음) */}
       <OnboardingTutorial
         isOpen={showHelpOnboarding}
         onClose={() => setShowHelpOnboarding(false)}

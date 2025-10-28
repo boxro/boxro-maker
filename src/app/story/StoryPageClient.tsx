@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import ErrorModal from "@/components/ErrorModal";
 import { Plus, Menu, X, Edit, Trash2, MoreVertical, BookOpen, Share2, MessageCircle, Eye, ThumbsUp, LinkIcon, Mail, MessageSquare, Car } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import CommonHeader from "@/components/CommonHeader";
 import PageHeader from "@/components/PageHeader";
 import CommonBackground from "@/components/CommonBackground";
@@ -1230,15 +1231,17 @@ export default function StoryPageClient() {
             
             {articles.filter((article, index, self) => 
               index === self.findIndex(a => a.id === article.id)
-            ).map((article, index) => (
+            ).map((article, index) => {
+              return (
               <div 
                 key={`${article.id}-${index}`} 
                 id={`card-${article.id}`}
                 className="group shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden w-full rounded-2xl relative flex flex-col mb-3 cursor-pointer"
                 style={{ 
                   breakInside: 'avoid',
-                  backgroundColor: article.cardBackgroundColor || 'rgba(255, 255, 255, 0.97)' 
+                  backgroundColor: article.cardBackgroundColor || '#ffffff' 
                 }}
+                data-background-color={article.cardBackgroundColor || '#ffffff'}
                 onClick={async () => {
                   await incrementView(article.id);
                 }}
@@ -1300,11 +1303,30 @@ export default function StoryPageClient() {
                   </h3>
                   
                   {article.summary && (
-                    <div className="text-[15px] mb-0 whitespace-pre-wrap flex-1 text-gray-900">
+                    <div className="text-[15px] mb-0 flex-1 text-gray-900">
                       {expandedArticles.has(article.id) ? (
-                        <p style={{ lineHeight: '1.6' }}>{article.summary}</p>
+                        <div style={{ lineHeight: '1.6' }}>
+                          <div className="text-[15px] whitespace-pre-wrap">
+                            <ReactMarkdown
+                              components={{
+                                strong: ({children}) => <strong className="font-bold">{children}</strong>,
+                                em: ({children}) => <em className="italic">{children}</em>,
+                                del: ({children}) => <del className="line-through">{children}</del>,
+                                h1: ({children}) => <h1 className="text-xl font-bold mb-2">{children}</h1>,
+                                h2: ({children}) => <h2 className="text-lg font-bold mb-2">{children}</h2>,
+                                h3: ({children}) => <h3 className="text-base font-bold mb-1">{children}</h3>,
+                                ul: ({children}) => <ul className="list-disc list-inside mb-2">{children}</ul>,
+                                ol: ({children}) => <ol className="list-decimal list-inside mb-2">{children}</ol>,
+                                li: ({children}) => <li className="mb-1">{children}</li>,
+                                p: ({children}) => <p className="mb-2">{children}</p>
+                              }}
+                            >
+                              {article.summary}
+                            </ReactMarkdown>
+                          </div>
+                        </div>
                       ) : (
-                        <p 
+                        <div 
                           style={{
                             display: '-webkit-box',
                             WebkitLineClamp: 3,
@@ -1315,8 +1337,25 @@ export default function StoryPageClient() {
                             maxHeight: '4.53em'
                           }}
                         >
-                          {article.summary}
-                        </p>
+                          <div className="text-[15px] whitespace-pre-wrap">
+                            <ReactMarkdown
+                              components={{
+                                strong: ({children}) => <strong className="font-bold">{children}</strong>,
+                                em: ({children}) => <em className="italic">{children}</em>,
+                                del: ({children}) => <del className="line-through">{children}</del>,
+                                h1: ({children}) => <h1 className="text-xl font-bold mb-2">{children}</h1>,
+                                h2: ({children}) => <h2 className="text-lg font-bold mb-2">{children}</h2>,
+                                h3: ({children}) => <h3 className="text-base font-bold mb-1">{children}</h3>,
+                                ul: ({children}) => <ul className="list-disc list-inside mb-2">{children}</ul>,
+                                ol: ({children}) => <ol className="list-decimal list-inside mb-2">{children}</ol>,
+                                li: ({children}) => <li className="mb-1">{children}</li>,
+                                p: ({children}) => <p className="mb-2">{children}</p>
+                              }}
+                            >
+                              {article.summary}
+                            </ReactMarkdown>
+                          </div>
+                        </div>
                       )}
                       
                       {article.summary.length > 100 && (
@@ -1403,7 +1442,8 @@ export default function StoryPageClient() {
                   
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
 

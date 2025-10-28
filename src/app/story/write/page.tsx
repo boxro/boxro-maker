@@ -6,7 +6,6 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ErrorModal from "@/components/ErrorModal";
-import RichTextEditor from "@/components/RichTextEditor";
 import { 
   ArrowLeft,
   Save,
@@ -24,85 +23,19 @@ export default function WriteStoryPage() {
   const { setArticles } = useStory();
   const router = useRouter();
   const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
   const [summary, setSummary] = useState("");
   const [thumbnail, setThumbnail] = useState("");
-  const [isPublished, setIsPublished] = useState(false);
-  const [viewTopImage, setViewTopImage] = useState("");
+  const [cardBackgroundColor, setCardBackgroundColor] = useState('#ffffff');
   const [saving, setSaving] = useState(false);
-  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   
-  
-  // 오류 모달 상태
+  // 모달 상태
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  
-  // 성공 메시지 모달 상태
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [successTitle, setSuccessTitle] = useState('발행 완료');
-  
-  // 안내 메시지 모달 상태
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [infoMessage, setInfoMessage] = useState('');
-
-  // 뷰 상단 이미지 압축 함수 (800px, 80%)
-  const compressViewTopImage = (file: File, maxWidth: number = 800, quality: number = 0.8): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const img = new Image();
-      
-      img.onerror = (error) => {
-        console.error('❌ 이미지 로드 실패:', error);
-        reject(new Error('이미지 파일을 읽을 수 없습니다. 지원되지 않는 형식이거나 손상된 파일일 수 있습니다.'));
-      };
-      
-      img.onload = () => {
-        try {
-        // 400px로 강제 리사이즈 (가로 기준)
-        const maxWidth = 400;
-        const ratio = maxWidth / img.width;
-        canvas.width = maxWidth;
-        canvas.height = img.height * ratio;
-        
-        // 이미지 그리기
-        ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
-        
-        // 투명도가 있는 이미지인지 확인
-        const imageData = ctx?.getImageData(0, 0, canvas.width, canvas.height);
-        const hasTransparency = imageData?.data.some((_, index) => index % 4 === 3 && imageData.data[index] < 255);
-        
-        // 투명도가 있으면 PNG, 없으면 JPG 사용 (고품질)
-        const format = hasTransparency ? 'image/png' : 'image/jpeg';
-        let startQuality = hasTransparency ? 0.8 : 0.8; // 80% 품질
-        
-        // 파일 크기가 800KB 이하가 될 때까지 품질을 낮춤 (제한 완화)
-        const compressImageRecursive = (currentQuality: number): string => {
-          const dataUrl = canvas.toDataURL(format, currentQuality);
-          const sizeKB = dataUrl.length / 1024;
-          
-          console.log(`뷰상단 압축 시도: 품질 ${currentQuality.toFixed(1)}, 크기 ${sizeKB.toFixed(1)}KB`);
-          
-          // 크기가 여전히 800KB보다 크고 품질을 더 낮출 수 있다면 재귀 호출
-          if (sizeKB > 800 && currentQuality > 0.1) {
-            return compressImageRecursive(currentQuality - 0.05);
-          }
-          
-          console.log(`뷰상단 최종 압축: 품질 ${currentQuality.toFixed(1)}, 크기 ${sizeKB.toFixed(1)}KB`);
-          return dataUrl;
-        };
-        
-        resolve(compressImageRecursive(startQuality));
-        } catch (error) {
-          console.error('❌ 압축 처리 중 오류:', error);
-          reject(new Error(`이미지 압축 중 오류가 발생했습니다: ${error.message}`));
-        }
-      };
-      
-      img.src = URL.createObjectURL(file);
-    });
-  };
 
   // 이미지 리사이즈 함수 (투명도 감지)
   const resizeImage = (file: File, maxWidth: number = 400): Promise<string> => {
@@ -210,45 +143,7 @@ export default function WriteStoryPage() {
     });
   };
 
-  // 에디터용 이미지 업로드 함수
-  const handleEditorImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (!file.type.startsWith('image/')) {
-        setErrorMessage('이미지 파일만 업로드할 수 있습니다.');
-        setShowErrorModal(true);
-        return;
-      }
 
-      if (file.size > 5 * 1024 * 1024) {
-        setErrorMessage('이미지 크기는 5MB 이하여야 합니다.');
-        setShowErrorModal(true);
-        return;
-      }
-
-      try {
-        const compressedImage = await compressEditorImage(file, 500, 0.8);
-        setUploadedImages(prev => [...prev, compressedImage]);
-      } catch (error) {
-        console.error('이미지 압축 실패:', error);
-        setErrorMessage('이미지 처리 중 오류가 발생했습니다.');
-        setShowErrorModal(true);
-      }
-    }
-  };
-
-  // 이미지 삭제 함수
-  const removeEditorImage = (index: number) => {
-    const imageToRemove = uploadedImages[index];
-    setUploadedImages(prev => prev.filter((_, i) => i !== index));
-    
-    // 에디터에서도 해당 이미지 제거
-    if (imageToRemove && content.includes(imageToRemove)) {
-      // 정규표현식 대신 문자열 치환 사용
-      const updatedContent = content.replace(`src="${imageToRemove}"`, 'src=""');
-      setContent(updatedContent);
-    }
-  };
 
   // 관리자 이메일 목록
   const adminEmails = [
@@ -286,21 +181,6 @@ export default function WriteStoryPage() {
     }
   };
 
-  // 뷰 상단 이미지 업로드 처리
-  const handleViewTopImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      try {
-        // 이미지 압축 (800px, 80% 품질)
-        const compressedImage = await compressViewTopImage(file, 800, 0.8);
-        setViewTopImage(compressedImage);
-      } catch (error) {
-        console.error('이미지 압축 실패:', error);
-        setErrorMessage('이미지 업로드 중 오류가 발생했습니다.');
-        setShowErrorModal(true);
-      }
-    }
-  };
 
   // 이미지 압축 함수 (400px, 1.0 품질)
   const compressImage = (file: File, maxWidth: number = 400, quality: number = 1.0): Promise<string> => {
@@ -374,29 +254,24 @@ export default function WriteStoryPage() {
       
       const articleData = {
         title: title.trim(),
-        content: content.trim() || '',
         summary: summary.trim() || '',
         author: user.displayName || (user.email ? user.email.split('@')[0] : 'Anonymous'),
         authorNickname: userNickname,
         authorEmail: user.email || '',
         thumbnail: thumbnail || '',
-        viewTopImage: viewTopImage || '',
         authorId: user.uid,
         tags: [],
+        cardBackgroundColor: cardBackgroundColor,
         views: 0,
         likes: 0,
         shares: 0,
         boxroTalks: 0,
-        isPublished: true,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       };
 
-      console.log('Firebase에 저장할 박스카 이야기 데이터:', articleData);
-      
       // Firebase에 저장
       const docRef = await addDoc(collection(db, 'storyArticles'), articleData);
-      console.log('박스카 이야기 저장 완료, ID:', docRef.id);
       
       setSuccessMessage('박스카 이야기가 성공적으로 발행되었습니다!');
       setShowSuccessModal(true);
@@ -434,48 +309,45 @@ export default function WriteStoryPage() {
             <CardTitle className="text-[18px]">박스카 이야기 작성</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* 기본 정보 박스 */}
             <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
-              <h3 className="font-medium text-gray-800 mb-4" style={{ fontSize: '16px' }}>
-                기본 정보
-              </h3>
-              
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* 입력 폼 */}
-                <div className="space-y-4">
-                {/* 제목 */}
+                <div className="space-y-2">
                 <div>
                   <label className="block text-sm font-medium text-gray-800 mb-2">
                     이야기 제목
                   </label>
-                  <div className="bg-transparent p-4 rounded-lg border border-gray-300">
-                    <input
-                      type="text"
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      placeholder="이야기 카드에 표시될 제목"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] mb-3 bg-white"
-                    />
-                  </div>
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="이야기 카드에 표시될 제목"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
+                  />
                 </div>
 
-                {/* 요약 */}
                 <div>
                   <label className="block text-sm font-medium text-gray-800 mb-2">
                     이야기 설명
                   </label>
-                  <div className="bg-transparent p-4 rounded-lg border border-gray-300">
-                    <textarea
-                      value={summary}
-                      onChange={(e) => setSummary(e.target.value)}
-                      placeholder="이야기 카드에 표시될 설명"
-                      rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] mb-2 bg-white"
-                    />
+                  <textarea
+                    value={summary}
+                    onChange={(e) => setSummary(e.target.value)}
+                    placeholder="이야기 카드에 표시될 설명"
+                    rows={24}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
+                  />
+                  <div className="mt-1 p-2 bg-blue-50 border border-blue-200 rounded-md">
+                    <div className="text-xs text-blue-800">
+                      <p className="font-bold mb-1">마크다운 작성 방법:</p>
+                      <div className="space-y-1 text-xs">
+                        <p>• <span className="font-bold">**굵은 글씨**</span> → <strong>굵은 글씨</strong></p>
+                        <p>• <span className="font-bold">*기울임*</span> → <em>기울임</em></p>
+                        <p>• <span className="font-bold">~~취소선~~</span> → <del>취소선</del></p>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                {/* 썸네일 */}
                 <div>
                   <label className="block text-sm font-medium text-gray-800 mb-2">
                     이야기 썸네일 (카드 이미지)
@@ -491,9 +363,7 @@ export default function WriteStoryPage() {
                       <button
                         type="button"
                         onClick={() => {
-                          console.log('썸네일 삭제 전:', thumbnail);
                           setThumbnail('');
-                          console.log('썸네일 삭제 후:', '');
                         }}
                         className="px-3 py-2 bg-sky-500 hover:bg-sky-600 text-white text-sm rounded-md transition-colors whitespace-nowrap flex-shrink-0"
                       >
@@ -503,6 +373,38 @@ export default function WriteStoryPage() {
                   </div>
                 </div>
 
+                {/* 카드 배경색 선택 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-800 mb-2">
+                    카드 배경색
+                  </label>
+                  <div className="flex items-center gap-4">
+                    <input
+                      type="color"
+                      value={cardBackgroundColor === 'transparent' ? '#ffffff' : cardBackgroundColor}
+                      onChange={(e) => setCardBackgroundColor(e.target.value)}
+                      className="w-12 h-10 border-0 rounded-md cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={cardBackgroundColor}
+                      onChange={(e) => setCardBackgroundColor(e.target.value)}
+                      placeholder="#ffffff"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setCardBackgroundColor('transparent')}
+                      className={`px-3 py-2 text-sm rounded-md border transition-colors ${
+                        cardBackgroundColor === 'transparent'
+                          ? 'bg-blue-100 border-blue-300 text-blue-700'
+                          : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      투명
+                    </button>
+                  </div>
+                </div>
 
                 </div>
 
@@ -510,7 +412,7 @@ export default function WriteStoryPage() {
                 <div className="flex justify-center">
                   <div 
                     className="group shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden w-[325px] rounded-2xl relative"
-                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.97)' }}
+                    style={{ backgroundColor: cardBackgroundColor }}
                   >
                     {/* 썸네일 */}
                     {thumbnail && (
@@ -549,12 +451,17 @@ export default function WriteStoryPage() {
                         })()}
                       </h4>
                       {summary && (
-                        <p 
+                        <div 
                           className="text-[15px] mb-3 whitespace-pre-wrap"
                           style={{ color: '#000000', lineHeight: '1.6' }}
-                        >
-                          {summary}
-                        </p>
+                          dangerouslySetInnerHTML={{
+                            __html: summary
+                              .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold">$1</strong>')
+                              .replace(/\*(.*?)\*/g, '<em class="italic">$1</em>')
+                              .replace(/~~(.*?)~~/g, '<del class="line-through">$1</del>')
+                              .replace(/\n/g, '<br>')
+                          }}
+                        />
                       )}
                     </div>
                   </div>
@@ -562,159 +469,7 @@ export default function WriteStoryPage() {
               </div>
             </div>
 
-            {/* 뷰 상단 이미지 */}
-            <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
-              <h3 className="font-medium text-gray-800 mb-4" style={{ fontSize: '16px' }}>
-                뷰 상단 이미지
-              </h3>
-              <div>
-                <label className="block text-sm font-medium text-gray-800 mb-2">
-                  뷰 상단 이미지
-                </label>
-                <div className="bg-transparent p-4 rounded-lg border border-gray-300">
-                  <div className="flex gap-2 mb-3">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleViewTopImageUpload}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
-                    />
-                    {viewTopImage && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          console.log('뷰 상단 이미지 삭제 전:', viewTopImage);
-                          setViewTopImage('');
-                          console.log('뷰 상단 이미지 삭제 후:', '');
-                        }}
-                        className="px-3 py-2 bg-sky-500 hover:bg-sky-600 text-white text-sm rounded-md transition-colors whitespace-nowrap flex-shrink-0"
-                      >
-                        삭제
-                      </button>
-                    )}
-                  </div>
-                  {viewTopImage && (
-                    <div className="mt-3">
-                      <img
-                        src={viewTopImage}
-                        alt="뷰 상단 이미지 미리보기"
-                        className="w-full h-auto max-h-64 object-contain rounded-lg border border-gray-200"
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
 
-            {/* 내용 */}
-            <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
-              <h3 className="font-medium text-gray-800 mb-4" style={{ fontSize: '16px' }}>
-                내용
-              </h3>
-              
-              {/* 이미지 업로더 */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-800 mb-3">이미지 업로드</label>
-                <div className="p-4 bg-white rounded-lg border border-gray-200">
-                <div className="flex flex-col gap-4">
-                  {/* 파일 선택 버튼과 업로드된 이미지들을 같은 줄에 배치 */}
-                  <div className="flex items-start gap-4 w-full">
-                    {/* 파일 선택 버튼 */}
-                    <div className="flex-shrink-0">
-                      <label>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleEditorImageUpload}
-                          className="hidden"
-                          id="image-upload"
-                        />
-                        <div className="w-20 h-20 bg-blue-50 hover:bg-blue-100 border-2 border-blue-300 rounded-lg flex flex-col items-center justify-center cursor-pointer transition-colors">
-                          <div className="text-blue-600 text-2xl mb-1">📷</div>
-                          <div className="text-blue-700 text-xs font-medium">선택</div>
-                        </div>
-                      </label>
-                    </div>
-                    
-                    {/* 업로드된 이미지들 - 가로 정렬 */}
-                    {uploadedImages.length > 0 && (
-                      <div className="flex gap-3 overflow-x-auto pb-2 flex-1">
-                      {uploadedImages.map((image, index) => (
-                        <div key={index} className="flex items-center gap-2 flex-shrink-0">
-                          <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
-                            <img 
-                              src={image} 
-                              alt={`업로드된 이미지 ${index + 1}`}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <div className="flex flex-col gap-1">
-                            <button
-                              type="button"
-                              onClick={async () => {
-                                try {
-                                  if (navigator.clipboard && navigator.clipboard.writeText) {
-                                    await navigator.clipboard.writeText(image);
-                                    alert('이미지 URL이 클립보드에 복사되었습니다!');
-                                  } else {
-                                    // 클립보드 API를 사용할 수 없는 경우
-                                    const textArea = document.createElement('textarea');
-                                    textArea.value = image;
-                                    document.body.appendChild(textArea);
-                                    textArea.select();
-                                    document.execCommand('copy');
-                                    document.body.removeChild(textArea);
-                                    alert('이미지 URL이 클립보드에 복사되었습니다!');
-                                  }
-                                } catch (error) {
-                                  console.error('클립보드 복사 실패:', error);
-                                  alert('복사에 실패했습니다. 다시 시도해주세요.');
-                                }
-                              }}
-                              className="px-2 py-1 bg-green-500 hover:bg-green-600 text-white text-xs rounded transition-colors"
-                            >
-                              복사
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => removeEditorImage(index)}
-                              className="px-2 py-1 bg-orange-500 hover:bg-orange-600 text-white text-xs rounded transition-colors"
-                            >
-                              삭제
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <p className="text-xs text-gray-500 text-center">이미지를 업로드한 후 URL을 복사하여 에디터에 붙여넣으세요.</p>
-                </div>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-800 mb-2">
-                  에디터
-                </label>
-                <RichTextEditor
-                  content={content}
-                  onChange={setContent}
-                  placeholder="박스카 이야기의 본문을 작성하세요..."
-                />
-                <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
-                  <div className="text-sm text-blue-800">
-                    <div className="space-y-1 text-xs">
-                      <p>• <span className="font-bold">H1</span>: CookieRun, 20px (제목)</p>
-                      <p>• <span className="font-bold">H2</span>: CookieRun, 18px (부제목)</p>
-                      <p>• <span className="font-bold">H3</span>: Inter, 16px (소제목)</p>
-                      <p>• <span className="font-bold">기본글꼴</span>: Inter, 14px (본문)</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
 
 
 

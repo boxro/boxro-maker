@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ErrorModal from "@/components/ErrorModal";
+import ReactMarkdown from "react-markdown";
 import { 
   ArrowLeft,
   Calendar,
@@ -787,13 +788,26 @@ export default function StoryArticlePage() {
           <CardContent>
             {/* 본문 내용 */}
             <div className="w-full md:w-4/5 mx-auto">
-              <div className="rich-text-editor prose prose-lg max-w-none">
-              <div 
-                className="prose prose-lg max-w-none leading-relaxed prose-headings:text-gray-800 prose-p:text-gray-800 prose-a:text-blue-600 prose-strong:text-gray-800 prose-code:bg-gray-100 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-pre:bg-gray-100 prose-blockquote:border-l-4 prose-blockquote:border-gray-300 prose-blockquote:pl-4 whitespace-pre-line"
-                dangerouslySetInnerHTML={{ 
-                  __html: article.content.replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>')
-                }}
-              />
+              <div className="text-base leading-relaxed text-gray-800">
+                <ReactMarkdown
+                  components={{
+                    strong: ({children}) => <strong className="font-bold text-gray-800">{children}</strong>,
+                    em: ({children}) => <em className="italic">{children}</em>,
+                    del: ({children}) => <del className="line-through">{children}</del>,
+                    h1: ({children}) => <h1 className="text-2xl font-bold mb-4 text-gray-800">{children}</h1>,
+                    h2: ({children}) => <h2 className="text-xl font-bold mb-3 text-gray-800">{children}</h2>,
+                    h3: ({children}) => <h3 className="text-lg font-bold mb-2 text-gray-800">{children}</h3>,
+                    ul: ({children}) => <ul className="list-disc list-inside mb-4 space-y-1">{children}</ul>,
+                    ol: ({children}) => <ol className="list-decimal list-inside mb-4 space-y-1">{children}</ol>,
+                    li: ({children}) => <li className="mb-1">{children}</li>,
+                    p: ({children}) => <p className="mb-4 leading-relaxed">{children}</p>,
+                    code: ({children}) => <code className="bg-gray-100 px-1 py-0.5 rounded text-sm">{children}</code>,
+                    pre: ({children}) => <pre className="bg-gray-100 p-4 rounded-lg overflow-x-auto mb-4">{children}</pre>,
+                    blockquote: ({children}) => <blockquote className="border-l-4 border-gray-300 pl-4 italic mb-4">{children}</blockquote>
+                  }}
+                >
+                  {article.content}
+                </ReactMarkdown>
               </div>
             </div>
             
