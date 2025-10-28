@@ -5243,19 +5243,6 @@ export default function AdminPage() {
                             <tr className="border-b border-gray-200">
                               <th 
                                 className="text-left py-1 px-3 font-medium text-gray-800 bg-gray-50 cursor-pointer hover:bg-gray-100"
-                                onClick={() => handleActivitySort('createdAt')}
-                              >
-                                <div className="flex items-center gap-1">
-                                  좋아요한 날짜
-                                  {activitySortField === 'createdAt' && (
-                                    activitySortDirection === 'desc' ? 
-                                    <ArrowDown className="w-3 h-3" /> : 
-                                    <ArrowUp className="w-3 h-3" />
-                                  )}
-                                </div>
-                              </th>
-                              <th 
-                                className="text-left py-1 px-3 font-medium text-gray-800 bg-gray-50 cursor-pointer hover:bg-gray-100"
                                 onClick={() => handleActivitySort('source')}
                               >
                                 <div className="flex items-center gap-1">
@@ -5276,11 +5263,6 @@ export default function AdminPage() {
                           <tbody>
                             {getSortedActivityData(userActivities[selectedUser]?.likes || []).slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((like: any, idx: number) => (
                               <tr key={idx} className="border-b border-gray-100 hover:bg-red-50">
-                                <td className="py-1 px-3 text-gray-800 text-xs">
-                                  <span className="text-red-500 font-medium">활동 날짜 추적 불가</span>
-                                  <br />
-                                  <span className="text-xs text-gray-400">현재 데이터 구조로는 실제 좋아요한 날짜를 알 수 없습니다</span>
-                      </td>
                                 <td className="py-1 px-3 text-gray-800 text-xs">
                                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                                     like.articleId 
@@ -5365,19 +5347,6 @@ export default function AdminPage() {
                             <tr className="border-b border-gray-200">
                               <th 
                                 className="text-left py-1 px-3 font-medium text-gray-800 bg-gray-50 cursor-pointer hover:bg-gray-100"
-                                onClick={() => handleActivitySort('createdAt')}
-                              >
-                                <div className="flex items-center gap-1">
-                                  다운로드한 날짜
-                                  {activitySortField === 'createdAt' && (
-                                    activitySortDirection === 'desc' ? 
-                                    <ArrowDown className="w-3 h-3" /> : 
-                                    <ArrowUp className="w-3 h-3" />
-                                  )}
-                                </div>
-                              </th>
-                              <th 
-                                className="text-left py-1 px-3 font-medium text-gray-800 bg-gray-50 cursor-pointer hover:bg-gray-100"
                                 onClick={() => handleActivitySort('source')}
                               >
                                 <div className="flex items-center gap-1">
@@ -5398,11 +5367,6 @@ export default function AdminPage() {
                           <tbody>
                             {getSortedActivityData(userActivities[selectedUser]?.downloads || []).slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((download: any, idx: number) => (
                               <tr key={idx} className="border-b border-gray-100 hover:bg-purple-50">
-                                <td className="py-1 px-3 text-gray-800 text-xs">
-                                  <span className="text-red-500 font-medium">활동 날짜 추적 불가</span>
-                                  <br />
-                                  <span className="text-xs text-gray-400">현재 데이터 구조로는 실제 다운로드한 날짜를 알 수 없습니다</span>
-                      </td>
                                 <td className="py-1 px-3 text-gray-800 text-xs">
                                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                                     download.type === 'blueprint' 
@@ -5487,19 +5451,6 @@ export default function AdminPage() {
                             <tr className="border-b border-gray-200">
                               <th 
                                 className="text-left py-1 px-3 font-medium text-gray-800 bg-gray-50 cursor-pointer hover:bg-gray-100"
-                                onClick={() => handleActivitySort('createdAt')}
-                              >
-                                <div className="flex items-center gap-1">
-                                  공유한 날짜
-                                  {activitySortField === 'createdAt' && (
-                                    activitySortDirection === 'desc' ? 
-                                    <ArrowDown className="w-3 h-3" /> : 
-                                    <ArrowUp className="w-3 h-3" />
-                                  )}
-                                </div>
-                              </th>
-                              <th 
-                                className="text-left py-1 px-3 font-medium text-gray-800 bg-gray-50 cursor-pointer hover:bg-gray-100"
                                 onClick={() => handleActivitySort('source')}
                               >
                                 <div className="flex items-center gap-1">
@@ -5520,11 +5471,6 @@ export default function AdminPage() {
                           <tbody>
                             {getSortedActivityData(userActivities[selectedUser]?.shares || []).slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((share: any, idx: number) => (
                               <tr key={idx} className="border-b border-gray-100 hover:bg-orange-50">
-                                <td className="py-1 px-3 text-gray-800 text-xs">
-                                  <span className="text-red-500 font-medium">활동 날짜 추적 불가</span>
-                                  <br />
-                                  <span className="text-xs text-gray-400">현재 데이터 구조로는 실제 공유한 날짜를 알 수 없습니다</span>
-                      </td>
                                 <td className="py-1 px-3 text-gray-800 text-xs">
                                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                                     share.articleId 
@@ -5609,19 +5555,6 @@ export default function AdminPage() {
                             <tr className="border-b border-gray-200">
                               <th 
                                 className="text-left py-1 px-3 font-medium text-gray-800 bg-gray-50 cursor-pointer hover:bg-gray-100"
-                                onClick={() => handleActivitySort('createdAt')}
-                              >
-                                <div className="flex items-center gap-1">
-                                  조회한 날짜
-                                  {activitySortField === 'createdAt' && (
-                                    activitySortDirection === 'desc' ? 
-                                    <ArrowDown className="w-3 h-3" /> : 
-                                    <ArrowUp className="w-3 h-3" />
-                                  )}
-                                </div>
-                              </th>
-                              <th 
-                                className="text-left py-1 px-3 font-medium text-gray-800 bg-gray-50 cursor-pointer hover:bg-gray-100"
                                 onClick={() => handleActivitySort('source')}
                               >
                                 <div className="flex items-center gap-1">
@@ -5642,11 +5575,6 @@ export default function AdminPage() {
                           <tbody>
                             {getSortedActivityData(userActivities[selectedUser]?.views || []).slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((view: any, idx: number) => (
                               <tr key={idx} className="border-b border-gray-100 hover:bg-orange-50">
-                                <td className="py-1 px-3 text-gray-800 text-xs">
-                                  <span className="text-red-500 font-medium">활동 날짜 추적 불가</span>
-                                  <br />
-                                  <span className="text-xs text-gray-400">현재 데이터 구조로는 실제 조회한 날짜를 알 수 없습니다</span>
-                      </td>
                                 <td className="py-1 px-3 text-gray-800 text-xs">
                                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                                     view.type === 'story' 
@@ -5735,19 +5663,6 @@ export default function AdminPage() {
                         <table className="w-full text-[13px] bg-white min-w-[800px]">
                           <thead>
                             <tr className="border-b border-gray-200">
-                              <th 
-                                className="text-left py-1 px-3 font-medium text-gray-800 bg-gray-50 cursor-pointer hover:bg-gray-100"
-                                onClick={() => handleActivitySort('createdAt')}
-                              >
-                                <div className="flex items-center gap-1">
-                                  바로가기 날짜
-                                  {activitySortField === 'createdAt' && (
-                                    activitySortDirection === 'desc' ? 
-                                    <ArrowDown className="w-3 h-3" /> : 
-                                    <ArrowUp className="w-3 h-3" />
-                                  )}
-                                </div>
-                              </th>
                               <th className="text-left py-1 px-3 font-medium text-gray-800 bg-gray-50">작품</th>
                               <th className="text-left py-1 px-3 font-medium text-gray-800 bg-gray-50">작가</th>
                               <th className="text-center py-1 px-3 font-medium text-gray-800 bg-gray-50">전체 바로가기 수</th>
@@ -5757,11 +5672,6 @@ export default function AdminPage() {
                           <tbody>
                             {getSortedActivityData(userActivities[selectedUser]?.storeRedirects || []).slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((redirect: any, idx: number) => (
                               <tr key={idx} className="border-b border-gray-100 hover:bg-orange-50">
-                                <td className="py-1 px-3 text-gray-800 text-xs">
-                                  <span className="text-red-500 font-medium">활동 날짜 추적 불가</span>
-                                  <br />
-                                  <span className="text-xs text-gray-400">현재 데이터 구조로는 실제 바로가기한 날짜를 알 수 없습니다</span>
-                                </td>
                                 <td className="py-1 px-3">
                                   <div className="flex items-center gap-3">
                                     <div className="w-[58px] h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
