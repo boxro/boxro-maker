@@ -32,6 +32,7 @@ interface StoryArticle {
   likes: number;
   isPublished: boolean;
   viewTopImage?: string;
+  cardBackgroundColor?: string;
   createdAt: any;
   updatedAt: any;
 }
@@ -49,6 +50,7 @@ export default function EditYoutubePage() {
   const [summary, setSummary] = useState("");
   const [storeUrl, setStoreUrl] = useState("");
   const [thumbnail, setThumbnail] = useState("");
+  const [cardBackgroundColor, setCardBackgroundColor] = useState('#ffffff');
   const [isPublished, setIsPublished] = useState(false);
   const [saving, setSaving] = useState(false);
   
@@ -159,6 +161,7 @@ export default function EditYoutubePage() {
         setStoreUrl(articleData.storeUrl || '');
         setThumbnail(articleData.thumbnail || '');
         setIsPublished(articleData.isPublished);
+        setCardBackgroundColor(articleData.cardBackgroundColor || '#ffffff');
       } else {
         setErrorMessage('글이 존재하지 않습니다.');
         setShowErrorModal(true);
@@ -273,6 +276,7 @@ export default function EditYoutubePage() {
         isPublished: true,
         thumbnail: thumbnail || '',
         authorNickname: userNickname,
+        cardBackgroundColor: cardBackgroundColor,
         updatedAt: new Date()
       };
 
@@ -280,6 +284,12 @@ export default function EditYoutubePage() {
       const articleRef = doc(db, 'youtubeItems', article.id);
       await updateDoc(articleRef, articleData);
       
+      
+      // 인덱스 캐시 무효화 (수정된 카드가 인덱스에 반영되도록)
+      if (typeof window !== 'undefined') {
+        (window as any).__youtubeIndexLoaded = false;
+        (window as any).__youtubeIndexCache = new Map();
+      }
       
       setSuccessMessage('영상이 성공적으로 수정되었습니다!');
       setShowSuccessModal(true);
@@ -368,9 +378,6 @@ export default function EditYoutubePage() {
           <CardContent className="space-y-6">
             {/* 기본 정보 박스 */}
             <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
-              <h3 className="font-medium text-gray-800 mb-4" style={{ fontSize: '16px' }}>
-                기본 정보
-              </h3>
               
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* 입력 폼 */}
@@ -380,15 +387,13 @@ export default function EditYoutubePage() {
                   <label className="block text-sm font-medium text-gray-800 mb-2">
                     영상 제목
                   </label>
-                  <div className="bg-transparent p-4 rounded-lg border border-gray-300">
-                    <input
-                      type="text"
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      placeholder="영상 카드에 표시될 제목"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] mb-3 bg-white"
-                    />
-                  </div>
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="영상 카드에 표시될 제목"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] mb-3 bg-white"
+                  />
                 </div>
 
                 {/* 요약 */}
@@ -396,14 +401,22 @@ export default function EditYoutubePage() {
                   <label className="block text-sm font-medium text-gray-800 mb-2">
                     영상 설명
                   </label>
-                  <div className="bg-transparent p-4 rounded-lg border border-gray-300">
-                    <textarea
-                      value={summary}
-                      onChange={(e) => setSummary(e.target.value)}
-                      placeholder="영상 카드에 표시될 설명"
-                      rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] mb-2 bg-white"
-                    />
+                  <textarea
+                    value={summary}
+                    onChange={(e) => setSummary(e.target.value)}
+                    placeholder="영상 카드에 표시될 설명"
+                    rows={12}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
+                  />
+                  <div className="mt-1 p-2 bg-blue-50 border border-blue-200 rounded-md">
+                    <div className="text-xs text-blue-800">
+                      <p className="font-bold mb-1">마크다운 작성 방법:</p>
+                      <div className="space-y-1 text-xs">
+                        <p>• <span className="font-bold">**굵은 글씨**</span> → <strong>굵은 글씨</strong></p>
+                        <p>• <span className="font-bold">*기울임*</span> → <em>기울임</em></p>
+                        <p>• <span className="font-bold">~~취소선~~</span> → <del>취소선</del></p>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -413,15 +426,13 @@ export default function EditYoutubePage() {
                   <label className="block text-sm font-medium text-gray-800 mb-2">
                     유튜브 바로가기 URL
                   </label>
-                  <div className="bg-transparent p-4 rounded-lg border border-gray-300">
-                    <input
-                      type="url"
-                      value={storeUrl}
-                      onChange={(e) => setStoreUrl(e.target.value)}
-                      placeholder="유튜브 바로가기 URL을 입력하세요 (예: https://youtube.com/watch?v=...)"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
-                    />
-                  </div>
+                  <input
+                    type="url"
+                    value={storeUrl}
+                    onChange={(e) => setStoreUrl(e.target.value)}
+                    placeholder="유튜브 바로가기 URL을 입력하세요 (예: https://youtube.com/watch?v=...)"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
+                  />
                 </div>
 
                 {/* 썸네일 */}
@@ -450,6 +461,35 @@ export default function EditYoutubePage() {
                       </button>
                     )}
                   </div>
+                  
+                  {/* 카드 배경색 선택 - 썸네일 바로 아래 */}
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium text-gray-800 mb-2">
+                      카드 배경색
+                    </label>
+                    <div className="flex items-center gap-4">
+                      <input
+                        type="color"
+                        value={cardBackgroundColor === 'transparent' ? '#ffffff' : cardBackgroundColor}
+                        onChange={(e) => setCardBackgroundColor(e.target.value)}
+                        className="w-12 h-10 border-0 rounded-md cursor-pointer"
+                      />
+                      <input
+                        type="text"
+                        value={cardBackgroundColor}
+                        onChange={(e) => setCardBackgroundColor(e.target.value)}
+                        placeholder="#ffffff"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setCardBackgroundColor('transparent')}
+                        className="px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white text-sm rounded-md transition-colors"
+                      >
+                        투명
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
 
@@ -458,8 +498,8 @@ export default function EditYoutubePage() {
                 {/* 미리보기 */}
                 <div className="flex justify-center">
                   <div 
-                    className="group shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden w-[325px] rounded-2xl relative"
-                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.97)' }}
+                    className="group shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden w-[375px] rounded-2xl relative"
+                    style={{ backgroundColor: cardBackgroundColor }}
                   >
                     {/* 썸네일 */}
                     {thumbnail && (
@@ -498,12 +538,17 @@ export default function EditYoutubePage() {
                         })()}
                       </h4>
                       {summary && (
-                        <p 
+                        <div 
                           className="text-[15px] mb-3 whitespace-pre-wrap"
                           style={{ color: '#000000', lineHeight: '1.6' }}
-                        >
-                          {summary}
-                        </p>
+                          dangerouslySetInnerHTML={{
+                            __html: summary
+                              .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold">$1</strong>')
+                              .replace(/\*(.*?)\*/g, '<em class="italic">$1</em>')
+                              .replace(/~~(.*?)~~/g, '<del class="line-through">$1</del>')
+                              .replace(/\n/g, '<br>')
+                          }}
+                        />
                       )}
                     </div>
                   </div>

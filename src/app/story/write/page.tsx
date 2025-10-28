@@ -273,6 +273,12 @@ export default function WriteStoryPage() {
       // Firebase에 저장
       const docRef = await addDoc(collection(db, 'storyArticles'), articleData);
       
+      // 인덱스 캐시 무효화 (새 카드가 인덱스에 포함되도록)
+      if (typeof window !== 'undefined') {
+        (window as any).__storyIndexLoaded = false;
+        (window as any).__storyIndexCache = new Map();
+      }
+      
       setSuccessMessage('박스카 이야기가 성공적으로 발행되었습니다!');
       setShowSuccessModal(true);
       

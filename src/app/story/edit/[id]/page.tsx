@@ -335,6 +335,12 @@ export default function EditStoryPage() {
       const articleRef = doc(db, 'storyArticles', article.id);
       await updateDoc(articleRef, articleData);
       
+      // 인덱스 캐시 무효화 (수정된 카드가 인덱스에 반영되도록)
+      if (typeof window !== 'undefined') {
+        (window as any).__storyIndexLoaded = false;
+        (window as any).__storyIndexCache = new Map();
+      }
+      
       setSuccessMessage('글이 성공적으로 발행되었습니다!');
       setShowSuccessModal(true);
       

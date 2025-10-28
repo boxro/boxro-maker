@@ -297,6 +297,12 @@ export default function EditStoryPage() {
       console.log('도안 수정 완료, ID:', id);
       
       
+      // 인덱스 캐시 무효화 (수정된 카드가 인덱스에 반영되도록)
+      if (typeof window !== 'undefined') {
+        (window as any).__storeIndexLoaded = false;
+        (window as any).__storeIndexCache = new Map();
+      }
+      
       setSuccessMessage('도안이 성공적으로 수정되었습니다!');
       setShowSuccessModal(true);
       

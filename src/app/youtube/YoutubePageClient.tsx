@@ -1521,12 +1521,17 @@ export default function YoutubePageClient() {
                   </h3>
                   
                   {article.summary && (
-                    <p 
-                      className="text-[15px] mb-3 whitespace-pre-wrap flex-1 text-gray-900"
-                      style={{ lineHeight: '1.6' }}
-                    >
-                      {article.summary}
-                    </p>
+                    <div
+                      className="text-[15px] mb-3 whitespace-pre-wrap flex-1"
+                      style={{ color: '#000000', lineHeight: '1.6' }}
+                      dangerouslySetInnerHTML={{
+                        __html: article.summary
+                          .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold">$1</strong>')
+                          .replace(/\*(.*?)\*/g, '<em class="italic">$1</em>')
+                          .replace(/~~(.*?)~~/g, '<del class="line-through">$1</del>')
+                          .replace(/\n/g, '<br>')
+                      }}
+                    />
                   )}
                   
                   {/* 유튜브에서 보기 버튼 */}
