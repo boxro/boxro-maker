@@ -1867,6 +1867,12 @@ export default function GalleryPage() {
 
       const docRef = await addDoc(collection(db, 'communityDesigns'), designData);
       
+      // 인덱스 캐시 무효화 (새 작품이 인덱스에 포함되도록)
+      if (typeof window !== 'undefined') {
+        (window as any).__galleryIndexLoaded = false;
+        (window as any).__galleryIndexCache = new Map();
+      }
+      
       // 로컬 상태에 새 디자인 추가
       const newDesign: GalleryDesign = {
         id: docRef.id,
@@ -1947,6 +1953,12 @@ export default function GalleryPage() {
         thumbnail: thumbnailUrl,
         updatedAt: serverTimestamp()
       });
+
+      // 인덱스 캐시 무효화 (수정된 작품이 인덱스에 반영되도록)
+      if (typeof window !== 'undefined') {
+        (window as any).__galleryIndexLoaded = false;
+        (window as any).__galleryIndexCache = new Map();
+      }
 
       // 로컬 상태 업데이트
       setDesigns(prev => prev.map(design => 
