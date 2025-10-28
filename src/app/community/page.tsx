@@ -1464,6 +1464,14 @@ export default function GalleryPage() {
         prevDesigns.filter(design => design.id !== deleteDesignId)
       );
 
+      // 해시 URL이 있는 경우 제거하고 일반 목록으로 리다이렉트
+      if (typeof window !== 'undefined' && window.location.hash) {
+        console.log('🗑️ 해시 URL이 있는 상태에서 작품 삭제, 해시 제거 후 리다이렉트');
+        window.history.replaceState(null, '', window.location.pathname);
+        // 해시 변경 이벤트 발생시켜서 일반 목록으로 전환
+        window.dispatchEvent(new HashChangeEvent('hashchange'));
+      }
+
       // 모달 닫기
       closeDeleteModal();
       

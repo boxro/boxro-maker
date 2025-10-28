@@ -681,6 +681,15 @@ export default function YoutubePageClient() {
       // 2. 게시물 삭제
       await deleteDoc(doc(db, 'youtubeItems', deleteArticleId));
       setArticles(articles.filter(article => article.id !== deleteArticleId));
+      
+      // 3. 해시 URL이 있는 경우 제거하고 일반 목록으로 리다이렉트
+      if (typeof window !== 'undefined' && window.location.hash) {
+        console.log('🗑️ 해시 URL이 있는 상태에서 카드 삭제, 해시 제거 후 리다이렉트');
+        window.history.replaceState(null, '', window.location.pathname);
+        // 해시 변경 이벤트 발생시켜서 일반 목록으로 전환
+        window.dispatchEvent(new HashChangeEvent('hashchange'));
+      }
+      
       closeDeleteModal();
     } catch (error) {
       console.error('삭제 실패:', error);
@@ -1286,7 +1295,7 @@ export default function YoutubePageClient() {
           }
         }, 1000);
       }
-    }, 500); // 지연 시간 증가
+    }, 500); // 지연 시간을 500ms로 복원
   }, [articles]);
 
   // articles가 로드된 후에만 해시 확인
