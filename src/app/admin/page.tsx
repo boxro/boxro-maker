@@ -5277,7 +5277,9 @@ export default function AdminPage() {
                             {getSortedActivityData(userActivities[selectedUser]?.likes || []).slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((like: any, idx: number) => (
                               <tr key={idx} className="border-b border-gray-100 hover:bg-red-50">
                                 <td className="py-1 px-3 text-gray-800 text-xs">
-                                  {new Date(like.likedAt?.toDate?.() || like.likedAt || like.createdAt?.toDate?.() || like.createdAt).toLocaleString('ko-KR')}
+                                  <span className="text-gray-500 italic">활동 날짜 추적 불가</span>
+                                  <br />
+                                  <span className="text-xs text-gray-400">(작품 생성일: {new Date(like.createdAt?.toDate?.() || like.createdAt).toLocaleString('ko-KR')})</span>
                       </td>
                                 <td className="py-1 px-3 text-gray-800 text-xs">
                                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -5397,7 +5399,9 @@ export default function AdminPage() {
                             {getSortedActivityData(userActivities[selectedUser]?.downloads || []).slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((download: any, idx: number) => (
                               <tr key={idx} className="border-b border-gray-100 hover:bg-purple-50">
                                 <td className="py-1 px-3 text-gray-800 text-xs">
-                                  {new Date(download.downloadedAt?.toDate?.() || download.downloadedAt || download.createdAt?.toDate?.() || download.createdAt).toLocaleString('ko-KR')}
+                                  <span className="text-gray-500 italic">활동 날짜 추적 불가</span>
+                                  <br />
+                                  <span className="text-xs text-gray-400">(작품 생성일: {new Date(download.createdAt?.toDate?.() || download.createdAt).toLocaleString('ko-KR')})</span>
                       </td>
                                 <td className="py-1 px-3 text-gray-800 text-xs">
                                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -5517,7 +5521,9 @@ export default function AdminPage() {
                             {getSortedActivityData(userActivities[selectedUser]?.shares || []).slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((share: any, idx: number) => (
                               <tr key={idx} className="border-b border-gray-100 hover:bg-orange-50">
                                 <td className="py-1 px-3 text-gray-800 text-xs">
-                                  {new Date(share.sharedAt?.toDate?.() || share.sharedAt || share.createdAt?.toDate?.() || share.createdAt).toLocaleString('ko-KR')}
+                                  <span className="text-gray-500 italic">활동 날짜 추적 불가</span>
+                                  <br />
+                                  <span className="text-xs text-gray-400">(작품 생성일: {new Date(share.createdAt?.toDate?.() || share.createdAt).toLocaleString('ko-KR')})</span>
                       </td>
                                 <td className="py-1 px-3 text-gray-800 text-xs">
                                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -5637,7 +5643,9 @@ export default function AdminPage() {
                             {getSortedActivityData(userActivities[selectedUser]?.views || []).slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((view: any, idx: number) => (
                               <tr key={idx} className="border-b border-gray-100 hover:bg-orange-50">
                                 <td className="py-1 px-3 text-gray-800 text-xs">
-                                  {new Date(view.viewedAt?.toDate?.() || view.viewedAt || view.createdAt?.toDate?.() || view.createdAt).toLocaleString('ko-KR')}
+                                  <span className="text-gray-500 italic">활동 날짜 추적 불가</span>
+                                  <br />
+                                  <span className="text-xs text-gray-400">(작품 생성일: {new Date(view.createdAt?.toDate?.() || view.createdAt).toLocaleString('ko-KR')})</span>
                       </td>
                                 <td className="py-1 px-3 text-gray-800 text-xs">
                                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -5750,7 +5758,9 @@ export default function AdminPage() {
                             {getSortedActivityData(userActivities[selectedUser]?.storeRedirects || []).slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((redirect: any, idx: number) => (
                               <tr key={idx} className="border-b border-gray-100 hover:bg-orange-50">
                                 <td className="py-1 px-3 text-gray-800 text-xs">
-                                  {new Date(redirect.redirectedAt?.toDate?.() || redirect.redirectedAt || redirect.createdAt?.toDate?.() || redirect.createdAt).toLocaleString('ko-KR')}
+                                  <span className="text-gray-500 italic">활동 날짜 추적 불가</span>
+                                  <br />
+                                  <span className="text-xs text-gray-400">(작품 생성일: {new Date(redirect.createdAt?.toDate?.() || redirect.createdAt).toLocaleString('ko-KR')})</span>
                                 </td>
                                 <td className="py-1 px-3">
                                   <div className="flex items-center gap-3">
