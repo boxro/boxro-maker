@@ -371,38 +371,38 @@ export default function WriteStoryPage() {
                       </button>
                     )}
                   </div>
-                </div>
-
-                {/* 카드 배경색 선택 */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-800 mb-2">
-                    카드 배경색
-                  </label>
-                  <div className="flex items-center gap-4">
-                    <input
-                      type="color"
-                      value={cardBackgroundColor === 'transparent' ? '#ffffff' : cardBackgroundColor}
-                      onChange={(e) => setCardBackgroundColor(e.target.value)}
-                      className="w-12 h-10 border-0 rounded-md cursor-pointer"
-                    />
-                    <input
-                      type="text"
-                      value={cardBackgroundColor}
-                      onChange={(e) => setCardBackgroundColor(e.target.value)}
-                      placeholder="#ffffff"
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setCardBackgroundColor('transparent')}
-                      className={`px-3 py-2 text-sm rounded-md border transition-colors ${
-                        cardBackgroundColor === 'transparent'
-                          ? 'bg-blue-100 border-blue-300 text-blue-700'
-                          : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                      }`}
-                    >
-                      투명
-                    </button>
+                  
+                  {/* 카드 배경색 선택 - 썸네일 바로 아래 */}
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium text-gray-800 mb-2">
+                      카드 배경색
+                    </label>
+                    <div className="flex items-center gap-4">
+                      <input
+                        type="color"
+                        value={cardBackgroundColor === 'transparent' ? '#ffffff' : cardBackgroundColor}
+                        onChange={(e) => setCardBackgroundColor(e.target.value)}
+                        className="w-12 h-10 border-0 rounded-md cursor-pointer"
+                      />
+                      <input
+                        type="text"
+                        value={cardBackgroundColor}
+                        onChange={(e) => setCardBackgroundColor(e.target.value)}
+                        placeholder="#ffffff"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setCardBackgroundColor('transparent')}
+                        className={`px-3 py-2 text-sm rounded-md border transition-colors ${
+                          cardBackgroundColor === 'transparent'
+                            ? 'bg-blue-100 border-blue-300 text-blue-700'
+                            : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        투명
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -411,7 +411,7 @@ export default function WriteStoryPage() {
                 {/* 미리보기 */}
                 <div className="flex justify-center">
                   <div 
-                    className="group shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden w-[325px] rounded-2xl relative"
+                    className="group shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden w-[375px] rounded-2xl relative"
                     style={{ backgroundColor: cardBackgroundColor }}
                   >
                     {/* 썸네일 */}

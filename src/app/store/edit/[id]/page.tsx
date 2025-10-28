@@ -6,7 +6,6 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ErrorModal from "@/components/ErrorModal";
-import RichTextEditor from "@/components/RichTextEditor";
 import { 
   ArrowLeft,
   Save,
@@ -23,104 +22,50 @@ import { db } from "@/lib/firebase";
 interface StoryArticle {
   id: string;
   title: string;
-  content: string;
   author: string;
   authorEmail: string;
   authorId: string;
   summary: string;
-  tags: string[];
-  views: number;
-  likes: number;
   isPublished: boolean;
-  viewTopImage?: string;
+  cardBackgroundColor?: string;
+  priceColor?: string;
+  price?: string;
+  isFullDonation?: boolean;
+  storeUrl?: string;
+  thumbnail?: string;
   createdAt: any;
   updatedAt: any;
 }
 
-// content에서 base64 이미지 추출 함수
-
 export default function EditStoryPage() {
   const { id } = useParams();
   const { user } = useAuth();
-  const { articles, updateArticle } = useStory();
+  const { updateArticle } = useStory();
   const router = useRouter();
   const [article, setArticle] = useState<StoryArticle | null>(null);
   const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  
-  // content 변경 디버깅
-  const handleContentChange = (newContent: string) => {
-    setContent(newContent);
-  };
   const [summary, setSummary] = useState("");
   const [price, setPrice] = useState("");
   const [isFullDonation, setIsFullDonation] = useState(false);
   const [storeUrl, setStoreUrl] = useState("");
   const [thumbnail, setThumbnail] = useState("");
+  const [cardBackgroundColor, setCardBackgroundColor] = useState('#ffffff');
+  const [priceColor, setPriceColor] = useState('#e54341');
   const [isPublished, setIsPublished] = useState(false);
-  const [viewTopImage, setViewTopImage] = useState("");
+  // 안내 메시지 모달 상태
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  const [infoMessage, setInfoMessage] = useState('');
+  
+  // 성공 메시지 모달 상태
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
   const [saving, setSaving] = useState(false);
-  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
   
   // 오류 모달 상태
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   
-  // 성공 메시지 모달 상태
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
-  
-  // 안내 메시지 모달 상태
-  const [showInfoModal, setShowInfoModal] = useState(false);
-  const [infoMessage, setInfoMessage] = useState('');
-  
-  const [loading, setLoading] = useState(true);
-
-  // 뷰 상단 이미지 압축 함수 (800px, 80%)
-  const compressViewTopImage = (file: File, maxWidth: number = 400, quality: number = 1.0): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const img = new Image();
-      
-      img.onerror = (error) => {
-        console.error('❌ 이미지 로드 실패:', error);
-        reject(new Error('이미지 파일을 읽을 수 없습니다. 지원되지 않는 형식이거나 손상된 파일일 수 있습니다.'));
-      };
-      
-      img.onload = () => {
-        try {
-        // 400px로 강제 리사이즈 (가로 기준)
-        const maxWidth = 400;
-        const ratio = maxWidth / img.width;
-        canvas.width = maxWidth;
-        canvas.height = img.height * ratio;
-        
-        // 이미지 그리기
-        ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
-        
-        // 투명도가 있는 이미지인지 확인
-        const imageData = ctx?.getImageData(0, 0, canvas.width, canvas.height);
-        const hasTransparency = imageData?.data.some((_, index) => index % 4 === 3 && imageData.data[index] < 255);
-        
-        // 투명도가 있으면 PNG, 없으면 JPG 사용 (원본 포맷 유지)
-        const format = hasTransparency ? 'image/png' : 'image/jpeg';
-        
-        // 1.0 품질로 압축 (원본 품질 유지)
-        const dataUrl = canvas.toDataURL(format, 1.0);
-        
-        console.log(`뷰상단 압축 완료: 품질 1.0, 크기 ${(dataUrl.length / 1024).toFixed(1)}KB`);
-        
-        resolve(dataUrl);
-        } catch (error) {
-          console.error('❌ 압축 처리 중 오류:', error);
-          reject(new Error(`이미지 압축 중 오류가 발생했습니다: ${error.message}`));
-        }
-      };
-      
-      img.src = URL.createObjectURL(file);
-    });
-  };
 
   // 이미지 리사이즈 함수 (투명도 감지)
   const resizeImage = (file: File, maxWidth: number = 800): Promise<string> => {
@@ -170,122 +115,7 @@ export default function EditStoryPage() {
     });
   };
 
-  // 에디터용 이미지 압축 함수 (500px, 80%)
-  const compressEditorImage = (file: File, maxWidth: number = 500, quality: number = 0.8): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const img = new Image();
-      
-      img.onerror = (error) => {
-        console.error('❌ 이미지 로드 실패:', error);
-        reject(new Error('이미지 파일을 읽을 수 없습니다. 지원되지 않는 형식이거나 손상된 파일일 수 있습니다.'));
-      };
-      
-      img.onload = () => {
-        try {
-        // 500px로 강제 리사이즈 (가로 기준)
-        const maxWidth = 500;
-        const ratio = maxWidth / img.width;
-        canvas.width = maxWidth;
-        canvas.height = img.height * ratio;
-        
-        // 이미지 그리기
-        ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
-        
-        // 투명도가 있는 이미지인지 확인
-        const imageData = ctx?.getImageData(0, 0, canvas.width, canvas.height);
-        const hasTransparency = imageData?.data.some((_, index) => index % 4 === 3 && imageData.data[index] < 255);
-        
-        // 투명도가 있으면 PNG, 없으면 JPG 사용 (고품질)
-        const format = hasTransparency ? 'image/png' : 'image/jpeg';
-        let startQuality = hasTransparency ? 0.8 : 0.8; // 80% 품질
-        
-        // 파일 크기가 300KB 이하가 될 때까지 품질을 낮춤
-        const compressImageRecursive = (currentQuality: number): string => {
-          const dataUrl = canvas.toDataURL(format, currentQuality);
-          const sizeKB = dataUrl.length / 1024;
-          
-          console.log(`에디터 압축 시도: 품질 ${currentQuality.toFixed(1)}, 크기 ${sizeKB.toFixed(1)}KB`);
-          
-          // 크기가 여전히 300KB보다 크고 품질을 더 낮출 수 있다면 재귀 호출
-          if (sizeKB > 300 && currentQuality > 0.05) {
-            return compressImageRecursive(currentQuality - 0.05);
-          }
-          
-          console.log(`에디터 최종 압축: 품질 ${currentQuality.toFixed(1)}, 크기 ${sizeKB.toFixed(1)}KB`);
-          return dataUrl;
-        };
-        
-        resolve(compressImageRecursive(startQuality));
-        } catch (error) {
-          console.error('❌ 압축 처리 중 오류:', error);
-          reject(new Error(`이미지 압축 중 오류가 발생했습니다: ${error.message}`));
-        }
-      };
-      
-      img.src = URL.createObjectURL(file);
-    });
-  };
 
-  // 에디터용 이미지 업로드 함수
-  const handleEditorImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (!file.type.startsWith('image/')) {
-        setErrorMessage('이미지 파일만 업로드할 수 있습니다.');
-        setShowErrorModal(true);
-        return;
-      }
-
-      if (file.size > 5 * 1024 * 1024) {
-        setErrorMessage('이미지 크기는 5MB 이하여야 합니다.');
-        setShowErrorModal(true);
-        return;
-      }
-
-      try {
-        const compressedImage = await compressEditorImage(file, 500, 0.8);
-        setUploadedImages(prev => [...prev, compressedImage]);
-      } catch (error) {
-        console.error('이미지 압축 실패:', error);
-        setErrorMessage('이미지 처리 중 오류가 발생했습니다.');
-        setShowErrorModal(true);
-      }
-    }
-  };
-
-  // 이미지 삭제 함수
-  const removeEditorImage = (index: number) => {
-    const imageToRemove = uploadedImages[index];
-    setUploadedImages(prev => prev.filter((_, i) => i !== index));
-    
-    // 에디터에서도 해당 이미지 제거
-    if (imageToRemove && content.includes(imageToRemove)) {
-      // 정규표현식 대신 문자열 치환 사용
-      const updatedContent = content.replace(`src="${imageToRemove}"`, 'src=""');
-      setContent(updatedContent);
-    }
-  };
-
-  // content에서 base64 이미지 추출 함수
-  const extractImagesFromContent = (content: string): string[] => {
-    if (!content) return [];
-    
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(content, 'text/html');
-    const images = doc.querySelectorAll('img');
-    const base64Images: string[] = [];
-    
-    images.forEach((img) => {
-      const src = img.getAttribute('src');
-      if (src && src.startsWith('data:image/')) {
-        base64Images.push(src);
-      }
-    });
-    
-    return base64Images;
-  };
 
   // 관리자 이메일 목록
   const adminEmails = [
@@ -293,7 +123,7 @@ export default function EditStoryPage() {
     "boxro.crafts@gmail.com"
   ];
 
-  // 관리자 권한 확인
+  // 관리자 권한 확인 및 글 불러오기
   useEffect(() => {
     if (!user) {
       router.push('/login');
@@ -301,61 +131,16 @@ export default function EditStoryPage() {
     }
     
     if (!adminEmails.includes(user.email || "")) {
-      setErrorMessage('박스로 스토어 도안 편집 권한이 없습니다.');
+      setErrorMessage('박스로 스토어 도안 작성 권한이 없습니다.');
       setShowErrorModal(true);
       router.push('/store');
       return;
     }
-  }, [user, router]);
-
-  // 기존 글 데이터 로드
-  const fetchArticle = async () => {
-    try {
-      setLoading(true);
-      
-      // Firebase에서 스토어 아이템 데이터 가져오기
-      const articleRef = doc(db, 'storeItems', id as string);
-      const articleSnap = await getDoc(articleRef);
-      
-      if (articleSnap.exists()) {
-        const articleData = {
-          id: articleSnap.id,
-          ...articleSnap.data()
-        } as StoryArticle;
-        
-        setArticle(articleData);
-        setTitle(articleData.title);
-        setContent(articleData.content);
-        setSummary(articleData.summary);
-        setPrice(articleData.price || '');
-        setIsFullDonation(articleData.isFullDonation || false);
-        setStoreUrl(articleData.storeUrl || '');
-        setThumbnail(articleData.thumbnail || '');
-        setIsPublished(articleData.isPublished);
-        setViewTopImage(articleData.viewTopImage || '');
-        
-        // 기존 content에서 base64 이미지들 추출하여 uploadedImages에 설정
-        const existingImages = extractImagesFromContent(articleData.content);
-        setUploadedImages(existingImages);
-      } else {
-        setErrorMessage('글이 존재하지 않습니다.');
-        setShowErrorModal(true);
-        router.push('/store');
-      }
-    } catch (error) {
-      console.error('글 로드 실패:', error);
-      setErrorMessage('글을 불러오는데 실패했습니다.');
-      setShowErrorModal(true);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
+    
     if (id) {
       fetchArticle();
     }
-  }, [id]);
+  }, [user, router, id]);
 
   // 이미지 업로드 처리
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -373,21 +158,6 @@ export default function EditStoryPage() {
     }
   };
 
-  // 뷰 상단 이미지 업로드 처리
-  const handleViewTopImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      try {
-        // 이미지 압축 (800px, 80% 품질)
-        const compressedImage = await compressViewTopImage(file, 800, 0.8);
-        setViewTopImage(compressedImage);
-      } catch (error) {
-        console.error('이미지 압축 실패:', error);
-        setErrorMessage('이미지 업로드 중 오류가 발생했습니다.');
-        setShowErrorModal(true);
-      }
-    }
-  };
 
   // 이미지 압축 함수 (400px, 1.0 품질)
   const compressImage = (file: File, maxWidth: number = 400, quality: number = 1.0): Promise<string> => {
@@ -428,9 +198,44 @@ export default function EditStoryPage() {
 
   // 태그 배열로 변환
 
+  // 글 불러오기
+  const fetchArticle = async () => {
+    if (!id) return;
+    
+    try {
+      setLoading(true);
+      const docRef = doc(db, 'storeItems', id as string);
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        const articleData = { id: docSnap.id, ...docSnap.data() } as StoryArticle;
+        setArticle(articleData);
+        setTitle(articleData.title || '');
+        setSummary(articleData.summary || '');
+        setPrice(articleData.price || '');
+        setIsFullDonation(articleData.isFullDonation || false);
+        setStoreUrl(articleData.storeUrl || '');
+        setThumbnail(articleData.thumbnail || '');
+        setCardBackgroundColor(articleData.cardBackgroundColor || '#ffffff');
+        setPriceColor(articleData.priceColor || '#e54341');
+        setIsPublished(articleData.isPublished);
+      } else {
+        setErrorMessage('도안을 찾을 수 없습니다.');
+        setShowErrorModal(true);
+        router.push('/store');
+      }
+    } catch (error) {
+      console.error('도안 불러오기 실패:', error);
+      setErrorMessage('도안을 불러오는데 실패했습니다.');
+      setShowErrorModal(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // 글 저장
   const saveArticle = async () => {
-    if (!user || !article) return;
+    if (!user) return;
     
     if (!title.trim()) {
       setInfoMessage('제목을 입력해주세요.');
@@ -442,8 +247,12 @@ export default function EditStoryPage() {
     
     // summary는 선택사항이므로 validation 제거
 
+
     try {
       setSaving(true);
+      
+      // Firebase에 도안 수정 저장
+      const { serverTimestamp } = await import("firebase/firestore");
       
       // 사용자의 최신 닉네임 가져오기
       let userNickname = user.displayName || (user.email ? user.email.split('@')[0] : 'Anonymous');
@@ -460,22 +269,32 @@ export default function EditStoryPage() {
       
       const articleData = {
         title: title.trim(),
-        content: content.trim() || '',
         summary: summary.trim() || '',
         price: price.trim() || '',
         storeUrl: storeUrl.trim() || '',
-        tags: [],
-        isPublished: true,
-        thumbnail: thumbnail || '',
-        isFullDonation: isFullDonation,
-        viewTopImage: viewTopImage,
+        author: user.displayName || (user.email ? user.email.split('@')[0] : 'Anonymous'),
         authorNickname: userNickname,
-        updatedAt: new Date()
+        authorEmail: user.email || '',
+        thumbnail: thumbnail || '',
+        cardBackgroundColor: cardBackgroundColor,
+        priceColor: priceColor,
+        isFullDonation: isFullDonation,
+        authorId: user.uid,
+        tags: [],
+        views: 0,
+        likes: 0,
+        shares: 0,
+        boxroTalks: 0,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
       };
 
-      // Firebase에서 스토어 아이템 업데이트
-      const articleRef = doc(db, 'storeItems', article.id);
-      await updateDoc(articleRef, articleData);
+      console.log('Firebase에 저장할 박스카 이야기 데이터:', articleData);
+      
+      // Firebase에 수정 저장
+      const docRef = doc(db, 'storeItems', id as string);
+      await updateDoc(docRef, articleData);
+      console.log('도안 수정 완료, ID:', id);
       
       
       setSuccessMessage('도안이 성공적으로 수정되었습니다!');
@@ -490,65 +309,26 @@ export default function EditStoryPage() {
     }
   };
 
-  if (loading) {
+  if (!user) {
     return (
-      <CommonBackground>
-        <CommonHeader />
-        <div className="max-w-7xl mx-auto px-4 md:px-8 flex-1">
-          <div className="mt-10">
-            <Card className="bg-transparent border-0 shadow-none transition-all duration-300 overflow-hidden py-5 w-full rounded-2xl">
-              <CardContent className="text-center py-12">
-                {/* 점프 애니메이션 (더 역동적인 뛰는 효과) */}
-                <div className="w-24 h-24 mx-auto mb-6 flex items-center justify-center">
-                  <img 
-                    src="/logo_remoteonly.png" 
-                    alt="박스로 로고" 
-                    className="w-20 h-20 animate-bounce"
-                    style={{ 
-                      animationDuration: '0.6s',
-                      animationIterationCount: 'infinite',
-                      animationTimingFunction: 'cubic-bezier(0.68, -0.55, 0.265, 1.55)'
-                    }}
-                  />
-                </div>
-                <h3 className="text-lg font-semibold text-white mb-2">
-                  박스카 도안을 불러오는 중...
-                </h3>
-                <p className="text-sm text-white/80">멋진 박스카 도안을 준비하고 있어요!</p>
-              </CardContent>
-            </Card>
-          </div>
+      <CommonBackground className="flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-white">로그인이 필요합니다.</p>
+          <Link href="/auth">
+            <Button className="mt-4">로그인하기</Button>
+          </Link>
         </div>
       </CommonBackground>
     );
   }
 
-  if (!user) {
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <CommonBackground className="flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-800">로그인이 필요합니다.</p>
-          <Link href="/login">
-            <Button className="mt-4">로그인하기</Button>
-          </Link>
+          <p className="text-white">도안을 불러오는 중...</p>
         </div>
-      </div>
-    );
-  }
-
-  if (!article) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-800">글을 찾을 수 없습니다.</p>
-          <Link href="/store">
-            <Button className="mt-4 bg-white border border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 rounded-full px-8 py-3 text-gray-800">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              목록으로
-            </Button>
-          </Link>
-        </div>
-      </div>
+      </CommonBackground>
     );
   }
 
@@ -563,44 +343,44 @@ export default function EditStoryPage() {
             <CardTitle className="text-[18px]">도안 수정</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* 기본 정보 박스 */}
             <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
-              <h3 className="font-medium text-gray-800 mb-4" style={{ fontSize: '16px' }}>
-                기본 정보
-              </h3>
-              
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* 입력 폼 */}
-                <div className="space-y-4">
+                <div className="space-y-2">
                 {/* 제목 */}
                 <div>
                   <label className="block text-sm font-medium text-gray-800 mb-2">
                     도안 제목
                   </label>
-                  <div className="bg-transparent p-4 rounded-lg border border-gray-300">
-                    <input
-                      type="text"
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      placeholder="도안 카드에 표시될 제목"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] mb-3 bg-white"
-                    />
-                  </div>
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="도안 카드에 표시될 제목"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
+                  />
                 </div>
 
-                {/* 요약 */}
+                {/* 설명 */}
                 <div>
                   <label className="block text-sm font-medium text-gray-800 mb-2">
                     도안 설명
                   </label>
-                  <div className="bg-transparent p-4 rounded-lg border border-gray-300">
-                    <textarea
-                      value={summary}
-                      onChange={(e) => setSummary(e.target.value)}
-                      placeholder="도안 카드에 표시될 설명"
-                      rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] mb-2 bg-white"
-                    />
+                  <textarea
+                    value={summary}
+                    onChange={(e) => setSummary(e.target.value)}
+                    placeholder="도안 카드에 표시될 설명"
+                    rows={8}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
+                  />
+                  <div className="mt-1 p-2 bg-blue-50 border border-blue-200 rounded-md">
+                    <div className="text-xs text-blue-800">
+                      <p className="font-bold mb-1">마크다운 작성 방법:</p>
+                      <div className="space-y-1 text-xs">
+                        <p>• <span className="font-bold">**굵은 글씨**</span> → <strong>굵은 글씨</strong></p>
+                        <p>• <span className="font-bold">*기울임*</span> → <em>기울임</em></p>
+                        <p>• <span className="font-bold">~~취소선~~</span> → <del>취소선</del></p>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -609,27 +389,25 @@ export default function EditStoryPage() {
                   <label className="block text-sm font-medium text-gray-800 mb-2">
                     도안 가격
                   </label>
-                  <div className="bg-transparent p-4 rounded-lg border border-gray-300">
+                  <div className="flex items-center gap-4">
                     <input
                       type="text"
                       value={price}
                       onChange={(e) => setPrice(e.target.value)}
                       placeholder="도안 가격을 입력하세요 (예: 5,000원)"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] mb-3 bg-white"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
                     />
                     
                     {/* 수익금 전액 기부 체크박스 */}
-                    <div className="mt-3">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={isFullDonation}
-                          onChange={(e) => setIsFullDonation(e.target.checked)}
-                          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                        />
-                        <span className="text-sm text-gray-700">수익금 전액 기부</span>
-                      </label>
-                    </div>
+                    <label className="flex items-center gap-2 cursor-pointer whitespace-nowrap">
+                      <input
+                        type="checkbox"
+                        checked={isFullDonation}
+                        onChange={(e) => setIsFullDonation(e.target.checked)}
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                      <span className="text-sm text-gray-700">수익금 전액 기부</span>
+                    </label>
                   </div>
                 </div>
 
@@ -638,15 +416,13 @@ export default function EditStoryPage() {
                   <label className="block text-sm font-medium text-gray-800 mb-2">
                     스토어 바로가기 URL
                   </label>
-                  <div className="bg-transparent p-4 rounded-lg border border-gray-300">
-                    <input
-                      type="url"
-                      value={storeUrl}
-                      onChange={(e) => setStoreUrl(e.target.value)}
-                      placeholder="스토어 바로가기 URL을 입력하세요 (예: https://boxro.crafts)"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
-                    />
-                  </div>
+                  <input
+                    type="url"
+                    value={storeUrl}
+                    onChange={(e) => setStoreUrl(e.target.value)}
+                    placeholder="스토어 바로가기 URL을 입력하세요 (예: https://boxro.crafts)"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
+                  />
                 </div>
 
                 {/* 썸네일 */}
@@ -665,9 +441,7 @@ export default function EditStoryPage() {
                       <button
                         type="button"
                         onClick={() => {
-                          console.log('썸네일 삭제 전:', thumbnail);
                           setThumbnail('');
-                          console.log('썸네일 삭제 후:', '');
                         }}
                         className="px-3 py-2 bg-sky-500 hover:bg-sky-600 text-white text-sm rounded-md transition-colors whitespace-nowrap flex-shrink-0"
                       >
@@ -675,16 +449,49 @@ export default function EditStoryPage() {
                       </button>
                     )}
                   </div>
+                  
+                  {/* 카드 배경색 선택 - 썸네일 바로 아래 */}
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium text-gray-800 mb-2">
+                      카드 배경색
+                    </label>
+                    <div className="flex items-center gap-4">
+                      <input
+                        type="color"
+                        value={cardBackgroundColor === 'transparent' ? '#ffffff' : cardBackgroundColor}
+                        onChange={(e) => setCardBackgroundColor(e.target.value)}
+                        className="w-12 h-10 border-0 rounded-md cursor-pointer"
+                      />
+                      <input
+                        type="text"
+                        value={cardBackgroundColor}
+                        onChange={(e) => setCardBackgroundColor(e.target.value)}
+                        placeholder="#ffffff"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setCardBackgroundColor('transparent')}
+                        className={`px-3 py-2 text-sm rounded-md border transition-colors ${
+                          cardBackgroundColor === 'transparent'
+                            ? 'bg-blue-100 border-blue-300 text-blue-700'
+                            : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        투명
+                      </button>
+                    </div>
+                  </div>
+                  
                 </div>
-
 
                 </div>
 
                 {/* 미리보기 */}
                 <div className="flex justify-center">
                   <div 
-                    className="group shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden w-[325px] rounded-2xl relative"
-                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.97)' }}
+                    className="group shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden w-[375px] rounded-2xl relative"
+                    style={{ backgroundColor: cardBackgroundColor }}
                   >
                     {/* 썸네일 */}
                     {thumbnail && (
@@ -723,29 +530,36 @@ export default function EditStoryPage() {
                         })()}
                       </h4>
                       {summary && (
-                        <p 
+                        <div 
                           className="text-[15px] mb-3 whitespace-pre-wrap"
                           style={{ color: '#000000', lineHeight: '1.6' }}
-                        >
-                          {summary}
-                        </p>
+                          dangerouslySetInnerHTML={{
+                            __html: summary
+                              .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold">$1</strong>')
+                              .replace(/\*(.*?)\*/g, '<em class="italic">$1</em>')
+                              .replace(/~~(.*?)~~/g, '<del class="line-through">$1</del>')
+                              .replace(/\n/g, '<br>')
+                          }}
+                        />
                       )}
                       {price && (
                         <div className="mb-3">
-                          <p 
-                            className="text-lg font-semibold"
-                            style={{ color: '#000000' }}
-                          >
-                            {price}
-                          </p>
-                          {isFullDonation && (
-                            <div 
-                              className="inline-block px-3 py-1 rounded-full text-white text-sm font-medium mt-2"
-                              style={{ backgroundColor: '#1f2937' }}
+                          <div className="flex items-center justify-between">
+                            <p 
+                              className="text-lg font-semibold"
+                              style={{ color: priceColor }}
                             >
-                              수익금 전액 기부
-                            </div>
-                          )}
+                              {price}
+                            </p>
+                            {isFullDonation && (
+                              <div 
+                                className="inline-block px-3 py-1 rounded-lg text-white text-sm font-medium"
+                                style={{ backgroundColor: priceColor }}
+                              >
+                                수익금 전액 기부
+                              </div>
+                            )}
+                          </div>
                         </div>
                       )}
                     </div>
@@ -753,167 +567,8 @@ export default function EditStoryPage() {
                 </div>
               </div>
             </div>
-
-            {/* 뷰 상단 이미지 */}
-            <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
-              <h3 className="font-medium text-gray-800 mb-4" style={{ fontSize: '16px' }}>
-                뷰 상단 이미지
-              </h3>
-              <div>
-                <label className="block text-sm font-medium text-gray-800 mb-2">
-                  뷰 상단 이미지
-                </label>
-                <div className="bg-transparent p-4 rounded-lg border border-gray-300">
-                  <div className="flex gap-2 mb-3">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleViewTopImageUpload}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
-                    />
-                    {viewTopImage && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          console.log('뷰 상단 이미지 삭제 전:', viewTopImage);
-                          setViewTopImage('');
-                          console.log('뷰 상단 이미지 삭제 후:', '');
-                        }}
-                        className="px-3 py-2 bg-sky-500 hover:bg-sky-600 text-white text-sm rounded-md transition-colors whitespace-nowrap flex-shrink-0"
-                      >
-                        삭제
-                      </button>
-                    )}
-                  </div>
-                  {viewTopImage && (
-                    <div className="mt-3">
-                      <img
-                        src={viewTopImage}
-                        alt="뷰 상단 이미지 미리보기"
-                        className="w-full h-auto max-h-64 object-contain rounded-lg border border-gray-200"
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* 내용 */}
-            <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
-              <h3 className="font-medium text-gray-800 mb-4" style={{ fontSize: '16px' }}>
-                내용
-              </h3>
-              
-              {/* 이미지 업로더 */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-800 mb-3">이미지 업로드</label>
-                <div className="p-4 bg-white rounded-lg border border-gray-200">
-                <div className="flex flex-col gap-4">
-                  {/* 파일 선택 버튼과 업로드된 이미지들을 같은 줄에 배치 */}
-                  <div className="flex items-start gap-4">
-                    {/* 파일 선택 버튼 */}
-                    <div className="flex-shrink-0">
-                      <label>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleEditorImageUpload}
-                          className="hidden"
-                          id="image-upload"
-                        />
-                        <div className="w-20 h-20 bg-blue-50 hover:bg-blue-100 border-2 border-blue-300 rounded-lg flex flex-col items-center justify-center cursor-pointer transition-colors">
-                          <div className="text-blue-600 text-2xl mb-1">📷</div>
-                          <div className="text-blue-700 text-xs font-medium">선택</div>
-                        </div>
-                      </label>
-                    </div>
-                    
-                    {/* 업로드된 이미지들 - 가로 정렬 */}
-                    {uploadedImages.length > 0 && (
-                      <div className="flex gap-3 overflow-x-auto pb-2 flex-1">
-                        {uploadedImages.map((image, index) => (
-                          <div key={index} className="flex items-center gap-2 flex-shrink-0">
-                            <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
-                              <img 
-                                src={image} 
-                                alt={`업로드된 이미지 ${index + 1}`}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                            <div className="flex flex-col gap-1">
-                              <button
-                                type="button"
-                                onClick={async () => {
-                                  try {
-                                    if (navigator.clipboard && navigator.clipboard.writeText) {
-                                      await navigator.clipboard.writeText(image);
-                                      alert('이미지 URL이 클립보드에 복사되었습니다!');
-                                    } else {
-                                      // 클립보드 API를 사용할 수 없는 경우
-                                      const textArea = document.createElement('textarea');
-                                      textArea.value = image;
-                                      document.body.appendChild(textArea);
-                                      textArea.select();
-                                      document.execCommand('copy');
-                                      document.body.removeChild(textArea);
-                                      alert('이미지 URL이 클립보드에 복사되었습니다!');
-                                    }
-                                  } catch (error) {
-                                    console.error('클립보드 복사 실패:', error);
-                                    alert('복사에 실패했습니다. 다시 시도해주세요.');
-                                  }
-                                }}
-                                className="px-2 py-1 bg-green-500 hover:bg-green-600 text-white text-xs rounded transition-colors"
-                              >
-                                복사
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => removeEditorImage(index)}
-                                className="px-2 py-1 bg-orange-500 hover:bg-orange-600 text-white text-xs rounded transition-colors"
-                              >
-                                삭제
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <p className="text-xs text-gray-500 text-center">이미지를 업로드한 후 URL을 복사하여 에디터에 붙여넣으세요.</p>
-                </div>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-800 mb-2">
-                  에디터
-                </label>
-            <RichTextEditor
-              content={content}
-              onChange={handleContentChange}
-              placeholder="박스카 이야기의 본문을 작성하세요..."
-            />
-                <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
-                  <div className="text-sm text-blue-800">
-                    <div className="space-y-1 text-xs">
-                      <p>• <span className="font-bold">H1</span>: CookieRun, 20px (제목)</p>
-                      <p>• <span className="font-bold">H2</span>: CookieRun, 18px (부제목)</p>
-                      <p>• <span className="font-bold">H3</span>: Inter, 16px (소제목)</p>
-                      <p>• <span className="font-bold">기본글꼴</span>: Inter, 14px (본문)</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-
-
-
           </CardContent>
         </Card>
-        </div>
 
         {/* 버튼들 - 카드 밖에 위치 */}
         <div className="mt-6 px-4 md:px-0">
@@ -937,6 +592,7 @@ export default function EditStoryPage() {
               </Button>
             </div>
           </div>
+        </div>
         </div>
       </div>
 
@@ -998,7 +654,7 @@ export default function EditStoryPage() {
           <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-6 max-w-sm w-full mx-6">
             <div className="text-center">
               <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
-                수정 완료
+                등록 완료
               </h3>
               <p className="text-gray-900 mb-4" style={{fontSize: '14px'}}>
                 {successMessage}
@@ -1017,6 +673,7 @@ export default function EditStoryPage() {
           </div>
         </div>
       )}
+
     </CommonBackground>
   );
 }

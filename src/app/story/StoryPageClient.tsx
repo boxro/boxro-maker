@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import ErrorModal from "@/components/ErrorModal";
 import { Plus, Menu, X, Edit, Trash2, MoreVertical, BookOpen, Share2, MessageCircle, Eye, ThumbsUp, LinkIcon, Mail, MessageSquare, Car } from "lucide-react";
-import ReactMarkdown from "react-markdown";
 import CommonHeader from "@/components/CommonHeader";
 import PageHeader from "@/components/PageHeader";
 import CommonBackground from "@/components/CommonBackground";
@@ -510,6 +509,8 @@ export default function StoryPageClient() {
       }
     } catch (error) {
       console.error('박스카 이야기 글 목록 로드 실패:', error);
+      setErrorMessage('이야기를 불러오는데 실패했습니다.');
+      setShowErrorModal(true);
     } finally {
       setLoading(false);
       isFetchingRef.current = false;
@@ -560,6 +561,8 @@ export default function StoryPageClient() {
       }
     } catch (error) {
       console.error('더 많은 글 로드 실패:', error);
+      setErrorMessage('더 많은 이야기를 불러오는데 실패했습니다.');
+      setShowErrorModal(true);
     } finally {
       setLoadingMore(false);
     }
@@ -1306,24 +1309,17 @@ export default function StoryPageClient() {
                     <div className="text-[15px] mb-0 flex-1 text-gray-900">
                       {expandedArticles.has(article.id) ? (
                         <div style={{ lineHeight: '1.6' }}>
-                          <div className="text-[15px] whitespace-pre-wrap">
-                            <ReactMarkdown
-                              components={{
-                                strong: ({children}) => <strong className="font-bold">{children}</strong>,
-                                em: ({children}) => <em className="italic">{children}</em>,
-                                del: ({children}) => <del className="line-through">{children}</del>,
-                                h1: ({children}) => <h1 className="text-xl font-bold mb-2">{children}</h1>,
-                                h2: ({children}) => <h2 className="text-lg font-bold mb-2">{children}</h2>,
-                                h3: ({children}) => <h3 className="text-base font-bold mb-1">{children}</h3>,
-                                ul: ({children}) => <ul className="list-disc list-inside mb-2">{children}</ul>,
-                                ol: ({children}) => <ol className="list-decimal list-inside mb-2">{children}</ol>,
-                                li: ({children}) => <li className="mb-1">{children}</li>,
-                                p: ({children}) => <p className="mb-2">{children}</p>
-                              }}
-                            >
-                              {article.summary}
-                            </ReactMarkdown>
-                          </div>
+                          <div 
+                            className="text-[15px] whitespace-pre-wrap"
+                            style={{ color: '#000000', lineHeight: '1.6' }}
+                            dangerouslySetInnerHTML={{
+                              __html: article.summary
+                                .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold">$1</strong>')
+                                .replace(/\*(.*?)\*/g, '<em class="italic">$1</em>')
+                                .replace(/~~(.*?)~~/g, '<del class="line-through">$1</del>')
+                                .replace(/\n/g, '<br>')
+                            }}
+                          />
                         </div>
                       ) : (
                         <div 
@@ -1337,24 +1333,17 @@ export default function StoryPageClient() {
                             maxHeight: '4.53em'
                           }}
                         >
-                          <div className="text-[15px] whitespace-pre-wrap">
-                            <ReactMarkdown
-                              components={{
-                                strong: ({children}) => <strong className="font-bold">{children}</strong>,
-                                em: ({children}) => <em className="italic">{children}</em>,
-                                del: ({children}) => <del className="line-through">{children}</del>,
-                                h1: ({children}) => <h1 className="text-xl font-bold mb-2">{children}</h1>,
-                                h2: ({children}) => <h2 className="text-lg font-bold mb-2">{children}</h2>,
-                                h3: ({children}) => <h3 className="text-base font-bold mb-1">{children}</h3>,
-                                ul: ({children}) => <ul className="list-disc list-inside mb-2">{children}</ul>,
-                                ol: ({children}) => <ol className="list-decimal list-inside mb-2">{children}</ol>,
-                                li: ({children}) => <li className="mb-1">{children}</li>,
-                                p: ({children}) => <p className="mb-2">{children}</p>
-                              }}
-                            >
-                              {article.summary}
-                            </ReactMarkdown>
-                          </div>
+                          <div 
+                            className="text-[15px] whitespace-pre-wrap"
+                            style={{ color: '#000000', lineHeight: '1.6' }}
+                            dangerouslySetInnerHTML={{
+                              __html: article.summary
+                                .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold">$1</strong>')
+                                .replace(/\*(.*?)\*/g, '<em class="italic">$1</em>')
+                                .replace(/~~(.*?)~~/g, '<del class="line-through">$1</del>')
+                                .replace(/\n/g, '<br>')
+                            }}
+                          />
                         </div>
                       )}
                       

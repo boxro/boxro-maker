@@ -422,107 +422,107 @@ export default function EditStoryPage() {
           <CardContent className="space-y-6">
             <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* 입력 필드들 */}
                 <div className="space-y-2">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    이야기 제목
-                  </label>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      이야기 제목
+                    </label>
                     <input
                       type="text"
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
                       placeholder="이야기 카드에 표시될 제목"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
-                      />
-                </div>
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    이야기 설명
-                  </label>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      이야기 설명
+                    </label>
                     <textarea
                       value={summary}
                       onChange={(e) => setSummary(e.target.value)}
                       placeholder="이야기 카드에 표시될 설명"
-                    rows={24}
+                      rows={24}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
+                    />
+                    <div className="mt-1 p-2 bg-blue-50 border border-blue-200 rounded-md">
+                      <div className="text-xs text-blue-800">
+                        <p className="font-bold mb-1">마크다운 작성 방법:</p>
+                        <div className="space-y-1 text-xs">
+                          <p>• <span className="font-bold">**굵은 글씨**</span> → <strong>굵은 글씨</strong></p>
+                          <p>• <span className="font-bold">*기울임*</span> → <em>기울임</em></p>
+                          <p>• <span className="font-bold">~~취소선~~</span> → <del>취소선</del></p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      이야기 썸네일 (카드 이미지)
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
                       />
-                  <div className="mt-1 p-2 bg-blue-50 border border-blue-200 rounded-md">
-                    <div className="text-xs text-blue-800">
-                      <p className="font-bold mb-1">마크다운 작성 방법:</p>
-                      <div className="space-y-1 text-xs">
-                        <p>• <span className="font-bold">**굵은 글씨**</span> → <strong>굵은 글씨</strong></p>
-                        <p>• <span className="font-bold">*기울임*</span> → <em>기울임</em></p>
-                        <p>• <span className="font-bold">~~취소선~~</span> → <del>취소선</del></p>
+                      {thumbnail && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setThumbnail('');
+                          }}
+                          className="px-3 py-2 bg-sky-500 hover:bg-sky-600 text-white text-sm rounded-md transition-colors whitespace-nowrap flex-shrink-0"
+                        >
+                          삭제
+                        </button>
+                      )}
+                    </div>
+                    
+                    {/* 카드 배경색 선택 - 썸네일 바로 아래 */}
+                    <div className="mt-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        카드 배경색
+                      </label>
+                      <div className="flex items-center gap-4">
+                        <input 
+                          type="color" 
+                          value={cardBackgroundColor === 'transparent' ? '#ffffff' : cardBackgroundColor}
+                          onChange={(e) => setCardBackgroundColor(e.target.value)}
+                          className="w-12 h-10 border-0 rounded-md cursor-pointer"
+                        />
+                        <input 
+                          type="text" 
+                          value={cardBackgroundColor}
+                          onChange={(e) => setCardBackgroundColor(e.target.value)}
+                          placeholder="#ffffff"
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setCardBackgroundColor('transparent')}
+                          className={`px-3 py-2 text-sm rounded-md border transition-colors ${
+                            cardBackgroundColor === 'transparent'
+                              ? 'bg-blue-100 border-blue-300 text-blue-700'
+                              : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                          }`}
+                        >
+                          투명
+                        </button>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    이야기 썸네일 (카드 이미지)
-                  </label>
-                  <div className="flex gap-2">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
-                    />
-                    {thumbnail && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setThumbnail('');
-                        }}
-                        className="px-3 py-2 bg-sky-500 hover:bg-sky-600 text-white text-sm rounded-md transition-colors whitespace-nowrap flex-shrink-0"
-                      >
-                        삭제
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* 카드 배경색 선택 */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    카드 배경색
-                  </label>
-                  <div className="flex items-center gap-4">
-                      <input 
-                        type="color" 
-                      value={cardBackgroundColor === 'transparent' ? '#ffffff' : cardBackgroundColor}
-                        onChange={(e) => setCardBackgroundColor(e.target.value)}
-                        className="w-12 h-10 border-0 rounded-md cursor-pointer"
-                      />
-                      <input 
-                        type="text" 
-                        value={cardBackgroundColor}
-                        onChange={(e) => setCardBackgroundColor(e.target.value)}
-                        placeholder="#ffffff"
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setCardBackgroundColor('transparent')}
-                      className={`px-3 py-2 text-sm rounded-md border transition-colors ${
-                        cardBackgroundColor === 'transparent'
-                          ? 'bg-blue-100 border-blue-300 text-blue-700'
-                          : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                      }`}
-                    >
-                      투명
-                    </button>
-                  </div>
-                </div>
-
-                </div>
-
-                {/* 미리보기 */}
+                {/* 미리보기 - 오른쪽에 배치 */}
                 <div className="flex justify-center">
                   <div 
-                    className="group shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden w-[325px] rounded-2xl relative"
+                    className="group shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden w-[375px] rounded-2xl relative"
                     style={{ backgroundColor: cardBackgroundColor }}
                   >
                     {/* 썸네일 */}
@@ -573,12 +573,12 @@ export default function EditStoryPage() {
                               .replace(/\n/g, '<br>')
                           }}
                         />
-                  )}
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-                        </div>
-                    </div>
                     
 
 

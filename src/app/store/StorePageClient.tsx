@@ -115,7 +115,6 @@ const ProfileImage = ({ authorId, authorName, authorEmail, size = "w-8 h-8" }: {
             userDoc = await getDoc(doc(db, 'users', authorId));
           } catch (error: any) {
             if (error.code === 'permission-denied') {
-              console.log('🔧 Firebase 보안 규칙 설정 대기 중 - authorId 조회 건너뜀');
             } else {
               throw error;
             }
@@ -132,7 +131,6 @@ const ProfileImage = ({ authorId, authorName, authorEmail, size = "w-8 h-8" }: {
             }
           } catch (error: any) {
             if (error.code === 'permission-denied') {
-              console.log('🔧 Firebase 보안 규칙 설정 대기 중 - authorEmail 조회 건너뜀');
             } else {
               throw error;
             }
@@ -149,7 +147,6 @@ const ProfileImage = ({ authorId, authorName, authorEmail, size = "w-8 h-8" }: {
             }
           } catch (error: any) {
             if (error.code === 'permission-denied') {
-              console.log('🔧 Firebase 보안 규칙 설정 대기 중 - authorName 조회 건너뜀');
             } else {
               throw error;
             }
@@ -164,7 +161,6 @@ const ProfileImage = ({ authorId, authorName, authorEmail, size = "w-8 h-8" }: {
           });
         }
       } catch (error) {
-        console.warn('프로필 정보 가져오기 실패:', error);
         setProfileData(null);
       } finally {
         setLoading(false);
@@ -278,12 +274,10 @@ export default function StorePageClient() {
   // 인덱싱 생성 (한 번만, 전역)
   const createIndex = async () => {
     if (typeof window !== 'undefined' && (window as any).__storeIndexLoaded) {
-      console.log('📚 스토어 인덱싱 이미 로드됨, 전역 캐시 사용');
       return;
     }
     
     try {
-      console.log('📚 스토어 인덱싱 생성 시작');
       const articlesRef = collection(db, 'storeItems');
       const q = query(articlesRef, orderBy('createdAt', 'desc'));
       const querySnapshot = await getDocs(q);
@@ -292,7 +286,6 @@ export default function StorePageClient() {
       const indexInfo = new Map();
       querySnapshot.docs.forEach((doc, index) => {
         indexInfo.set(doc.id, { article: doc.data(), index });
-        console.log(`📝 인덱싱 저장: ${doc.id} -> ${index}`);
       });
       
       if (typeof window !== 'undefined') {
@@ -300,7 +293,6 @@ export default function StorePageClient() {
         (window as any).__storeIndexLoaded = true;
       }
       
-      console.log('📚 스토어 인덱싱 생성 완료, 총 카드 수:', indexInfo.size);
     } catch (error) {
       console.error('스토어 인덱싱 생성 실패:', error);
     }
@@ -326,7 +318,6 @@ export default function StorePageClient() {
   // 스토어 아이템 목록 가져오기
   const fetchArticles = async () => {
     if (isFetchingRef.current) {
-      console.log('🔄 fetchArticles 중복 실행 방지');
       return;
     }
     
@@ -342,6 +333,11 @@ export default function StorePageClient() {
       setArticles([]);
       setHasMore(true);
       
+      // Firebase 연결 확인
+      if (!db) {
+        throw new Error('Firebase 데이터베이스에 연결할 수 없습니다.');
+      }
+      
       // 인덱싱이 없으면 먼저 생성
       if (typeof window !== 'undefined' && !(window as any).__storeIndexLoaded) {
         await createIndex();
@@ -353,26 +349,14 @@ export default function StorePageClient() {
       
       // URL 해시 확인하여 초기 정렬
       const currentHash = typeof window !== 'undefined' ? window.location.hash : '';
-      console.log('🔍 URL 해시 확인:', { 
-        currentHash, 
-        hasHash: currentHash && currentHash.startsWith('#card-'),
-        fullUrl: typeof window !== 'undefined' ? window.location.href : ''
-      });
       
       if (currentHash && currentHash.startsWith('#card-')) {
         const cardId = currentHash.replace('#card-', '');
         
         // 전역 인덱싱 정보에서 해당 카드 찾기
         const cardInfo = typeof window !== 'undefined' ? (window as any).__storeIndexCache.get(cardId) : null;
-        console.log('🔍 전역 인덱싱에서 카드 찾기:', { 
-          cardId, 
-          cardInfo, 
-          indexCacheSize: typeof window !== 'undefined' ? (window as any).__storeIndexCache.size : 0,
-          allKeys: typeof window !== 'undefined' ? Array.from((window as any).__storeIndexCache.keys()) : []
-        });
         
         if (cardInfo) {
-          console.log('🎯 인덱싱에서 해시 카드 발견, 해당 카드 포함하여 로드');
           
           // 해당 카드가 포함된 범위를 로드
           const endIndex = Math.min(cardInfo.index + 15, (window as any).__storeIndexCache.size);
@@ -416,9 +400,7 @@ export default function StorePageClient() {
             const reorderedArticles = [targetCard, ...shuffledOtherCards];
             setArticles(reorderedArticles);
             
-            console.log('✅ 해시 카드 첫 번째 배치 완료, 총 카드 수:', reorderedArticles.length);
           } else {
-            console.log('❌ 직접 검색에서도 해시 카드를 찾을 수 없음, 일반 로딩');
             // 일반 로딩
             const articlesData: StoryArticle[] = [];
             querySnapshot.docs.slice(0, 15).forEach((doc) => {
@@ -469,6 +451,8 @@ export default function StorePageClient() {
       }
     } catch (error) {
       console.error('스토어 아이템 목록 로드 실패:', error);
+      setErrorMessage('도안을 불러오는데 실패했습니다.');
+      setShowErrorModal(true);
     } finally {
       setLoading(false);
       isFetchingRef.current = false;
@@ -519,6 +503,8 @@ export default function StorePageClient() {
       }
     } catch (error) {
       console.error('더 많은 글 로드 실패:', error);
+      setErrorMessage('더 많은 도안을 불러오는데 실패했습니다.');
+      setShowErrorModal(true);
     } finally {
       setLoadingMore(false);
     }
@@ -997,25 +983,20 @@ export default function StorePageClient() {
   // 해시 카드 처리 함수
   const processHashCard = useCallback((forceReload = false) => {
     const hash = typeof window !== 'undefined' ? window.location.hash : '';
-    console.log('🔍 processHashCard 실행:', { hash, articlesLength: articles.length });
     
     // 해시가 없으면 아무것도 하지 않음
     if (!hash || !hash.startsWith('#card-')) {
-      console.log('ℹ️ 해시가 없음, 현재 순서 유지');
       return;
     }
     
     const cardId = hash.replace('#card-', '');
-    console.log('🎯 카드 ID 추출:', { cardId });
     
     // 해시 카드를 첫 번째로 재배치
     const targetCard = articles.find(article => article.id === cardId);
     if (targetCard) {
-      console.log('🔄 해시 카드 재배치 시작');
       const otherCards = articles.filter(article => article.id !== cardId);
       const reorderedArticles = [targetCard, ...otherCards];
       setArticles(reorderedArticles);
-      console.log('✅ 해시 카드 첫 번째로 재배치 완료');
       
       // 즉시 스크롤 위치 복원
       requestAnimationFrame(() => {
@@ -1023,12 +1004,10 @@ export default function StorePageClient() {
       });
     } else {
       if (forceReload) {
-        console.log('❌ 해시 카드가 현재 목록에 없음, 데이터 재로드 필요');
         // 해시 카드가 현재 목록에 없으면 fetchArticles() 호출하여 해당 카드 포함하여 로드
         fetchArticles();
         return;
       } else {
-        console.log('❌ 해시 카드가 현재 목록에 없음, 현재 순서 유지');
         // 같은 페이지에서 카드 클릭 시에는 아무것도 하지 않음 (순서 유지)
         return;
       }
@@ -1036,11 +1015,9 @@ export default function StorePageClient() {
     
     // 하이라이트 효과 (지연 시간 증가) - 한 번만 실행
     setTimeout(() => {
-      console.log('🎨 하이라이트 효과 시작');
       
       const cardElement = document.getElementById(`card-${cardId}`);
       if (cardElement) {
-        console.log('✅ 카드 엘리먼트 찾음, 스타일 적용');
         // 초기 스타일 설정
         cardElement.style.border = '6px solid #ffaa00';
         cardElement.style.transform = 'scale(1.04)';
@@ -1070,12 +1047,10 @@ export default function StorePageClient() {
           }
         }, 300);
       } else {
-        console.log('❌ 카드 엘리먼트를 찾을 수 없음:', `card-${cardId}`);
         // DOM이 준비될 때까지 재시도
         setTimeout(() => {
           const retryElement = document.getElementById(`card-${cardId}`);
           if (retryElement) {
-            console.log('✅ 재시도로 카드 엘리먼트 찾음');
             // 하이라이트 효과 적용
             retryElement.style.border = '6px solid #ffaa00';
             retryElement.style.transform = 'scale(1.04)';
@@ -1099,7 +1074,6 @@ export default function StorePageClient() {
                   retryElement.style.transform = '';
                   retryElement.style.zIndex = '';
                   retryElement.style.transition = '';
-                  console.log('🎨 재시도 하이라이트 효과 완료');
                 }, 500);
               }
             }, 300);
@@ -1126,11 +1100,6 @@ export default function StorePageClient() {
       return;
     }
 
-    console.log('🔍 URL 해시 처리 useEffect 실행:', { 
-      articlesLength: articles.length, 
-      hash: typeof window !== 'undefined' ? window.location.hash : '',
-      firstArticleId: articles[0]?.id 
-    });
 
     // articles가 로드된 후에만 해시 확인 (강제 재로드 허용)
     processHashCard(true);
@@ -1139,19 +1108,15 @@ export default function StorePageClient() {
   // 해시 변경 이벤트 리스너
   useEffect(() => {
     const handleHashChange = () => {
-      console.log('🔄 해시 변경 이벤트 발생');
       const currentHash = typeof window !== 'undefined' ? window.location.hash : '';
-      console.log('🔍 현재 해시:', { currentHash, articlesLength: articles.length });
       
       // 해시가 제거된 경우 (일반 목록으로 이동)
       if (!currentHash || !currentHash.startsWith('#card-')) {
-        console.log('🔄 해시 제거됨, 일반 목록으로 재로드');
         fetchArticles();
         return;
       }
       
       // 해시가 있는 경우 - 기존 데이터에서 재배치만 수행 (강제 재로드 허용)
-      console.log('🔄 해시 있음, 기존 데이터에서 재배치');
       processHashCard(true);
     };
     
@@ -1192,7 +1157,6 @@ export default function StorePageClient() {
     };
   }, []);
 
-  console.log('StorePageClient render:', { loading, articlesCount: articles.length });
 
   if (loading) {
     return (
@@ -1343,12 +1307,17 @@ export default function StorePageClient() {
                   </h3>
                   
                   {article.summary && (
-                    <p 
+                    <div 
                       className="text-[15px] mb-3 whitespace-pre-wrap flex-1 text-gray-900"
                       style={{ lineHeight: '1.6' }}
-                    >
-                      {article.summary}
-                    </p>
+                      dangerouslySetInnerHTML={{
+                        __html: article.summary
+                          .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold">$1</strong>')
+                          .replace(/\*(.*?)\*/g, '<em class="italic">$1</em>')
+                          .replace(/~~(.*?)~~/g, '<del class="line-through">$1</del>')
+                          .replace(/\n/g, '<br>')
+                      }}
+                    />
                   )}
                   
                   {article.price && (
@@ -1356,14 +1325,14 @@ export default function StorePageClient() {
                       <div className="flex items-center justify-between">
                         <p 
                           className="text-lg font-semibold"
-                          style={{ color: article.priceColor || '#1f2937' }}
+                          style={{ color: article.priceColor || '#e54341' }}
                         >
                           {article.price}
                         </p>
                         {article.isFullDonation && (
                  <div
                    className="inline-block px-3 py-1 rounded-lg text-white text-sm font-medium"
-                   style={{ backgroundColor: article.priceColor || '#1f2937' }}
+                   style={{ backgroundColor: article.priceColor || '#e54341' }}
                  >
                    수익금 전액 기부
                  </div>
@@ -1534,7 +1503,6 @@ export default function StorePageClient() {
                         setShowShareModal(false);
                       }
                     } catch (error) {
-                      console.error('클립보드 복사 실패:', error);
                       prompt('공유 링크를 복사하세요:', shareUrl);
                       setShowShareModal(false);
                     }
