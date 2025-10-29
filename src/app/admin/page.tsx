@@ -5147,7 +5147,7 @@ export default function AdminPage() {
                         )}
                       </div>
                     </th>
-                              <th className="text-left py-1 px-3 font-medium text-gray-800 bg-gray-50">작품</th>
+                              <th className="text-left py-1 px-3 font-medium text-gray-800 bg-gray-50">제목</th>
                               <th className="text-left py-1 px-3 font-medium text-gray-800 bg-gray-50">작가</th>
                   </tr>
                 </thead>
@@ -5254,7 +5254,7 @@ export default function AdminPage() {
                                   )}
                                 </div>
                               </th>
-                              <th className="text-left py-1 px-3 font-medium text-gray-800 bg-gray-50">작품</th>
+                              <th className="text-left py-1 px-3 font-medium text-gray-800 bg-gray-50">제목</th>
                               <th className="text-left py-1 px-3 font-medium text-gray-800 bg-gray-50">작가</th>
                               <th className="text-center py-1 px-3 font-medium text-gray-800 bg-gray-50">전체 좋아요 수</th>
                               <th className="text-left py-1 px-3 font-medium text-gray-800 bg-gray-50">생성일</th>
@@ -5373,7 +5373,7 @@ export default function AdminPage() {
                                   )}
                                 </div>
                               </th>
-                              <th className="text-left py-1 px-3 font-medium text-gray-800 bg-gray-50">작품</th>
+                              <th className="text-left py-1 px-3 font-medium text-gray-800 bg-gray-50">제목</th>
                               <th className="text-left py-1 px-3 font-medium text-gray-800 bg-gray-50">작가</th>
                               <th className="text-center py-1 px-3 font-medium text-gray-800 bg-gray-50">전체 다운로드 수</th>
                               <th className="text-left py-1 px-3 font-medium text-gray-800 bg-gray-50">생성일</th>
@@ -5407,14 +5407,9 @@ export default function AdminPage() {
                                     <div className="w-[58px] h-12 bg-gray-200 rounded flex items-center justify-center text-gray-400 text-xs" style={{display: download.thumbnail ? 'none' : 'flex'}}>
                                       작품
                                     </div>
-                                    <a 
-                                      href={download.type === 'blueprint' ? `/draw` : `/gallery#card-${download.id}`} 
-                                      target="_blank" 
-                                      rel="noopener noreferrer"
-                                      className="text-gray-800 hover:text-gray-600 hover:underline"
-                                    >
+                                    <span className="text-gray-800">
                                       {download.title}
-                                    </a>
+                                    </span>
                                   </div>
                                 </td>
                                 <td className="py-1 px-3 text-gray-800 text-xs">{download.author}</td>
@@ -5477,7 +5472,7 @@ export default function AdminPage() {
                                   )}
                                 </div>
                               </th>
-                              <th className="text-left py-1 px-3 font-medium text-gray-800 bg-gray-50">작품</th>
+                              <th className="text-left py-1 px-3 font-medium text-gray-800 bg-gray-50">제목</th>
                               <th className="text-left py-1 px-3 font-medium text-gray-800 bg-gray-50">작가</th>
                               <th className="text-center py-1 px-3 font-medium text-gray-800 bg-gray-50">전체 공유 수</th>
                               <th className="text-left py-1 px-3 font-medium text-gray-800 bg-gray-50">생성일</th>
@@ -5581,7 +5576,7 @@ export default function AdminPage() {
                                   )}
                                 </div>
                               </th>
-                              <th className="text-left py-1 px-3 font-medium text-gray-800 bg-gray-50">작품</th>
+                              <th className="text-left py-1 px-3 font-medium text-gray-800 bg-gray-50">제목</th>
                               <th className="text-left py-1 px-3 font-medium text-gray-800 bg-gray-50">작가</th>
                               <th className="text-center py-1 px-3 font-medium text-gray-800 bg-gray-50">전체 조회 수</th>
                               <th className="text-left py-1 px-3 font-medium text-gray-800 bg-gray-50">생성일</th>
@@ -5678,8 +5673,7 @@ export default function AdminPage() {
                         <table className="w-full text-[13px] bg-white min-w-[800px]">
                           <thead>
                             <tr className="border-b border-gray-200">
-                              <th className="text-left py-1 px-3 font-medium text-gray-800 bg-gray-50">작품</th>
-                              <th className="text-left py-1 px-3 font-medium text-gray-800 bg-gray-50">작가</th>
+                              <th className="text-left py-1 px-3 font-medium text-gray-800 bg-gray-50">제목</th>
                               <th className="text-center py-1 px-3 font-medium text-gray-800 bg-gray-50">전체 바로가기 수</th>
                               <th className="text-left py-1 px-3 font-medium text-gray-800 bg-gray-50">생성일</th>
                             </tr>
@@ -5718,7 +5712,6 @@ export default function AdminPage() {
                                     </a>
                                   </div>
                                 </td>
-                                <td className="py-1 px-3 text-gray-800 text-xs">{redirect.author}</td>
                                 <td className="py-1 px-3 text-center text-gray-800">{redirect.storeRedirects}</td>
                                 <td className="py-1 px-3 text-gray-800 text-xs">
                                   {new Date(redirect.createdAt?.toDate?.() || redirect.createdAt).toLocaleString('ko-KR')}
