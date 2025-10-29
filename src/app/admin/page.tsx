@@ -5265,18 +5265,27 @@ export default function AdminPage() {
                               <tr key={idx} className="border-b border-gray-100 hover:bg-red-50">
                                 <td className="py-1 px-3 text-gray-800 text-xs">
                                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                    like.articleId 
+                                    like.type === 'story' 
                                       ? 'bg-purple-100 text-purple-800' 
-                                      : 'bg-blue-100 text-blue-800'
+                                      : like.type === 'gallery'
+                                      ? 'bg-blue-100 text-blue-800'
+                                      : like.type === 'store'
+                                      ? 'bg-green-100 text-green-800'
+                                      : like.type === 'youtube'
+                                      ? 'bg-red-100 text-red-800'
+                                      : 'bg-gray-100 text-gray-800'
                                   }`}>
-                                    {like.articleId ? '이야기' : '갤러리'}
+                                    {like.type === 'story' ? '이야기' : 
+                                     like.type === 'gallery' ? '갤러리' :
+                                     like.type === 'store' ? '스토어' :
+                                     like.type === 'youtube' ? '유튜브' : '알 수 없음'}
                                   </span>
                       </td>
                                 <td className="py-1 px-3 text-gray-800">
                                   <div className="flex items-center gap-2">
-                                    {like.thumbnail ? (
+                                    {like.cardThumbnail ? (
                                       <img 
-                                        src={like.thumbnail} 
+                                        src={like.cardThumbnail} 
                                         alt={like.title || '작품 썸네일'}
                                         className="w-[58px] h-12 object-cover rounded"
                                         onError={(e) => {
@@ -5285,11 +5294,17 @@ export default function AdminPage() {
                                         }}
                                       />
                                     ) : null}
-                                    <div className="w-[58px] h-12 bg-gray-200 rounded flex items-center justify-center text-gray-400 text-xs" style={{display: like.thumbnail ? 'none' : 'flex'}}>
+                                    <div className="w-[58px] h-12 bg-gray-200 rounded flex items-center justify-center text-gray-400 text-xs" style={{display: like.cardThumbnail ? 'none' : 'flex'}}>
                                       작품
                                     </div>
                                     <a 
-                                      href={like.articleId ? `/story#card-${like.articleId}` : `/gallery#card-${like.id}`} 
+                                      href={
+                                        like.type === 'story' ? `/story#card-${like.id}` :
+                                        like.type === 'gallery' ? `/gallery#card-${like.id}` :
+                                        like.type === 'store' ? `/store#card-${like.id}` :
+                                        like.type === 'youtube' ? `/youtube#card-${like.id}` :
+                                        `/gallery#card-${like.id}`
+                                      } 
                                       target="_blank" 
                                       rel="noopener noreferrer"
                                       className="text-gray-800 hover:text-gray-600 hover:underline"
