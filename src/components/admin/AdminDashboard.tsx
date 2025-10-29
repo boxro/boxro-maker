@@ -15,6 +15,7 @@ interface AdminStats {
   inactiveUsers: number;
   totalStories: number;
   totalStoreItems: number;
+  totalYoutubeItems: number;
   galleryViews: number;
   galleryBoxroTalks: number;
   galleryLikes: number;
@@ -29,6 +30,11 @@ interface AdminStats {
   storeBoxroTalks: number;
   storeLikes: number;
   storeShares: number;
+  youtubeViews: number;
+  youtubeRedirects: number;
+  youtubeBoxroTalks: number;
+  youtubeLikes: number;
+  youtubeShares: number;
   blueprintDownloads: number;
   firebaseConnected: boolean;
   dbConnected: boolean;
@@ -163,6 +169,26 @@ export default function AdminDashboard({ adminStats, loading }: AdminDashboardPr
                 박스로 톡: {adminStats.storeBoxroTalks||0}<br/>
                 조회: {adminStats.storeViews||0}<br/>
                 스토어 바로가기: {adminStats.storeRedirects||0}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 유튜브 영상 수 */}
+        <div className="bg-white text-gray-900 py-2 gap-2 border border-gray-200 rounded-lg px-8 py-6">
+          <div className="flex flex-row items-center justify-between space-y-0 pb-2 border-b border-gray-200">
+            <div className="text-sm font-medium">유튜브 영상 수</div>
+            <ShoppingBag className="h-4 w-4 text-red-500" />
+          </div>
+          <div className="flex flex-row items-end justify-between h-24">
+            <div className="text-3xl font-bold text-red-600">{adminStats.totalYoutubeItems || 0}</div>
+            <div className="text-right">
+              <div className="text-xs text-gray-800">
+                좋아요: {adminStats.youtubeLikes||0}<br/>
+                공유: {adminStats.youtubeShares||0}<br/>
+                박스로 톡: {adminStats.youtubeBoxroTalks||0}<br/>
+                조회: {adminStats.youtubeViews||0}<br/>
+                유튜브 바로가기: {adminStats.youtubeRedirects||0}
               </div>
             </div>
           </div>

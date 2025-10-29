@@ -69,6 +69,7 @@ interface AdminStats {
   inactiveUsers: number;
   totalStories: number;
   totalStoreItems: number;
+  totalYoutubeItems: number;
   galleryViews: number;
   galleryBoxroTalks: number;
   galleryLikes: number;
@@ -83,6 +84,11 @@ interface AdminStats {
   storeBoxroTalks: number;
   storeLikes: number;
   storeShares: number;
+  youtubeViews: number;
+  youtubeRedirects: number;
+  youtubeBoxroTalks: number;
+  youtubeLikes: number;
+  youtubeShares: number;
   blueprintDownloads: number;
   firebaseConnected: boolean;
   dbConnected: boolean;
@@ -249,6 +255,7 @@ export default function AdminPage() {
     inactiveUsers: 0,
     totalStories: 0,
     totalStoreItems: 0,
+    totalYoutubeItems: 0,
     galleryViews: 0,
     galleryBoxroTalks: 0,
     galleryLikes: 0,
@@ -263,6 +270,11 @@ export default function AdminPage() {
     storeBoxroTalks: 0,
     storeLikes: 0,
     storeShares: 0,
+    youtubeViews: 0,
+    youtubeRedirects: 0,
+    youtubeBoxroTalks: 0,
+    youtubeLikes: 0,
+    youtubeShares: 0,
     blueprintDownloads: 0,
     firebaseConnected: false,
     dbConnected: false,
@@ -3621,6 +3633,49 @@ export default function AdminPage() {
       const storeLikes = storeItems.reduce((sum, storeItem: any) => sum + (storeItem.likes || 0), 0);
       const storeShares = storeItems.reduce((sum, storeItem: any) => sum + (storeItem.shares || 0), 0);
       
+      // 유튜브 박스로 톡 통계 계산
+      let youtubeBoxroTalks: any[] = [];
+      
+      // 1. youtubeBoxroTalks 컬렉션 확인
+      try {
+        const youtubeBoxroTalksQuery = query(collection(db, 'youtubeBoxroTalks'));
+        const youtubeBoxroTalksSnapshot = await getDocs(youtubeBoxroTalksQuery);
+        youtubeBoxroTalks = youtubeBoxroTalksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        console.log('🔍 youtubeBoxroTalks 컬렉션:', youtubeBoxroTalks.length);
+      } catch (error: unknown) {
+        console.warn('⚠️ youtubeBoxroTalks 컬렉션 접근 권한 없음:', error);
+      }
+      
+      // 2. 유튜브 아이템에서 박스로 톡 추출
+      let youtubeBoxroTalksFromYoutube: any[] = [];
+      youtubeItems.forEach((item: any) => {
+        if (item.boxroTalks && Array.isArray(item.boxroTalks)) {
+          item.boxroTalks.forEach((talk: any) => {
+            youtubeBoxroTalksFromYoutube.push({
+              ...talk,
+              youtubeId: item.id,
+              youtubeTitle: item.title || item.name
+            });
+          });
+        }
+      });
+      console.log('🔍 유튜브 아이템에서 박스로 톡:', youtubeBoxroTalksFromYoutube.length);
+      
+      // 3. 고아 박스로 톡 필터링
+      const activeYoutubeBoxroTalks = await filterOrphanedBoxroTalks(youtubeBoxroTalks, 'gallery'); // 유튜브는 갤러리와 동일한 방식으로 처리
+      const youtubeBoxroTalksCount = activeYoutubeBoxroTalks.length + youtubeBoxroTalksFromYoutube.length;
+      
+      // 디버깅: 유튜브 박스로 톡 통계 확인
+      console.log('🔍 유튜브 박스로 톡 통계:');
+      console.log('  - youtubeBoxroTalks 컬렉션:', youtubeBoxroTalks.length);
+      console.log('  - 유튜브 아이템에서 박스로 톡:', youtubeBoxroTalksFromYoutube.length);
+      console.log('  - 총합:', youtubeBoxroTalksCount);
+      
+      // 유튜브 통계 계산
+      const youtubeViews = youtubeItems.reduce((sum, youtubeItem: any) => sum + (youtubeItem.views || 0), 0);
+      const youtubeRedirects = youtubeItems.reduce((sum, youtubeItem: any) => sum + (youtubeItem.youtubeRedirects || 0), 0);
+      const youtubeLikes = youtubeItems.reduce((sum, youtubeItem: any) => sum + (youtubeItem.likes || 0), 0);
+      const youtubeShares = youtubeItems.reduce((sum, youtubeItem: any) => sum + (youtubeItem.shares || 0), 0);
 
       // 사용자가 한 좋아요/다운로드/공유/조회 활동 계산
       // 갤러리 작품에서 사용자 활동 추적
@@ -4224,22 +4279,23 @@ export default function AdminPage() {
       });
       
       // 전체 통합 통계 (삭제되지 않은 박스로 톡만)
-      const totalBoxroTalks = activeGalleryBoxroTalks.length + storyBoxroTalksCount + storeBoxroTalksCount;
+      const totalBoxroTalks = activeGalleryBoxroTalks.length + storyBoxroTalksCount + storeBoxroTalksCount + youtubeBoxroTalksCount;
       
       
       
       const totalStats = {
         totalUsers: userStatsMap.size,
         totalDesigns: designs.length,
-        totalBoxroTalks: totalBoxroTalks, // 갤러리 + 스토리 + 스토어 박스로 톡
-        totalLikes: galleryLikes + storyLikes + storeLikes, // 갤러리 + 스토리 + 스토어 좋아요
+        totalBoxroTalks: totalBoxroTalks, // 갤러리 + 스토리 + 스토어 + 유튜브 박스로 톡
+        totalLikes: galleryLikes + storyLikes + storeLikes + youtubeLikes, // 갤러리 + 스토리 + 스토어 + 유튜브 좋아요
         totalDownloads: blueprintDownloads, // 도안 다운로드만
-        totalShares: galleryShares + storyShares + storeShares, // 갤러리 + 스토리 + 스토어 공유
-        totalViews: galleryViews + storyViews + storeViews, // 갤러리 + 스토리 + 스토어 조회
+        totalShares: galleryShares + storyShares + storeShares + youtubeShares, // 갤러리 + 스토리 + 스토어 + 유튜브 공유
+        totalViews: galleryViews + storyViews + storeViews + youtubeViews, // 갤러리 + 스토리 + 스토어 + 유튜브 조회
         activeUsers: activeUsers,
         inactiveUsers: inactiveUsers,
         totalStories: stories.length,
         totalStoreItems: storeItems.length,
+        totalYoutubeItems: youtubeItems.length,
         galleryViews: galleryViews,
         galleryBoxroTalks: galleryBoxroTalks,
         galleryLikes: galleryLikes,
@@ -4253,6 +4309,11 @@ export default function AdminPage() {
         storeBoxroTalks: storeBoxroTalksCount,
         storeLikes: storeLikes,
         storeShares: storeShares,
+        youtubeViews: youtubeViews,
+        youtubeRedirects: youtubeRedirects,
+        youtubeBoxroTalks: youtubeBoxroTalksCount,
+        youtubeLikes: youtubeLikes,
+        youtubeShares: youtubeShares,
         blueprintDownloads: blueprintDownloads,
         firebaseConnected: connectionStatus.firebaseConnected,
         dbConnected: connectionStatus.dbConnected,
