@@ -3102,7 +3102,7 @@ export default function AdminPage() {
             type: 'store',
             id: storeItem.id,
             title: storeItem.title || '제목 없음',
-            cardThumbnail: storeItem.cardThumbnail,
+            thumbnail: storeItem.thumbnail || storeItem.cardThumbnail,
             author: storeItem.authorNickname || storeItem.author || storeItem.authorName || storeItem.creator || storeItem.userId || '작가 정보 없음',
             storeRedirects: storeItem.storeRedirects || 0,
             createdAt: storeItem.createdAt,
