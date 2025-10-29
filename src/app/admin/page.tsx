@@ -2916,7 +2916,7 @@ export default function AdminPage() {
         const sharedBy = design.sharedBy || [];
         if (sharedBy.includes(currentUserUid)) {
           userShares.push({
-            type: 'design',
+            type: 'gallery',
             id: design.id,
             title: design.title || design.name || '제목 없음',
             cardThumbnail: design.thumbnail || design.thumbnailUrl,
@@ -2935,7 +2935,7 @@ export default function AdminPage() {
             type: 'story',
             id: story.id,
             title: story.title || '제목 없음',
-            cardThumbnail: story.cardThumbnail,
+            cardThumbnail: story.thumbnail || story.cardThumbnail,
             author: story.authorNickname || story.author || story.authorName || story.creator || story.userId || '작가 정보 없음',
             shares: story.shares || 0,
             createdAt: story.createdAt
@@ -2951,7 +2951,7 @@ export default function AdminPage() {
             type: 'store',
             id: storeItem.id,
             title: storeItem.title || '제목 없음',
-            cardThumbnail: storeItem.cardThumbnail,
+            cardThumbnail: storeItem.thumbnail || storeItem.cardThumbnail,
             author: storeItem.authorNickname || storeItem.author || storeItem.authorName || storeItem.creator || storeItem.userId || '작가 정보 없음',
             shares: storeItem.shares || 0,
             createdAt: storeItem.createdAt
@@ -5483,18 +5483,27 @@ export default function AdminPage() {
                               <tr key={idx} className="border-b border-gray-100 hover:bg-orange-50">
                                 <td className="py-1 px-3 text-gray-800 text-xs">
                                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                    share.articleId 
+                                    share.type === 'story' 
                                       ? 'bg-purple-100 text-purple-800' 
-                                      : 'bg-blue-100 text-blue-800'
+                                      : share.type === 'gallery'
+                                      ? 'bg-blue-100 text-blue-800'
+                                      : share.type === 'store'
+                                      ? 'bg-green-100 text-green-800'
+                                      : share.type === 'youtube'
+                                      ? 'bg-red-100 text-red-800'
+                                      : 'bg-gray-100 text-gray-800'
                                   }`}>
-                                    {share.articleId ? '이야기' : '갤러리'}
+                                    {share.type === 'story' ? '이야기' : 
+                                     share.type === 'gallery' ? '갤러리' :
+                                     share.type === 'store' ? '스토어' :
+                                     share.type === 'youtube' ? '유튜브' : '알 수 없음'}
                         </span>
                       </td>
                                 <td className="py-1 px-3 text-gray-800">
                                   <div className="flex items-center gap-2">
-                                    {share.thumbnail ? (
+                                    {share.cardThumbnail ? (
                                       <img 
-                                        src={share.thumbnail} 
+                                        src={share.cardThumbnail} 
                                         alt={share.title || '작품 썸네일'}
                                         className="w-[58px] h-12 object-cover rounded"
                                         onError={(e) => {
@@ -5503,11 +5512,17 @@ export default function AdminPage() {
                                         }}
                                       />
                                     ) : null}
-                                    <div className="w-[58px] h-12 bg-gray-200 rounded flex items-center justify-center text-gray-400 text-xs" style={{display: share.thumbnail ? 'none' : 'flex'}}>
+                                    <div className="w-[58px] h-12 bg-gray-200 rounded flex items-center justify-center text-gray-400 text-xs" style={{display: share.cardThumbnail ? 'none' : 'flex'}}>
                                       작품
                                     </div>
                                     <a 
-                                      href={share.articleId ? `/story#card-${share.articleId}` : `/gallery#card-${share.id}`} 
+                                      href={
+                                        share.type === 'story' ? `/story#card-${share.id}` :
+                                        share.type === 'gallery' ? `/gallery#card-${share.id}` :
+                                        share.type === 'store' ? `/store#card-${share.id}` :
+                                        share.type === 'youtube' ? `/youtube#card-${share.id}` :
+                                        `/gallery#card-${share.id}`
+                                      } 
                                       target="_blank" 
                                       rel="noopener noreferrer"
                                       className="text-gray-800 hover:text-gray-600 hover:underline"
