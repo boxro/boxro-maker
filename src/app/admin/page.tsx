@@ -3633,6 +3633,11 @@ export default function AdminPage() {
       const storeLikes = storeItems.reduce((sum, storeItem: any) => sum + (storeItem.likes || 0), 0);
       const storeShares = storeItems.reduce((sum, storeItem: any) => sum + (storeItem.shares || 0), 0);
       
+      // 유튜브 아이템 데이터 가져오기
+      const youtubeItemsQuery = query(collection(db, 'youtubeItems'));
+      const youtubeItemsSnapshot = await getDocs(youtubeItemsQuery);
+      const youtubeItems = youtubeItemsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      
       // 유튜브 박스로 톡 통계 계산
       let youtubeBoxroTalks: any[] = [];
       
@@ -4030,10 +4035,6 @@ export default function AdminPage() {
       });
 
       // 유튜브 아이템에서 사용자 활동 추적
-      const youtubeItemsQuery = query(collection(db, 'youtubeItems'));
-      const youtubeItemsSnapshot = await getDocs(youtubeItemsQuery);
-      const youtubeItems = youtubeItemsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
       youtubeItems.forEach((youtubeItem: any) => {
         const likedBy = youtubeItem.likedBy || [];
         const sharedBy = youtubeItem.sharedBy || [];
