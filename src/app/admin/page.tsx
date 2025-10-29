@@ -5164,10 +5164,16 @@ export default function AdminPage() {
                                       ? 'bg-blue-100 text-blue-800' 
                                       : boxroTalk.source === 'story'
                                       ? 'bg-purple-100 text-purple-800'
-                                      : 'bg-green-100 text-green-800'
+                                      : boxroTalk.source === 'store'
+                                      ? 'bg-green-100 text-green-800'
+                                      : boxroTalk.source === 'youtube'
+                                      ? 'bg-red-100 text-red-800'
+                                      : 'bg-gray-100 text-gray-800'
                                   }`}>
                                     {boxroTalk.source === 'gallery' ? '갤러리' : 
-                                     boxroTalk.source === 'story' ? '이야기' : '스토어'}
+                                     boxroTalk.source === 'story' ? '이야기' : 
+                                     boxroTalk.source === 'store' ? '스토어' :
+                                     boxroTalk.source === 'youtube' ? '유튜브' : '알 수 없음'}
                                   </span>
                                 </td>
                                 <td className="py-1 px-3 text-gray-800 text-xs">
@@ -5187,7 +5193,15 @@ export default function AdminPage() {
                                        작품
                           </div>
                                     <a 
-                                      href={boxroTalk.designId ? `/gallery#card-${boxroTalk.designId}` : `/story#card-${boxroTalk.articleId}`} 
+                                      href={
+                                        boxroTalk.source === 'gallery' && boxroTalk.designId ? `/gallery#card-${boxroTalk.designId}` :
+                                        boxroTalk.source === 'story' && boxroTalk.articleId ? `/story#card-${boxroTalk.articleId}` :
+                                        boxroTalk.source === 'store' && boxroTalk.articleId ? `/store#card-${boxroTalk.articleId}` :
+                                        boxroTalk.source === 'youtube' && boxroTalk.articleId ? `/youtube#card-${boxroTalk.articleId}` :
+                                        boxroTalk.designId ? `/gallery#card-${boxroTalk.designId}` :
+                                        boxroTalk.articleId ? `/story#card-${boxroTalk.articleId}` :
+                                        '#'
+                                      } 
                                       target="_blank" 
                                       rel="noopener noreferrer"
                                       className="text-gray-800 hover:text-gray-600 hover:underline"
