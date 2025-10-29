@@ -2790,7 +2790,7 @@ export default function AdminPage() {
             type: 'story',
             id: story.id,
             title: story.title || '제목 없음',
-            cardThumbnail: story.cardThumbnail,
+            cardThumbnail: story.thumbnail || story.cardThumbnail,
             author: story.authorNickname || story.author || story.authorName || story.creator || story.userId || '작가 정보 없음',
             likes: story.likes || 0,
             createdAt: story.createdAt
@@ -2806,7 +2806,7 @@ export default function AdminPage() {
             type: 'store',
             id: storeItem.id,
             title: storeItem.title || '제목 없음',
-            cardThumbnail: storeItem.cardThumbnail,
+            cardThumbnail: storeItem.thumbnail || storeItem.cardThumbnail,
             author: storeItem.authorNickname || storeItem.author || storeItem.authorName || storeItem.creator || storeItem.userId || '작가 정보 없음',
             likes: storeItem.likes || 0,
             createdAt: storeItem.createdAt
@@ -2822,7 +2822,7 @@ export default function AdminPage() {
             type: 'youtube',
             id: youtubeItem.id,
             title: youtubeItem.title || '제목 없음',
-            cardThumbnail: youtubeItem.cardThumbnail,
+            cardThumbnail: youtubeItem.thumbnail || youtubeItem.cardThumbnail,
             author: youtubeItem.authorNickname || youtubeItem.author || youtubeItem.authorName || youtubeItem.creator || youtubeItem.userId || '작가 정보 없음',
             likes: youtubeItem.likes || 0,
             createdAt: youtubeItem.createdAt
