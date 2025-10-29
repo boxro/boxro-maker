@@ -3678,9 +3678,23 @@ export default function AdminPage() {
       
       // 유튜브 통계 계산
       const youtubeViews = youtubeItems.reduce((sum, youtubeItem: any) => sum + (youtubeItem.views || 0), 0);
-      const youtubeRedirects = youtubeItems.reduce((sum, youtubeItem: any) => sum + (youtubeItem.youtubeRedirects || 0), 0);
+      const youtubeRedirects = 0; // 유튜브에서는 바로가기 카운트를 추적하지 않음
       const youtubeLikes = youtubeItems.reduce((sum, youtubeItem: any) => sum + (youtubeItem.likes || 0), 0);
       const youtubeShares = youtubeItems.reduce((sum, youtubeItem: any) => sum + (youtubeItem.shares || 0), 0);
+      
+      // 디버깅: 유튜브 통계 확인
+      console.log('🔍 유튜브 통계:');
+      console.log('  - 총 아이템 수:', youtubeItems.length);
+      console.log('  - 총 조회수:', youtubeViews);
+      console.log('  - 총 좋아요:', youtubeLikes);
+      console.log('  - 총 공유:', youtubeShares);
+      console.log('  - 유튜브 아이템 샘플:', youtubeItems.slice(0, 3).map(item => ({
+        id: item.id,
+        title: item.title,
+        views: item.views,
+        likes: item.likes,
+        shares: item.shares
+      })));
 
       // 사용자가 한 좋아요/다운로드/공유/조회 활동 계산
       // 갤러리 작품에서 사용자 활동 추적
