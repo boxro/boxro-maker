@@ -1552,6 +1552,18 @@ export default function YoutubePageClient() {
                         onClick={async (e) => {
                           e.stopPropagation();
                           await incrementView(article.id);
+                          
+                          // 유튜브 바로가기 카운트 증가
+                          try {
+                            const { updateDoc, doc, increment, arrayUnion } = await import("firebase/firestore");
+                            const { db } = await import("@/lib/firebase");
+                            await updateDoc(doc(db, 'youtubeItems', article.id), {
+                              youtubeRedirects: increment(1),
+                              youtubeRedirectedBy: arrayUnion(user?.uid || 'anonymous')
+                            });
+                          } catch (error) {
+                            console.log('유튜브 바로가기 카운트 업데이트 실패:', error);
+                          }
                         }}
                         className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-white rounded-full transition-colors text-sm font-medium"
                         style={{ backgroundColor: '#f0544c' }}

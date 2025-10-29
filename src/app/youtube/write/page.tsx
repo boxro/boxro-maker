@@ -217,6 +217,7 @@ export default function WriteYoutubePage() {
         likes: 0,
         shares: 0,
         boxroTalks: 0,
+        youtubeRedirects: 0,
         isPublished: true,
         cardBackgroundColor: cardBackgroundColor,
         createdAt: serverTimestamp(),
