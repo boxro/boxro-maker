@@ -395,7 +395,7 @@ export default function EditStoryPage() {
                   <label className="block text-sm font-medium text-gray-800 mb-2">
                     도안 가격
                   </label>
-                  <div className="flex items-center gap-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                     <input
                       type="text"
                       value={price}
@@ -466,26 +466,15 @@ export default function EditStoryPage() {
                         type="color"
                         value={cardBackgroundColor === 'transparent' ? '#ffffff' : cardBackgroundColor}
                         onChange={(e) => setCardBackgroundColor(e.target.value)}
-                        className="w-12 h-10 border-0 rounded-md cursor-pointer"
+                        className="w-16 h-12 border-0 rounded-md cursor-pointer"
                       />
                       <input
                         type="text"
                         value={cardBackgroundColor}
                         onChange={(e) => setCardBackgroundColor(e.target.value)}
                         placeholder="#ffffff"
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
+                        className="w-32 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
                       />
-                      <button
-                        type="button"
-                        onClick={() => setCardBackgroundColor('transparent')}
-                        className={`px-3 py-2 text-sm rounded-md border transition-colors ${
-                          cardBackgroundColor === 'transparent'
-                            ? 'bg-blue-100 border-blue-300 text-blue-700'
-                            : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                        }`}
-                      >
-                        투명
-                      </button>
                     </div>
                   </div>
                   
