@@ -368,7 +368,7 @@ export default function WriteYoutubePage() {
                         type="color"
                         value={cardBackgroundColor === 'transparent' ? '#ffffff' : cardBackgroundColor}
                         onChange={(e) => setCardBackgroundColor(e.target.value)}
-                        className="w-12 h-10 border-0 rounded-md cursor-pointer"
+                        className="w-16 h-12 border-0 rounded-md cursor-pointer"
                       />
                       <input
                         type="text"
@@ -377,13 +377,6 @@ export default function WriteYoutubePage() {
                         placeholder="#ffffff"
                         className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
                       />
-                      <button
-                        type="button"
-                        onClick={() => setCardBackgroundColor('transparent')}
-                        className="px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white text-sm rounded-md transition-colors"
-                      >
-                        투명
-                      </button>
                     </div>
                   </div>
                 </div>
