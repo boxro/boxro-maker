@@ -4660,7 +4660,7 @@ export default function DrawPage() {
           </CardTitle>
           {/* 안내 문구 */}
           <p className="text-sm text-gray-600 mt-0 mb-0 text-left">
-            펜으로 쓱쓱, 완성하면 AI가 도안으로 변신 🚗
+            펜으로 쓱쓱, AI가 박스카 도안으로 변신시켜 줘요!
           </p>
         </CardHeader>
         <CardContent 
