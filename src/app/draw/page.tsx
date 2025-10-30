@@ -483,7 +483,7 @@ export default function DrawPage() {
     ctx.fillStyle = '#000000';
     ctx.font = '18px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText('ⓒ 2022 Boxro All rights reserved.', a4Width / 2, a4Height - 60);
+    ctx.fillText('ⓒ 2025 Boxro All rights reserved.', a4Width / 2, a4Height - 60);
   };
 
   // 3D 모델 기반 도안 전개도 생성 함수 (A4 가로 방향, 여러 장)
@@ -825,7 +825,7 @@ export default function DrawPage() {
       // Copyright (가운데 정렬)
       ctx.font = '18px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('ⓒ 2022 Boxro All rights reserved.', a4Width / 2, a4Height - 60);
+      ctx.fillText('ⓒ 2025 Boxro All rights reserved.', a4Width / 2, a4Height - 60);
     });
 
     // 페이지 2
