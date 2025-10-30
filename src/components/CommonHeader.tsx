@@ -1,6 +1,14 @@
 'use client';
 
 import { useState, useEffect } from "react";
+
+// Google Translate 타입 선언
+declare global {
+  interface Window {
+    google: any;
+    googleTranslateElementInit: () => void;
+  }
+}
 import Link from "next/link";
 import Image from "next/image";
 import { 
@@ -30,6 +38,7 @@ export default function CommonHeader({ className = "" }: CommonHeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [showHelpOnboarding, setShowHelpOnboarding] = useState(false);
+  const [isTranslated, setIsTranslated] = useState(false);
   const { user, logout, setShowOnboarding } = useAuth();
 
   // 관리자 권한 체크
@@ -39,6 +48,77 @@ export default function CommonHeader({ className = "" }: CommonHeaderProps) {
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
+
+  // Google Translate 쿠키 설정 유틸
+  const setTranslateCookie = (value: string) => {
+    // 현재 도메인 및 루트 경로에 모두 설정 (크로스 경로 적용성 향상)
+    document.cookie = `googtrans=${value}; path=/`;
+    document.cookie = `googtrans=${value}; domain=${window.location.hostname}; path=/`;
+  };
+
+  const clearTranslateCookie = () => {
+    document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+    document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 GMT; domain=${window.location.hostname}; path=/`;
+  };
+
+  // 언어 토글 함수 - 쿠키 기반 전환 (안정적)
+  const toggleLanguage = () => {
+    if (!isTranslated) {
+      // 쿠키에 대상 언어 설정 (ko -> en)
+      setTranslateCookie('/ko/en');
+      localStorage.setItem('boxro-translation', 'en');
+      setIsTranslated(true);
+      // 스크립트 없으면 로드만 해두고, 적용은 새로고침으로 보장
+      if (!window.google || !window.google.translate) {
+        const script = document.createElement('script');
+        script.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+        script.async = true;
+        document.head.appendChild(script);
+        window.googleTranslateElementInit = () => {
+          new window.google.translate.TranslateElement({
+            pageLanguage: 'ko',
+            includedLanguages: 'ko,en',
+            layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE,
+            autoDisplay: false
+          }, 'google_translate_element');
+        };
+      }
+      // 적용 보장을 위해 한 번 새로고침
+      window.location.reload();
+    } else {
+      clearTranslateCookie();
+      localStorage.setItem('boxro-translation', 'ko');
+      setIsTranslated(false);
+      window.location.reload();
+    }
+  };
+
+  // 컴포넌트 마운트 시 저장된 번역 상태 복원 (쿠키 기반)
+  useEffect(() => {
+    const savedTranslation = localStorage.getItem('boxro-translation');
+    if (savedTranslation === 'en') {
+      setIsTranslated(true);
+      // 쿠키만 보장해 두고, 위젯 스크립트는 비동기로 로드
+      setTranslateCookie('/ko/en');
+      if (!window.google || !window.google.translate) {
+        const script = document.createElement('script');
+        script.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+        script.async = true;
+        document.head.appendChild(script);
+        window.googleTranslateElementInit = () => {
+          new window.google.translate.TranslateElement({
+            pageLanguage: 'ko',
+            includedLanguages: 'ko,en',
+            layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE,
+            autoDisplay: false
+          }, 'google_translate_element');
+        };
+      }
+    } else {
+      clearTranslateCookie();
+      setIsTranslated(false);
+    }
+  }, []);
 
   // 스크롤 이벤트 핸들러
   useEffect(() => {
@@ -124,16 +204,26 @@ export default function CommonHeader({ className = "" }: CommonHeaderProps) {
             </span>
           </Link>
 
-          {/* Right: Hamburger Menu */}
-          <div className="menu-container relative">
+          {/* Right: Language Toggle + Hamburger Menu */}
+          <div className="flex items-center gap-2">
+            {/* Language Toggle Button */}
             <button
-              onClick={toggleMenu}
-              className="p-2 rounded-lg transition-all duration-200 bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30"
+              onClick={toggleLanguage}
+              className="w-[42px] h-[42px] rounded-lg transition-all duration-200 bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30 text-sm font-medium flex items-center justify-center"
             >
-              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              <span className="notranslate" translate="no">{isTranslated ? '한글' : 'EN'}</span>
             </button>
             
-            {/* Dropdown Menu */}
+            {/* Hamburger Menu */}
+            <div className="menu-container relative">
+              <button
+                onClick={toggleMenu}
+                className="p-2 rounded-lg transition-all duration-200 bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30"
+              >
+                {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
+            
+              {/* Dropdown Menu */}
             {isMenuOpen && (
               <div className="menu-dropdown absolute top-full right-0 mt-2 w-64 rounded-lg shadow-xl transition-all duration-200 bg-white border border-gray-200">
                 <div className="p-4">
@@ -262,6 +352,7 @@ export default function CommonHeader({ className = "" }: CommonHeaderProps) {
                 </div>
               </div>
             )}
+            </div>
           </div>
         </div>
       </div>
@@ -274,6 +365,19 @@ export default function CommonHeader({ className = "" }: CommonHeaderProps) {
         showDontShowAgain={false}
         redirectTo="/draw"
       />
+      
+      {/* Google Translate Widget (Hidden) */}
+      <div id="google_translate_element" style={{ display: 'none' }}></div>
+      {/* Google Translate 위젯/배너 완전 숨김 처리 */}
+      <style jsx global>{`
+        .goog-te-banner-frame { display: none !important; }
+        .goog-te-gadget-icon { display: none !important; }
+        .goog-te-gadget-simple { display: none !important; }
+        .goog-te-gadget { display: none !important; }
+        .goog-te-combo { display: none !important; }
+        .skiptranslate { display: none !important; }
+        body { top: 0 !important; }
+      `}</style>
     </header>
   );
 }
