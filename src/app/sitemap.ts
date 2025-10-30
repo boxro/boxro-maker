@@ -32,6 +32,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     },
     {
+      url: `${baseUrl}/youtube`,
+      lastModified: new Date(),
+      changeFrequency: 'daily' as const,
+      priority: 0.8,
+    },
+    {
       url: `${baseUrl}/draw`,
       lastModified: new Date(),
       changeFrequency: 'weekly' as const,
@@ -63,7 +69,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     
     storyPages = storySnapshot.docs.map((doc) => ({
       url: `${baseUrl}/story/${doc.id}`,
-      lastModified: doc.data().updatedAt?.toDate?.() || new Date(),
+      lastModified: doc.data().updatedAt?.toDate?.() || doc.data().createdAt?.toDate?.() || new Date(),
       changeFrequency: 'weekly' as const,
       priority: 0.7,
     }))
@@ -83,7 +89,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     
     storePages = storeSnapshot.docs.map((doc) => ({
       url: `${baseUrl}/store/${doc.id}`,
-      lastModified: doc.data().updatedAt?.toDate?.() || new Date(),
+      lastModified: doc.data().updatedAt?.toDate?.() || doc.data().createdAt?.toDate?.() || new Date(),
       changeFrequency: 'weekly' as const,
       priority: 0.7,
     }))

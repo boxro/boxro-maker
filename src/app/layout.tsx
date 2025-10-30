@@ -17,6 +17,9 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NODE_ENV === 'production' ? 'https://boxro.vercel.app' : 'http://localhost:3000'),
   title: "BOXRO 박스로 | Eco-Friendly Maker Project",
   description: "버려진 박스로 자동차를 만들고, 상상력을 움직이는 친환경 놀이 플랫폼",
+  alternates: {
+    canonical: process.env.NEXT_PUBLIC_SITE_URL || 'https://boxro.vercel.app',
+  },
   openGraph: {
     title: "BOXRO 박스로 | Eco-Friendly Maker Project",
     description: "버려진 박스로 자동차를 만들고, 상상력을 움직이는 친환경 놀이 플랫폼",
