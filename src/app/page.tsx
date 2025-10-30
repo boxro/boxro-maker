@@ -61,7 +61,7 @@ export default function HomePage() {
               </div>
               
               <span className="text-[22px] sm:text-[30px] text-white/90 font-bold block mb-[22px] font-cookie-run">
-                상상하는 자동차를 만들어보세요✨
+                AI와 함께 만드는 나만의 박스카✨
               </span>
               
               <p className="text-white/90 max-w-3xl mx-auto leading-relaxed" style={{ marginBottom: '46px', fontSize: '15px' }}>
