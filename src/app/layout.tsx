@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     locale: "ko_KR",
     images: [
       {
-        url: 'https://boxro.vercel.app/og-image.png',
+        url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://boxro.vercel.app'}/og-image.png`,
         width: 1200,
         height: 630,
         alt: 'BOXRO 박스로 | Eco-Friendly Maker Project',
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "BOXRO 박스로 | AI가 아이의 그림을 박스카로 만들어주는 창작 플랫폼",
     description: "아이가 그린 자동차를 AI가 도안으로 만들어줘요. 상상한 그림이 진짜 박스카로 변신하는 즐거운 창작 놀이터! 🚗✨",
-    images: ['https://boxro.vercel.app/og-image.png'],
+    images: [`${process.env.NEXT_PUBLIC_SITE_URL || 'https://boxro.vercel.app'}/og-image.png`],
   },
   icons: {
     icon: [

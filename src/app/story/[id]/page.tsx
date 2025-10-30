@@ -737,7 +737,7 @@ export default function StoryArticlePage() {
                 "name": "BOXRO 박스로",
                 "logo": {
                   "@type": "ImageObject",
-                  "url": "/og-image.png"
+                  "url": `${process.env.NEXT_PUBLIC_SITE_URL || 'https://boxro.vercel.app'}/og-image.png`
                 }
               },
               "mainEntityOfPage": {
