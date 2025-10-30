@@ -275,7 +275,7 @@ export default function CommonHeader({ className = "" }: CommonHeaderProps) {
                     >
                       <div className="flex items-center gap-3">
                         <Play className="w-4 h-4" />
-                        <span>박스로 유튜브</span>
+                        <span>Boxro 유튜브</span>
                       </div>
                     </Link>
                     <Link 
@@ -291,7 +291,7 @@ export default function CommonHeader({ className = "" }: CommonHeaderProps) {
                     >
                       <div className="flex items-center gap-3">
                         <ShoppingBag className="w-4 h-4" />
-                        <span>박스로 스토어</span>
+                        <span>Boxro 스토어</span>
                       </div>
                     </Link>
                     <button 
