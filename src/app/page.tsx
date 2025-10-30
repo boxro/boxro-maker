@@ -65,7 +65,7 @@ export default function HomePage() {
               </span>
               
               <p className="text-white/90 max-w-3xl mx-auto leading-relaxed" style={{ marginBottom: '46px', fontSize: '15px' }}>
-                아이가 자동차를 그리면,<br />
+                우리 아이가 그림을 그리면,<br />
                 AI가 박스카 도안을 만들어주는 창작 플랫폼입니다.<br />
                 디자인부터 조립, 공유까지 즐겁게 경험하세요.
               </p>
