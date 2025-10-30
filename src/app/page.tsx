@@ -65,9 +65,10 @@ export default function HomePage() {
               </span>
               
               <p className="text-white/90 max-w-3xl mx-auto leading-relaxed" style={{ marginBottom: '46px', fontSize: '15px' }}>
-                아이들이 직접 자동차를 디자인하고,<br />
-                박스카 도안을 출력해 조립하며,<br />
-                친구들과 공유할 수 있는 창작 놀이 플랫폼입니다.
+                아이의 상상을 AI가 도와 현실로 만드는<br />
+                창작형 박스카 플랫폼입니다.<br />
+                디자인부터 도안 출력, 조립, 공유까지 —<br />
+                모든 과정을 쉽고 즐겁게 경험하세요.
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center">

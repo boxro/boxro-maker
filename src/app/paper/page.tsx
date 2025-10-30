@@ -444,7 +444,7 @@ export default function DrawPage() {
     ctx.fillText('이 도안은 박스로에서 만들어졌어요 ✨', 240, 80);
     
     ctx.font = '22px Arial';
-    ctx.fillText('아이들이 직접 자동차를 디자인하고, 도안을 출력해 조립하며, 친구들과 나누는 창작 놀이 플랫폼이에요.', 240, 110);
+    ctx.fillText('아이의 상상을 AI가 도와 현실로 만드는 창작형 박스카 플랫폼이에요.', 240, 110);
     
     // 도안 생성날짜 (오른쪽상단) - 원래 서식
     const now = new Date();
@@ -792,7 +792,7 @@ export default function DrawPage() {
       
       ctx.font = '22px Arial';
       const textY2 = 1030; // 모바일/데스크톱 동일한 위치
-      ctx.fillText('아이들이 직접 자동차를 디자인하고, 도안을 출력해 조립하며, 친구들과 나누는 창작 놀이 플랫폼이에요.', a4Width / 2, textY2);
+      ctx.fillText('아이의 상상을 AI가 도와 현실로 만드는 창작형 박스카 플랫폼이에요.', a4Width / 2, textY2);
       
       // Copyright (가운데 정렬)
       ctx.font = '18px Arial';
