@@ -4790,8 +4790,8 @@ export default function DrawPage() {
 
       <div className="mb-6 mt-10 px-4 md:px-0">
         <PageHeader 
-          title="3D 미리보기"
-          description="내가 그린 그림이 3D 박스카로 짠!"
+          title="3D 박스카 미리보기"
+          description="내 그림이 3D 박스카로 변했어요!"
         />
       </div>
 
@@ -4803,11 +4803,11 @@ export default function DrawPage() {
             <CardHeader className="text-gray-800 px-4 md:px-8 pb-0 pt-0">
               <CardTitle className="text-lg flex items-center">
                 <Brain className="w-5 h-5 mr-2 text-blue-600" />
-                <span className="bg-gradient-to-r from-blue-600 to-pink-600 bg-clip-text text-transparent">AI가 분석한 박스카</span>
+                <span className="bg-gradient-to-r from-blue-600 to-pink-600 bg-clip-text text-transparent">AI가 추천한 박스카</span>
               </CardTitle>
               {/* 안내 문구 */}
               <p className="text-sm text-gray-600 mt-0 mb-0 text-left">
-                결과가 마음에 안 들면, 다른 차로 바로 바꿔보세요!
+                마음에 드는 디자인이 나올 때까지 바꿔보세요.
               </p>
             </CardHeader>
             <CardContent className="px-4 md:px-8 pt-0 pb-0 -mt-3">
