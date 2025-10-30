@@ -4638,7 +4638,7 @@ export default function DrawPage() {
       <div className="mb-6 mt-10 px-4 md:px-0">
         <PageHeader 
           title="박스카 그리기"
-          description="상상한 자동차를 그려보세요! 화면 위에 쓱쓱 자유롭게 ✨"
+          description="그림을 그리면, AI가 박스카 도안을 만들어줘요! ✨"
         />
       </div>
 
@@ -4651,7 +4651,7 @@ export default function DrawPage() {
           </CardTitle>
           {/* 안내 문구 */}
           <p className="text-sm text-gray-600 mt-0 mb-0 text-left">
-            펜으로 그림을 그리고, 지우개로 지울 수 있어요.
+            펜으로 쓱쓱, 완성하면 AI가 도안으로 변신 🚗
           </p>
         </CardHeader>
         <CardContent 
