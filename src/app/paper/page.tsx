@@ -4647,7 +4647,7 @@ export default function DrawPage() {
       <div className="mb-6 mt-10 px-4 md:px-0">
         <PageHeader 
           title="박스카 그리기"
-          description="그림을 그리면, AI가 박스카 도안을 만들어줘요! ✨"
+          description="그림을 그리면, AI가 진짜 박스카로 만들어줘요! ✨"
         />
       </div>
 
@@ -4660,7 +4660,7 @@ export default function DrawPage() {
           </CardTitle>
           {/* 안내 문구 */}
           <p className="text-sm text-gray-600 mt-0 mb-0 text-left">
-            펜으로 쓱쓱, AI가 박스카 도안으로 변신시켜 줘요!
+            펜으로 쓱쓱, 완성된 그림이 박스카 도안으로 변신해요.
           </p>
         </CardHeader>
         <CardContent 
