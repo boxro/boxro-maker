@@ -15,13 +15,13 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NODE_ENV === 'production' ? 'https://boxro.vercel.app' : 'http://localhost:3000'),
-  title: "BOXRO 박스로 | AI가 아이의 그림을 박스카로 만들어주는 창작 플랫폼",
+  title: "BOXRO 박스로 | AI가 아이의 그림을 박스카 도안으로!",
   description: "아이가 그린 자동차를 AI가 도안으로 만들어줘요. 상상한 그림이 진짜 박스카로 변신하는 즐거운 창작 놀이터! 🚗✨",
   alternates: {
     canonical: process.env.NEXT_PUBLIC_SITE_URL || 'https://boxro.vercel.app',
   },
   openGraph: {
-    title: "BOXRO 박스로 | AI가 아이의 그림을 박스카로 만들어주는 창작 플랫폼",
+    title: "BOXRO 박스로 | AI가 아이의 그림을 박스카 도안으로!",
     description: "아이가 그린 자동차를 AI가 도안으로 만들어줘요.\n상상한 그림이 진짜 박스카로 변신하는 즐거운 창작 놀이터! 🚗✨",
     siteName: "BOXRO 박스로 | Eco-Friendly Maker Project",
     type: "website",
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "BOXRO 박스로 | AI가 아이의 그림을 박스카로 만들어주는 창작 플랫폼",
+    title: "BOXRO 박스로 | AI가 아이의 그림을 박스카 도안으로!",
     description: "아이가 그린 자동차를 AI가 도안으로 만들어줘요. 상상한 그림이 진짜 박스카로 변신하는 즐거운 창작 놀이터! 🚗✨",
     images: [`${process.env.NEXT_PUBLIC_SITE_URL || 'https://boxro.vercel.app'}/og-image.png`],
   },
