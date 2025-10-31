@@ -3,7 +3,7 @@ import { collection, getDocs, query, orderBy, where } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://boxro.vercel.app'
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://boxro.kr'
   
   // 정적 페이지들
   const staticPages = [

@@ -541,7 +541,7 @@ const handleInstall = async () => {
 ```typescript
 // src/app/layout.tsx
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://boxro.vercel.app'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://boxro.kr'),
   title: "BOXRO 박스로 | AI가 아이의 그림을 박스카 도안으로!",
   description: "아이가 그린 자동차를 AI가 도안으로 만들어줘요...",
   openGraph: {
@@ -593,7 +593,7 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
 ```typescript
 // src/app/sitemap.ts
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://boxro.vercel.app';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://boxro.kr';
   
   // 정적 페이지
   const staticPages = [...];

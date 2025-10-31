@@ -713,7 +713,7 @@ export default function StoryArticlePage() {
         <meta property="og:title" content={article.title} />
         <meta property="og:description" content={article.summary} />
         <meta property="og:type" content="product" />
-        <meta property="og:url" content={`${process.env.NEXT_PUBLIC_SITE_URL || 'https://boxro.vercel.app'}/store/${id}`} />
+        <meta property="og:url" content={`${process.env.NEXT_PUBLIC_SITE_URL || 'https://boxro.kr'}/store/${id}`} />
         {article.thumbnail && <meta property="og:image" content={article.thumbnail} />}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={article.title} />
