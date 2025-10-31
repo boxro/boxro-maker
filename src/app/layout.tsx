@@ -64,6 +64,7 @@ export default function RootLayout({
           rel="stylesheet" 
         />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="naver-site-verification" content="d96b54fb49ebbab9eaf8915453de40c5e1501e5a" />
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#2563eb" />
         <meta name="mobile-web-app-capable" content="yes" />
