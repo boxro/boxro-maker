@@ -14,7 +14,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NODE_ENV === 'production' ? 'https://boxro.vercel.app' : 'http://localhost:3000'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || (process.env.NODE_ENV === 'production' ? 'https://boxro.vercel.app' : 'http://localhost:3000')),
   title: "BOXRO 박스로 | AI가 아이의 그림을 박스카 도안으로!",
   description: "아이가 그린 자동차를 AI가 도안으로 만들어줘요. 상상한 그림이 진짜 박스카로 변신하는 즐거운 창작 놀이터! 🚗✨",
   alternates: {
