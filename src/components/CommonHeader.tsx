@@ -39,6 +39,7 @@ export default function CommonHeader({ className = "" }: CommonHeaderProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [showHelpOnboarding, setShowHelpOnboarding] = useState(false);
   const [isTranslated, setIsTranslated] = useState(false);
+  const [showTranslationToast, setShowTranslationToast] = useState(false);
   const { user, logout, setShowOnboarding } = useAuth();
 
   // 관리자 권한 체크
@@ -67,6 +68,7 @@ export default function CommonHeader({ className = "" }: CommonHeaderProps) {
       // 쿠키에 대상 언어 설정 (ko -> en)
       setTranslateCookie('/ko/en');
       localStorage.setItem('boxro-translation', 'en');
+      localStorage.setItem('boxro-show-translation-toast', 'true'); // 토스트 표시 플래그 설정
       setIsTranslated(true);
       // 스크립트 없으면 로드만 해두고, 적용은 새로고침으로 보장
       if (!window.google || !window.google.translate) {
@@ -88,6 +90,7 @@ export default function CommonHeader({ className = "" }: CommonHeaderProps) {
     } else {
       clearTranslateCookie();
       localStorage.setItem('boxro-translation', 'ko');
+      localStorage.removeItem('boxro-show-translation-toast'); // 토스트 플래그 제거
       setIsTranslated(false);
       window.location.reload();
     }
@@ -100,19 +103,57 @@ export default function CommonHeader({ className = "" }: CommonHeaderProps) {
       setIsTranslated(true);
       // 쿠키만 보장해 두고, 위젯 스크립트는 비동기로 로드
       setTranslateCookie('/ko/en');
-      if (!window.google || !window.google.translate) {
+      
+      // 스크립트가 이미 로드되었는지 확인
+      const existingScript = document.querySelector('script[src*="translate_a/element.js"]');
+      const hasGoogleTranslate = window.google && window.google.translate;
+      
+      if (!existingScript && !hasGoogleTranslate) {
+        // googleTranslateElementInit이 이미 설정되어 있으면 재설정하지 않음
+        if (!window.googleTranslateElementInit) {
+          window.googleTranslateElementInit = () => {
+            try {
+              // 이미 초기화되었는지 확인
+              const translateElement = document.getElementById('google_translate_element');
+              if (translateElement && translateElement.firstChild) {
+                return; // 이미 초기화됨
+              }
+              
+              if (window.google && window.google.translate) {
+                new window.google.translate.TranslateElement({
+                  pageLanguage: 'ko',
+                  includedLanguages: 'ko,en',
+                  layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE,
+                  autoDisplay: false
+                }, 'google_translate_element');
+              }
+            } catch (error) {
+              console.error('Google Translate 초기화 실패:', error);
+            }
+          };
+        }
+        
         const script = document.createElement('script');
         script.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
         script.async = true;
-        document.head.appendChild(script);
-        window.googleTranslateElementInit = () => {
-          new window.google.translate.TranslateElement({
-            pageLanguage: 'ko',
-            includedLanguages: 'ko,en',
-            layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE,
-            autoDisplay: false
-          }, 'google_translate_element');
+        script.onerror = () => {
+          console.error('Google Translate 스크립트 로드 실패');
         };
+        document.head.appendChild(script);
+      }
+      
+      // 영어로 번역된 상태이고 토스트 표시 플래그가 있으면 토스트 표시
+      const shouldShowToast = localStorage.getItem('boxro-show-translation-toast') === 'true';
+      if (shouldShowToast) {
+        setShowTranslationToast(true);
+        localStorage.removeItem('boxro-show-translation-toast');
+        
+        // 5초 후 자동으로 토스트 닫기
+        const timer = setTimeout(() => {
+          setShowTranslationToast(false);
+        }, 5000);
+        
+        return () => clearTimeout(timer);
       }
     } else {
       clearTranslateCookie();
@@ -365,6 +406,19 @@ export default function CommonHeader({ className = "" }: CommonHeaderProps) {
         showDontShowAgain={false}
         redirectTo="/draw"
       />
+      
+      {/* 번역 토스트 메시지 */}
+      {showTranslationToast && (
+        <div 
+          className="fixed top-20 left-1/2 transform -translate-x-1/2 z-[60] animate-in fade-in slide-in-from-top-2 duration-300 w-[80%] md:w-auto md:max-w-md mx-auto"
+        >
+          <div className="bg-white/95 backdrop-blur-sm border border-gray-200 rounded-lg shadow-xl px-4 md:px-6 py-4 text-center">
+            <p className="text-gray-800 text-sm md:text-base">
+              Translated by AI - it might sound a little funny, but we hope the message still reaches you 💛
+            </p>
+          </div>
+        </div>
+      )}
       
       {/* Google Translate Widget (Hidden) */}
       <div id="google_translate_element" style={{ display: 'none' }}></div>
