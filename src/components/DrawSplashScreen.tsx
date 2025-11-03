@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { X, Car, Palette, Download } from "lucide-react";
 import Image from "next/image";
+import { useScrollLock } from "@/hooks/useScrollLock";
 
 interface DrawSplashScreenProps {
   onClose: () => void;
@@ -12,14 +13,8 @@ interface DrawSplashScreenProps {
 }
 
 export default function DrawSplashScreen({ onClose, onSignUp }: DrawSplashScreenProps) {
-  // 스크롤 방지
-  useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, []);
+  // 스크롤 방지 (스크롤 위치 복원 포함)
+  useScrollLock(true);
 
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-purple-900/20 via-blue-900/20 to-pink-900/20 backdrop-blur-md z-50 flex items-center justify-center p-4">
