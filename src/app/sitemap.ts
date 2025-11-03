@@ -1,4 +1,6 @@
 import { MetadataRoute } from 'next'
+import { collection, getDocs, query, orderBy } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://boxro.kr'
@@ -43,5 +45,88 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ]
 
-  return [...staticPages]
+  // 동적 카드 페이지들 (해시 URL)
+  let cardPages: MetadataRoute.Sitemap = []
+
+  try {
+    // Story 카드들
+    const storyQuery = query(
+      collection(db, 'storyArticles'),
+      orderBy('createdAt', 'desc')
+    )
+    const storySnapshot = await getDocs(storyQuery)
+    
+    storySnapshot.docs.forEach((doc) => {
+      cardPages.push({
+        url: `${baseUrl}/story#card-${doc.id}`,
+        lastModified: doc.data().updatedAt?.toDate?.() || doc.data().createdAt?.toDate?.() || new Date(),
+        changeFrequency: 'weekly' as const,
+        priority: 0.6,
+      })
+    })
+  } catch (error) {
+    console.error('이야기 카드 사이트맵 생성 실패:', error)
+  }
+
+  try {
+    // Store 카드들
+    const storeQuery = query(
+      collection(db, 'storeItems'),
+      orderBy('createdAt', 'desc')
+    )
+    const storeSnapshot = await getDocs(storeQuery)
+    
+    storeSnapshot.docs.forEach((doc) => {
+      cardPages.push({
+        url: `${baseUrl}/store#card-${doc.id}`,
+        lastModified: doc.data().updatedAt?.toDate?.() || doc.data().createdAt?.toDate?.() || new Date(),
+        changeFrequency: 'weekly' as const,
+        priority: 0.6,
+      })
+    })
+  } catch (error) {
+    console.error('스토어 카드 사이트맵 생성 실패:', error)
+  }
+
+  try {
+    // Youtube 카드들
+    const youtubeQuery = query(
+      collection(db, 'youtubeItems'),
+      orderBy('createdAt', 'desc')
+    )
+    const youtubeSnapshot = await getDocs(youtubeQuery)
+    
+    youtubeSnapshot.docs.forEach((doc) => {
+      cardPages.push({
+        url: `${baseUrl}/youtube#card-${doc.id}`,
+        lastModified: doc.data().updatedAt?.toDate?.() || doc.data().createdAt?.toDate?.() || new Date(),
+        changeFrequency: 'weekly' as const,
+        priority: 0.6,
+      })
+    })
+  } catch (error) {
+    console.error('유튜브 카드 사이트맵 생성 실패:', error)
+  }
+
+  try {
+    // Community (갤러리) 카드들
+    const communityQuery = query(
+      collection(db, 'communityDesigns'),
+      orderBy('createdAt', 'desc')
+    )
+    const communitySnapshot = await getDocs(communityQuery)
+    
+    communitySnapshot.docs.forEach((doc) => {
+      cardPages.push({
+        url: `${baseUrl}/community#card-${doc.id}`,
+        lastModified: doc.data().updatedAt?.toDate?.() || doc.data().createdAt?.toDate?.() || new Date(),
+        changeFrequency: 'weekly' as const,
+        priority: 0.6,
+      })
+    })
+  } catch (error) {
+    console.error('커뮤니티 카드 사이트맵 생성 실패:', error)
+  }
+
+  return [...staticPages, ...cardPages]
 }
