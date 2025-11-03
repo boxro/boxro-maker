@@ -17,8 +17,9 @@ const nextConfig = {
   },
   async redirects() {
     return [
-      { source: '/gallery', destination: '/community', permanent: false },
-      { source: '/gallery/:path*', destination: '/community/:path*', permanent: false },
+      // 영구 리디렉션 (308) - Google이 최종 목적지를 색인하도록
+      { source: '/gallery', destination: '/community', permanent: true },
+      { source: '/gallery/:path*', destination: '/community/:path*', permanent: true },
     ];
   },
   // prefetch 비활성화로 Failed to fetch 에러 방지

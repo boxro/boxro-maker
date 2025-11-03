@@ -5140,7 +5140,7 @@ export default function AdminPage() {
                                       </div>
                                     </div>
                                     <a 
-                                      href={`/gallery#card-${design.id}`} 
+                                      href={`/community#card-${design.id}`} 
                                       target="_blank" 
                                       rel="noopener noreferrer"
                                       className="text-gray-800 hover:text-gray-600 hover:underline"
@@ -5272,11 +5272,11 @@ export default function AdminPage() {
                           </div>
                                     <a 
                                       href={
-                                        boxroTalk.source === 'gallery' && boxroTalk.designId ? `/gallery#card-${boxroTalk.designId}` :
+                                        boxroTalk.source === 'gallery' && boxroTalk.designId ? `/community#card-${boxroTalk.designId}` :
                                         boxroTalk.source === 'story' && boxroTalk.articleId ? `/story#card-${boxroTalk.articleId}` :
                                         boxroTalk.source === 'store' && boxroTalk.articleId ? `/store#card-${boxroTalk.articleId}` :
                                         boxroTalk.source === 'youtube' && boxroTalk.articleId ? `/youtube#card-${boxroTalk.articleId}` :
-                                        boxroTalk.designId ? `/gallery#card-${boxroTalk.designId}` :
+                                        boxroTalk.designId ? `/community#card-${boxroTalk.designId}` :
                                         boxroTalk.articleId ? `/story#card-${boxroTalk.articleId}` :
                                         '#'
                                       } 
@@ -5392,10 +5392,10 @@ export default function AdminPage() {
                                     <a 
                                       href={
                                         like.type === 'story' ? `/story#card-${like.id}` :
-                                        like.type === 'gallery' ? `/gallery#card-${like.id}` :
+                                        like.type === 'gallery' ? `/community#card-${like.id}` :
                                         like.type === 'store' ? `/store#card-${like.id}` :
                                         like.type === 'youtube' ? `/youtube#card-${like.id}` :
-                                        `/gallery#card-${like.id}`
+                                        `/community#card-${like.id}`
                                       } 
                                       target="_blank" 
                                       rel="noopener noreferrer"
@@ -5610,10 +5610,10 @@ export default function AdminPage() {
                                     <a 
                                       href={
                                         share.type === 'story' ? `/story#card-${share.id}` :
-                                        share.type === 'gallery' ? `/gallery#card-${share.id}` :
+                                        share.type === 'gallery' ? `/community#card-${share.id}` :
                                         share.type === 'store' ? `/store#card-${share.id}` :
                                         share.type === 'youtube' ? `/youtube#card-${share.id}` :
-                                        `/gallery#card-${share.id}`
+                                        `/community#card-${share.id}`
                                       } 
                                       target="_blank" 
                                       rel="noopener noreferrer"
@@ -5724,7 +5724,7 @@ export default function AdminPage() {
                                       작품
                                     </div>
                                     <a 
-                                      href={view.type === 'story' ? `/story#card-${view.id}` : view.type === 'store' ? `/store#card-${view.id}` : view.type === 'youtube' ? `/youtube#card-${view.id}` : `/gallery#card-${view.id}`} 
+                                      href={view.type === 'story' ? `/story#card-${view.id}` : view.type === 'store' ? `/store#card-${view.id}` : view.type === 'youtube' ? `/youtube#card-${view.id}` : `/community#card-${view.id}`} 
                                       target="_blank" 
                                       rel="noopener noreferrer"
                                       className="text-gray-800 hover:text-gray-600 hover:underline"
