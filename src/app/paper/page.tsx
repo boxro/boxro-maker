@@ -6526,7 +6526,7 @@ export default function DrawPage() {
                 <Button
                   onClick={() => {
                     setShowGallerySuccessModal(false);
-                    router.push('/gallery');
+                    router.push('/community');
                   }}
                   className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 rounded-full"
                 >

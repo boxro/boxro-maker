@@ -12,15 +12,16 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      // 영구 리디렉션 (308) - Google이 최종 목적지를 색인하도록
       {
         source: '/gallery',
         destination: '/community',
-        permanent: false,
+        permanent: true,
       },
       {
         source: '/gallery/:path*',
         destination: '/community/:path*',
-        permanent: false,
+        permanent: true,
       },
     ];
   },
