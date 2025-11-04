@@ -1211,7 +1211,7 @@ export default function StorePageClient() {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <PageHeader 
-                title="박스로 스토어"
+                title="Boxro 스토어"
                 description="아이들과 함께 만들고 즐기는 박스카 도안을 만나보세요!"
               />
             </div>

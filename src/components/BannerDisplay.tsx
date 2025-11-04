@@ -22,7 +22,7 @@ interface Banner {
 }
 
 interface BannerDisplayProps {
-  currentPage: 'gallery' | 'story' | 'store' | 'youtube';
+  currentPage: 'gallery' | 'story' | 'store' | 'youtube' | 'friends';
 }
 
 const BannerDisplay: React.FC<BannerDisplayProps> = ({ currentPage }) => {
@@ -34,7 +34,8 @@ const BannerDisplay: React.FC<BannerDisplayProps> = ({ currentPage }) => {
     'store': ['스토어', 'store'],
     'gallery': ['갤러리', 'gallery'],
     'story': ['이야기', 'story'],
-    'youtube': ['박스로 유튜브', 'youtube']
+    'youtube': ['박스로 유튜브', 'youtube'],
+    'friends': ['Boxro 프렌즈', 'friends']
   };
 
   useEffect(() => {

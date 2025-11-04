@@ -335,6 +335,12 @@ export default function CommonHeader({ className = "" }: CommonHeaderProps) {
                         <span>Boxro 스토어</span>
                       </div>
                     </Link>
+                    <Link href="/friends" onClick={() => setIsMenuOpen(false)} className="block px-6 py-2 rounded-full transition-colors text-gray-900 hover:bg-purple-100">
+                      <div className="flex items-center gap-3">
+                        <Users className="w-4 h-4" />
+                        <span>Boxro 프렌즈</span>
+                      </div>
+                    </Link>
                     <button 
                       onClick={() => {
                         setIsMenuOpen(false);

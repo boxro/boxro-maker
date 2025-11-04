@@ -106,11 +106,15 @@ service cloud.firestore {
          (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'shares', 'views', 'likedBy', 'sharedBy', 'viewedBy', 'boxroTalks', 'boxroTalkedBy', 'popularityBoost'])));
     }
     
-    // 박스카 이야기 댓글
-    match /storyComments/{document} {
+    // 프렌즈 아이템 (Boxro 프렌즈)
+    match /friendsItems/{document} {
       allow read: if true; // 모든 사용자가 읽기 가능
-      allow create: if request.auth != null; // 로그인된 사용자만 댓글 작성 가능
-      allow update, delete: if request.auth != null && resource.data.authorId == request.auth.uid; // 작성자만 수정/삭제 가능
+      allow create, delete: if request.auth != null && 
+        request.auth.token.email in ["beagle3651@gmail.com", "boxro.crafts@gmail.com"]; // 관리자만 생성/삭제 가능
+      // 일반 사용자는 좋아요, 공유, 조회수 등 업데이트만 가능
+      allow update: if request.auth != null && 
+        (request.auth.token.email in ["beagle3651@gmail.com", "boxro.crafts@gmail.com"] ||
+         (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'shares', 'views', 'likedBy', 'sharedBy', 'viewedBy', 'popularityBoost'])));
     }
     
     // 사용자 상호작용 상태 (다운로드, 공유, 댓글 등)
