@@ -43,6 +43,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'weekly' as const,
       priority: 0.7,
     },
+    {
+      url: `${baseUrl}/friends`,
+      lastModified: new Date(),
+      changeFrequency: 'daily' as const,
+      priority: 0.8,
+    },
   ]
 
   // 동적 카드 페이지들 (해시 URL)
@@ -126,6 +132,26 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })
   } catch (error) {
     console.error('커뮤니티 카드 사이트맵 생성 실패:', error)
+  }
+
+  try {
+    // Friends 카드들
+    const friendsQuery = query(
+      collection(db, 'friendsItems'),
+      orderBy('createdAt', 'desc')
+    )
+    const friendsSnapshot = await getDocs(friendsQuery)
+    
+    friendsSnapshot.docs.forEach((doc) => {
+      cardPages.push({
+        url: `${baseUrl}/friends#card-${doc.id}`,
+        lastModified: doc.data().updatedAt?.toDate?.() || doc.data().createdAt?.toDate?.() || new Date(),
+        changeFrequency: 'weekly' as const,
+        priority: 0.6,
+      })
+    })
+  } catch (error) {
+    console.error('프렌즈 카드 사이트맵 생성 실패:', error)
   }
 
   return [...staticPages, ...cardPages]
