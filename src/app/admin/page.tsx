@@ -2299,41 +2299,9 @@ export default function AdminPage() {
     }
   };
 
-  // PWA 설치수 계산
-  const getPWAInstallCount = async (): Promise<number> => {
-    try {
-      // PWA 설치 데이터 가져오기
-      if (!db) {
-        throw new Error("Firebase가 초기화되지 않았습니다.");
-      }
-      const pwaInstallsQuery = query(collection(db, 'pwaInstalls'), orderBy('timestamp', 'desc'));
-      const pwaInstallsSnapshot = await getDocs(pwaInstallsQuery);
-      const pwaInstalls = pwaInstallsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      
-      // 설치 완료된 PWA 수 계산
-      const installedPWAs = pwaInstalls.filter(install => 
-        install.eventType === 'install_complete' || 
-        install.eventType === 'already_installed' || 
-        install.eventType === 'install_detected'
-      );
-      
-      // 중복 제거 (같은 사용자가 여러 번 설치한 경우)
-      const uniqueInstalls = new Set();
-      installedPWAs.forEach(install => {
-        const userAgent = install.userAgent || '';
-        // User Agent의 해시값을 키로 사용하여 더 정확한 중복 제거
-        const key = userAgent.length > 0 ? userAgent.substring(0, Math.min(userAgent.length, 100)) : 'unknown';
-        uniqueInstalls.add(key);
-      });
-      
-      const installCount = uniqueInstalls.size;
-      console.log('PWA 설치수 계산:', { totalInstalls: pwaInstalls.length, uniqueInstalls: installCount });
-      return installCount;
-    } catch (error: unknown) {
-      console.error('PWA 설치수 계산 실패:', error);
-      return 0;
-    }
-  };
+  // PWA 설치수 계산 함수는 제거됨
+  // 이제 loadAdminData에서 pwaInstallMap을 사용하여 계산하므로
+  // 전체 통계와 회원 통계 테이블의 숫자가 일치함
 
   // Firestore 사용량 계산
   const getFirestoreUsage = async () => {
@@ -3287,6 +3255,8 @@ export default function AdminPage() {
       }
 
       // PWA 설치 데이터를 사용자별로 정리 (실제 사용자 ID 기반)
+      // 전체 통계와 회원 통계 테이블의 계산 방식을 완전히 동일하게 맞추기 위해
+      // userId/userEmail 기준으로만 계산 (UserAgent는 부정확하므로 제외)
       const pwaInstallMap = new Map<string, { installed: boolean; installDate: string }>();
       pwaInstalls.forEach((pwaInstall: any) => {
         if (pwaInstall.eventType === 'install_complete' || pwaInstall.eventType === 'already_installed' || pwaInstall.eventType === 'install_detected') {
@@ -3295,12 +3265,14 @@ export default function AdminPage() {
           // 사용자 ID 또는 이메일로 정확한 매칭
           if (pwaInstall.userId) {
             // 사용자 ID가 있는 경우 (로그인된 사용자)
+            // Map의 키는 userId로 설정하여 중복 자동 제거
             pwaInstallMap.set(pwaInstall.userId, {
               installed: true,
               installDate: installDate
             });
           } else if (pwaInstall.userEmail) {
             // 이메일이 있는 경우
+            // Map의 키는 userEmail로 설정하여 중복 자동 제거
             pwaInstallMap.set(pwaInstall.userEmail, {
               installed: true,
               installDate: installDate
@@ -3308,6 +3280,19 @@ export default function AdminPage() {
           }
           // User Agent 기반 매칭은 제거 (부정확하므로)
         }
+      });
+      
+      // 전체 통계용 PWA 설치 수 계산 (회원 통계 테이블과 동일한 방식)
+      // pwaInstallMap의 크기가 실제 설치된 사용자 수 (중복 자동 제거됨)
+      const calculatedPWAInstallCount = pwaInstallMap.size;
+      console.log('📱 PWA 설치 수 계산 (회원 통계와 동일한 방식):', {
+        totalEvents: pwaInstalls.filter((p: any) => 
+          p.eventType === 'install_complete' || 
+          p.eventType === 'already_installed' || 
+          p.eventType === 'install_detected'
+        ).length,
+        uniqueUsers: calculatedPWAInstallCount,
+        pwaInstallMapSize: pwaInstallMap.size
       });
 
 
@@ -3699,471 +3684,141 @@ export default function AdminPage() {
       })));
 
       // 사용자가 한 좋아요/다운로드/공유/조회 활동 계산
-      // 갤러리 작품에서 사용자 활동 추적
-      designs.forEach((design: any) => {
-        const likedBy = design.likedBy || [];
-        const downloadedBy = design.downloadedBy || [];
-        const sharedBy = design.sharedBy || [];
-        const viewedBy = design.viewedBy || [];
+      // 활동내역 모달과 완전히 동일한 방식으로 계산하여 일치성 보장
+      // 활동내역 모달: 각 콘텐츠를 순회하면서 if (viewedBy.includes(currentUserUid)) 카운트
+      // 회원 통계: 각 콘텐츠를 순회하면서 각 사용자에 대해 if (viewedBy.includes(userId)) 카운트
+      
+      // 모든 콘텐츠를 하나의 배열로 합치기 (활동내역 모달과 동일한 데이터 소스)
+      const allContentItems = [
+        ...designs.map((d: any) => ({ ...d, contentType: 'gallery' })),
+        ...stories.map((s: any) => ({ ...s, contentType: 'story' })),
+        ...storeItems.map((s: any) => ({ ...s, contentType: 'store' })),
+        ...youtubeItems.map((y: any) => ({ ...y, contentType: 'youtube' }))
+      ];
+      
+      // 각 사용자별로 활동 카운트 (활동내역 모달과 동일한 방식)
+      users.forEach((userData: any) => {
+        const userUid = userData.uid;
+        const email = userData.email || 'unknown';
         
-        // 각 사용자별로 활동 카운트
-        likedBy.forEach((userId: string) => {
-          const user = users.find(u => u.uid === userId);
-          if (user) {
-            const email = user.email || 'unknown';
-            if (!userStatsMap.has(email)) {
-              userStatsMap.set(email, {
-                email,
-                displayName: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
-                authorNickname: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
-                photoURL: user.photoURL || '',
-                createdAt: user.createdAt || '',
-                lastSignIn: user.lastSignIn || '',
-                designsCount: 0,
-                boxroTalksCount: 0,
-                likesCount: 0,
-                downloadsCount: 0,
-                sharesCount: 0,
-                viewsCount: 0,
-                storeRedirectsCount: 0,
-                uid: user.uid || ''
-              });
-            }
-            const userStat = userStatsMap.get(email)!;
+        if (!userStatsMap.has(email)) {
+          userStatsMap.set(email, {
+            email,
+            displayName: getDisplayName(userData.displayName || '', userData.authorNickname || '', userData.email || 'unknown'),
+            authorNickname: getDisplayName(userData.displayName || '', userData.authorNickname || '', userData.email || 'unknown'),
+            photoURL: userData.photoURL || '',
+            createdAt: userData.createdAt || '',
+            lastSignIn: userData.lastSignIn || '',
+            designsCount: 0,
+            boxroTalksCount: 0,
+            likesCount: 0,
+            downloadsCount: 0,
+            sharesCount: 0,
+            viewsCount: 0,
+            storeRedirectsCount: 0,
+            uid: userData.uid || ''
+          });
+        }
+        
+        const userStat = userStatsMap.get(email)!;
+        
+        // 갤러리 작품에서 사용자 활동 추적
+        designs.forEach((design: any) => {
+          const likedBy = design.likedBy || [];
+          const sharedBy = design.sharedBy || [];
+          const viewedBy = design.viewedBy || [];
+          
+          // 좋아요: 활동내역 모달과 동일한 방식
+          if (likedBy.includes(userUid)) {
             userStat.likesCount++;
           }
-        });
-        
-        // 갤러리 다운로드 로직 제거됨 - 도안 다운로드만 추적
-        
-        viewedBy.forEach((userId: string) => {
-          const user = users.find(u => u.uid === userId);
-          if (user) {
-            const email = user.email || 'unknown';
-            if (!userStatsMap.has(email)) {
-              userStatsMap.set(email, {
-                email,
-                displayName: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
-                authorNickname: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
-                photoURL: user.photoURL || '',
-                createdAt: user.createdAt || '',
-                lastSignIn: user.lastSignIn || '',
-                designsCount: 0,
-                boxroTalksCount: 0,
-                likesCount: 0,
-                downloadsCount: 0,
-                sharesCount: 0,
-                viewsCount: 0,
-                storeRedirectsCount: 0,
-                uid: user.uid || ''
-              });
-            }
-            const userStat = userStatsMap.get(email)!;
+          
+          // 조회: 활동내역 모달과 동일한 방식
+          if (viewedBy.includes(userUid)) {
             userStat.viewsCount++;
           }
-        });
-        
-        sharedBy.forEach((userId: string) => {
-          const user = users.find(u => u.uid === userId);
-          if (user) {
-            const email = user.email || 'unknown';
-            if (!userStatsMap.has(email)) {
-              userStatsMap.set(email, {
-                email,
-                displayName: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
-                authorNickname: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
-                photoURL: user.photoURL || '',
-                createdAt: user.createdAt || '',
-                lastSignIn: user.lastSignIn || '',
-                designsCount: 0,
-                boxroTalksCount: 0,
-                likesCount: 0,
-                downloadsCount: 0,
-                sharesCount: 0,
-                viewsCount: 0,
-                storeRedirectsCount: 0,
-                uid: user.uid || ''
-              });
-            }
-            const userStat = userStatsMap.get(email)!;
-            userStat.sharesCount++; // 공유한 콘텐츠 수 카운트
+          
+          // 공유: 활동내역 모달과 동일한 방식
+          if (sharedBy.includes(userUid)) {
+            userStat.sharesCount++;
           }
         });
-
-        viewedBy.forEach((userId: string) => {
-          const user = users.find(u => u.uid === userId);
-          if (user) {
-            const email = user.email || 'unknown';
-            if (!userStatsMap.has(email)) {
-              userStatsMap.set(email, {
-                email,
-                displayName: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
-                authorNickname: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
-                photoURL: user.photoURL || '',
-                createdAt: user.createdAt || '',
-                lastSignIn: user.lastSignIn || '',
-                designsCount: 0,
-                boxroTalksCount: 0,
-                likesCount: 0,
-                downloadsCount: 0,
-                sharesCount: 0,
-                viewsCount: 0,
-                storeRedirectsCount: 0,
-                uid: user.uid || ''
-              });
-            }
-            const userStat = userStatsMap.get(email)!;
-            userStat.viewsCount++; // 조회한 콘텐츠 수 카운트
+        
+        // 스토리에서 사용자 활동 추적
+        stories.forEach((story: any) => {
+          const likedBy = story.likedBy || [];
+          const sharedBy = story.sharedBy || [];
+          const viewedBy = story.viewedBy || [];
+          
+          // 좋아요: 활동내역 모달과 동일한 방식
+          if (likedBy.includes(userUid)) {
+            userStat.likesCount++;
+          }
+          
+          // 조회: 활동내역 모달과 동일한 방식
+          if (viewedBy.includes(userUid)) {
+            userStat.viewsCount++;
+          }
+          
+          // 공유: 활동내역 모달과 동일한 방식
+          if (sharedBy.includes(userUid)) {
+            userStat.sharesCount++;
+          }
+        });
+        
+        // 스토어 아이템에서 사용자 활동 추적
+        storeItems.forEach((storeItem: any) => {
+          const likedBy = storeItem.likedBy || [];
+          const sharedBy = storeItem.sharedBy || [];
+          const viewedBy = storeItem.viewedBy || [];
+          
+          // 좋아요: 활동내역 모달과 동일한 방식
+          if (likedBy.includes(userUid)) {
+            userStat.likesCount++;
+          }
+          
+          // 조회: 활동내역 모달과 동일한 방식
+          if (viewedBy.includes(userUid)) {
+            userStat.viewsCount++;
+          }
+          
+          // 공유: 활동내역 모달과 동일한 방식
+          if (sharedBy.includes(userUid)) {
+            userStat.sharesCount++;
+          }
+        });
+        
+        // 유튜브 아이템에서 사용자 활동 추적
+        youtubeItems.forEach((youtubeItem: any) => {
+          const likedBy = youtubeItem.likedBy || [];
+          const sharedBy = youtubeItem.sharedBy || [];
+          const viewedBy = youtubeItem.viewedBy || [];
+          
+          // 좋아요: 활동내역 모달과 동일한 방식
+          if (likedBy.includes(userUid)) {
+            userStat.likesCount++;
+          }
+          
+          // 조회: 활동내역 모달과 동일한 방식
+          if (viewedBy.includes(userUid)) {
+            userStat.viewsCount++;
+          }
+          
+          // 공유: 활동내역 모달과 동일한 방식
+          if (sharedBy.includes(userUid)) {
+            userStat.sharesCount++;
           }
         });
       });
 
-      // 스토리에서 사용자 활동 추적
-      stories.forEach((story: any) => {
-        const likedBy = story.likedBy || [];
-        const sharedBy = story.sharedBy || [];
-        const viewedBy = story.viewedBy || [];
-        
-        // 각 사용자별로 활동 카운트
-        viewedBy.forEach((userId: string) => {
-          const user = users.find(u => u.uid === userId);
-          if (user) {
-            const email = user.email || 'unknown';
-            if (!userStatsMap.has(email)) {
-              userStatsMap.set(email, {
-                email,
-                displayName: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
-                authorNickname: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
-                photoURL: user.photoURL || '',
-                createdAt: user.createdAt || '',
-                lastSignIn: user.lastSignIn || '',
-                designsCount: 0,
-                boxroTalksCount: 0,
-                likesCount: 0,
-                downloadsCount: 0,
-                sharesCount: 0,
-                viewsCount: 0,
-                storeRedirectsCount: 0,
-                uid: user.uid || ''
-              });
-            }
-            const userStat = userStatsMap.get(email)!;
-            userStat.viewsCount++;
-          }
-        });
-        
-        likedBy.forEach((userId: string) => {
-          const user = users.find(u => u.uid === userId);
-          if (user) {
-            const email = user.email || 'unknown';
-            if (!userStatsMap.has(email)) {
-              userStatsMap.set(email, {
-                email,
-                displayName: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
-                authorNickname: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
-                photoURL: user.photoURL || '',
-                createdAt: user.createdAt || '',
-                lastSignIn: user.lastSignIn || '',
-                designsCount: 0,
-                boxroTalksCount: 0,
-                likesCount: 0,
-                downloadsCount: 0,
-                sharesCount: 0,
-                viewsCount: 0,
-                storeRedirectsCount: 0,
-                uid: user.uid || ''
-              });
-            }
-            const userStat = userStatsMap.get(email)!;
-            userStat.likesCount++;
-          }
-        });
-        
-        sharedBy.forEach((userId: string) => {
-          const user = users.find(u => u.uid === userId);
-          if (user) {
-            const email = user.email || 'unknown';
-            if (!userStatsMap.has(email)) {
-              userStatsMap.set(email, {
-                email,
-                displayName: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
-                authorNickname: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
-                photoURL: user.photoURL || '',
-                createdAt: user.createdAt || '',
-                lastSignIn: user.lastSignIn || '',
-                designsCount: 0,
-                boxroTalksCount: 0,
-                likesCount: 0,
-                downloadsCount: 0,
-                sharesCount: 0,
-                viewsCount: 0,
-                storeRedirectsCount: 0,
-                uid: user.uid || ''
-              });
-            }
-            const userStat = userStatsMap.get(email)!;
-            userStat.sharesCount++; // 공유한 콘텐츠 수 카운트
-          }
-        });
-
-        viewedBy.forEach((userId: string) => {
-          const user = users.find(u => u.uid === userId);
-          if (user) {
-            const email = user.email || 'unknown';
-            if (!userStatsMap.has(email)) {
-              userStatsMap.set(email, {
-                email,
-                displayName: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
-                authorNickname: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
-                photoURL: user.photoURL || '',
-                createdAt: user.createdAt || '',
-                lastSignIn: user.lastSignIn || '',
-                designsCount: 0,
-                boxroTalksCount: 0,
-                likesCount: 0,
-                downloadsCount: 0,
-                sharesCount: 0,
-                viewsCount: 0,
-                storeRedirectsCount: 0,
-                uid: user.uid || ''
-              });
-            }
-            const userStat = userStatsMap.get(email)!;
-            userStat.viewsCount++; // 조회한 콘텐츠 수 카운트
-          }
-        });
-      });
-
-      // 스토어 아이템에서 사용자 활동 추적
-      storeItems.forEach((storeItem: any) => {
-        const likedBy = storeItem.likedBy || [];
-        const sharedBy = storeItem.sharedBy || [];
-        const viewedBy = storeItem.viewedBy || [];
-        
-        // 각 사용자별로 활동 카운트
-        viewedBy.forEach((userId: string) => {
-          const user = users.find(u => u.uid === userId);
-          if (user) {
-            const email = user.email || 'unknown';
-            if (!userStatsMap.has(email)) {
-              userStatsMap.set(email, {
-                email,
-                displayName: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
-                authorNickname: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
-                photoURL: user.photoURL || '',
-                createdAt: user.createdAt || '',
-                lastSignIn: user.lastSignIn || '',
-                designsCount: 0,
-                boxroTalksCount: 0,
-                likesCount: 0,
-                downloadsCount: 0,
-                sharesCount: 0,
-                viewsCount: 0,
-                storeRedirectsCount: 0,
-                uid: user.uid || ''
-              });
-            }
-            const userStat = userStatsMap.get(email)!;
-            userStat.viewsCount++;
-          }
-        });
-        
-        likedBy.forEach((userId: string) => {
-          const user = users.find(u => u.uid === userId);
-          if (user) {
-            const email = user.email || 'unknown';
-            if (!userStatsMap.has(email)) {
-              userStatsMap.set(email, {
-                email,
-                displayName: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
-                authorNickname: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
-                photoURL: user.photoURL || '',
-                createdAt: user.createdAt || '',
-                lastSignIn: user.lastSignIn || '',
-                designsCount: 0,
-                boxroTalksCount: 0,
-                likesCount: 0,
-                downloadsCount: 0,
-                sharesCount: 0,
-                viewsCount: 0,
-                storeRedirectsCount: 0,
-                uid: user.uid || ''
-              });
-            }
-            const userStat = userStatsMap.get(email)!;
-            userStat.likesCount++;
-          }
-        });
-        
-        sharedBy.forEach((userId: string) => {
-          const user = users.find(u => u.uid === userId);
-          if (user) {
-            const email = user.email || 'unknown';
-            if (!userStatsMap.has(email)) {
-              userStatsMap.set(email, {
-                email,
-                displayName: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
-                authorNickname: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
-                photoURL: user.photoURL || '',
-                createdAt: user.createdAt || '',
-                lastSignIn: user.lastSignIn || '',
-                designsCount: 0,
-                boxroTalksCount: 0,
-                likesCount: 0,
-                downloadsCount: 0,
-                sharesCount: 0,
-                viewsCount: 0,
-                storeRedirectsCount: 0,
-                uid: user.uid || ''
-              });
-            }
-            const userStat = userStatsMap.get(email)!;
-            userStat.sharesCount++; // 공유한 콘텐츠 수 카운트
-          }
-        });
-
-        viewedBy.forEach((userId: string) => {
-          const user = users.find(u => u.uid === userId);
-          if (user) {
-            const email = user.email || 'unknown';
-            if (!userStatsMap.has(email)) {
-              userStatsMap.set(email, {
-                email,
-                displayName: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
-                authorNickname: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
-                photoURL: user.photoURL || '',
-                createdAt: user.createdAt || '',
-                lastSignIn: user.lastSignIn || '',
-                designsCount: 0,
-                boxroTalksCount: 0,
-                likesCount: 0,
-                downloadsCount: 0,
-                sharesCount: 0,
-                viewsCount: 0,
-                storeRedirectsCount: 0,
-                uid: user.uid || ''
-              });
-            }
-            const userStat = userStatsMap.get(email)!;
-            userStat.viewsCount++; // 조회한 콘텐츠 수 카운트
-          }
-        });
-      });
-
-      // 유튜브 아이템에서 사용자 활동 추적
-      youtubeItems.forEach((youtubeItem: any) => {
-        const likedBy = youtubeItem.likedBy || [];
-        const sharedBy = youtubeItem.sharedBy || [];
-        const viewedBy = youtubeItem.viewedBy || [];
-        
-        // 각 사용자별로 활동 카운트
-        viewedBy.forEach((userId: string) => {
-          const user = users.find(u => u.uid === userId);
-          if (user) {
-            const email = user.email || 'unknown';
-            if (!userStatsMap.has(email)) {
-              userStatsMap.set(email, {
-                email,
-                displayName: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
-                authorNickname: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
-                photoURL: user.photoURL || '',
-                createdAt: user.createdAt || '',
-                lastSignIn: user.lastSignIn || '',
-                designsCount: 0,
-                boxroTalksCount: 0,
-                likesCount: 0,
-                downloadsCount: 0,
-                sharesCount: 0,
-                viewsCount: 0,
-                storeRedirectsCount: 0,
-                uid: user.uid || ''
-              });
-            }
-            const userStat = userStatsMap.get(email)!;
-            userStat.viewsCount++;
-          }
-        });
-        
-        likedBy.forEach((userId: string) => {
-          const user = users.find(u => u.uid === userId);
-          if (user) {
-            const email = user.email || 'unknown';
-            if (!userStatsMap.has(email)) {
-              userStatsMap.set(email, {
-                email,
-                displayName: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
-                authorNickname: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
-                photoURL: user.photoURL || '',
-                createdAt: user.createdAt || '',
-                lastSignIn: user.lastSignIn || '',
-                designsCount: 0,
-                boxroTalksCount: 0,
-                likesCount: 0,
-                downloadsCount: 0,
-                sharesCount: 0,
-                viewsCount: 0,
-                storeRedirectsCount: 0,
-                uid: user.uid || ''
-              });
-            }
-            const userStat = userStatsMap.get(email)!;
-            userStat.likesCount++;
-          }
-        });
-        
-        sharedBy.forEach((userId: string) => {
-          const user = users.find(u => u.uid === userId);
-          if (user) {
-            const email = user.email || 'unknown';
-            if (!userStatsMap.has(email)) {
-              userStatsMap.set(email, {
-                email,
-                displayName: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
-                authorNickname: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
-                photoURL: user.photoURL || '',
-                createdAt: user.createdAt || '',
-                lastSignIn: user.lastSignIn || '',
-                designsCount: 0,
-                boxroTalksCount: 0,
-                likesCount: 0,
-                downloadsCount: 0,
-                sharesCount: 0,
-                viewsCount: 0,
-                storeRedirectsCount: 0,
-                uid: user.uid || ''
-              });
-            }
-            const userStat = userStatsMap.get(email)!;
-            userStat.sharesCount++; // 공유한 콘텐츠 수 카운트
-          }
-        });
-
-        viewedBy.forEach((userId: string) => {
-          const user = users.find(u => u.uid === userId);
-          if (user) {
-            const email = user.email || 'unknown';
-            if (!userStatsMap.has(email)) {
-              userStatsMap.set(email, {
-                email,
-                displayName: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
-                authorNickname: getDisplayName(user.displayName || '', user.authorNickname || '', user.email || 'unknown'),
-                photoURL: user.photoURL || '',
-                createdAt: user.createdAt || '',
-                lastSignIn: user.lastSignIn || '',
-                designsCount: 0,
-                boxroTalksCount: 0,
-                likesCount: 0,
-                downloadsCount: 0,
-                sharesCount: 0,
-                viewsCount: 0,
-                storeRedirectsCount: 0,
-                uid: user.uid || ''
-              });
-            }
-            const userStat = userStatsMap.get(email)!;
-            userStat.viewsCount++; // 조회한 콘텐츠 수 카운트
-          }
-        });
+      // 디버깅: 조회수 계산 결과 확인
+      console.log('🔍 회원 통계 테이블 조회수 계산 결과:', {
+        totalUsers: userStatsMap.size,
+        sampleUsers: Array.from(userStatsMap.entries()).slice(0, 5).map(([email, stat]) => ({
+          email,
+          viewsCount: stat.viewsCount,
+          uid: stat.uid
+        }))
       });
 
       // Firestore에서 가져온 사용자 정보로 업데이트
@@ -4234,6 +3889,18 @@ export default function AdminPage() {
       const finalUserStats = Array.from(userStatsMap.values());
       setUserStats(finalUserStats);
       setFilteredUserStats(finalUserStats);
+
+      // PWA 설치 수 검증: 회원 통계 테이블의 합산과 전체 통계가 일치하는지 확인
+      const pwaInstalledCountFromTable = finalUserStats.filter(user => user.pwaInstalled === true).length;
+      console.log('📱 PWA 설치 수 검증:', {
+        전체통계_pwaInstallMap크기: calculatedPWAInstallCount,
+        회원통계테이블_합산: pwaInstalledCountFromTable,
+        일치여부: calculatedPWAInstallCount === pwaInstalledCountFromTable,
+        차이: Math.abs(calculatedPWAInstallCount - pwaInstalledCountFromTable)
+      });
+      
+      // 전체 통계에는 회원 통계 테이블의 합산과 일치하는 값 사용
+      const verifiedPWAInstallCount = pwaInstalledCountFromTable;
 
       // 전체 통계 계산 (갤러리 + 스토리 통합)
       const activeUsers = finalUserStats.filter(user => user.designsCount > 0 || user.boxroTalksCount > 0).length;
@@ -4340,7 +4007,7 @@ export default function AdminPage() {
         lastBuild: await getLastBuildTime(),
         todayActiveUsers: await getTodayActiveUsers(),
         recent24hActivity: await getRecent24hActivity(),
-        pwaInstallCount: await getPWAInstallCount(),
+        pwaInstallCount: verifiedPWAInstallCount, // 회원 통계 테이블의 합산과 일치하는 값 사용
         firestoreUsage: await getFirestoreUsage(),
         apiCalls: await getAPICalls()
       };
