@@ -2623,12 +2623,70 @@ export default function AdminPage() {
           boxroTalk.deletedAt === undefined
         );
 
-      // 모든 박스로 톡 합치기 (최신순 정렬, 삭제된 톡 제외)
-      const userBoxroTalks = [...userGalleryBoxroTalks, ...userStoryBoxroTalks, ...userStoreBoxroTalks]
+      // 사용자의 박스로 톡 가져오기 (유튜브 박스로 톡)
+      let userYoutubeBoxroTalks: any[] = [];
+      try {
+        const youtubeBoxroTalksQuery = query(collection(db, 'youtubeBoxroTalks'), orderBy('createdAt', 'desc'));
+        const youtubeBoxroTalksSnapshot = await getDocs(youtubeBoxroTalksQuery);
+        userYoutubeBoxroTalks = youtubeBoxroTalksSnapshot.docs
+          .map(doc => ({ id: doc.id, ...doc.data(), source: 'youtube' }))
+          .filter((boxroTalk: any) => 
+            boxroTalk.authorEmail === userEmail &&
+            boxroTalk.isDeleted !== true && 
+            boxroTalk.deletedAt === undefined
+          );
+      } catch (error: unknown) {
+        console.warn('⚠️ youtubeBoxroTalks 컬렉션 접근 권한 없음:', error);
+      }
+
+      // 유튜브 아이템에서 박스로 톡 추출 (삭제되지 않은 것만)
+      const allYoutubeItemsForTalksQuery = query(collection(db, 'youtubeItems'));
+      const allYoutubeItemsForTalksSnapshot = await getDocs(allYoutubeItemsForTalksQuery);
+      const allYoutubeItemsForTalks = allYoutubeItemsForTalksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      
+      allYoutubeItemsForTalks.forEach((item: any) => {
+        if (item.boxroTalks && Array.isArray(item.boxroTalks)) {
+          item.boxroTalks.forEach((talk: any) => {
+            if (talk.authorEmail === userEmail && 
+                talk.isDeleted !== true && 
+                talk.deletedAt === undefined) {
+              userYoutubeBoxroTalks.push({
+                ...talk,
+                youtubeId: item.id,
+                youtubeTitle: item.title || item.name,
+                source: 'youtube'
+              });
+            }
+          });
+        }
+      });
+
+      // 모든 박스로 톡 합치기 (삭제된 톡 제외)
+      const allUserBoxroTalksRaw = [...userGalleryBoxroTalks, ...userStoryBoxroTalks, ...userStoreBoxroTalks, ...userYoutubeBoxroTalks]
         .filter((boxroTalk: any) => 
           boxroTalk.isDeleted !== true && 
           boxroTalk.deletedAt === undefined
-        )
+        );
+
+      // 회원 통계 테이블과 동일한 방식으로 고아 박스로톡 필터링
+      // 갤러리 박스로 톡 필터링
+      const galleryTalksForFilter = allUserBoxroTalksRaw.filter((talk: any) => talk.source === 'gallery');
+      const validGalleryTalks = await filterOrphanedBoxroTalks(galleryTalksForFilter, 'gallery');
+      
+      // 스토리 박스로 톡 필터링
+      const storyTalksForFilter = allUserBoxroTalksRaw.filter((talk: any) => talk.source === 'story');
+      const validStoryTalks = await filterOrphanedBoxroTalks(storyTalksForFilter, 'story');
+      
+      // 스토어 박스로 톡 필터링
+      const storeTalksForFilter = allUserBoxroTalksRaw.filter((talk: any) => talk.source === 'store');
+      const validStoreTalks = await filterOrphanedBoxroTalks(storeTalksForFilter, 'store');
+      
+      // 유튜브 박스로 톡 필터링 (gallery와 동일한 방식으로 처리)
+      const youtubeTalksForFilter = allUserBoxroTalksRaw.filter((talk: any) => talk.source === 'youtube');
+      const validYoutubeTalks = await filterOrphanedBoxroTalks(youtubeTalksForFilter, 'gallery'); // 유튜브는 갤러리와 동일한 방식으로 처리
+      
+      // 모든 유효한 박스로 톡 합치기
+      const userBoxroTalks = [...validGalleryTalks, ...validStoryTalks, ...validStoreTalks, ...validYoutubeTalks]
         .sort((a, b) => {
           // Firestore Timestamp 객체 처리
           const getTimestamp = (date: any) => {
@@ -2647,7 +2705,7 @@ export default function AdminPage() {
           return dateB - dateA; // 최신순 (내림차순)
         });
 
-      // 박스로 톡의 작품 정보 가져오기 (고아 박스로톡 제외)
+      // 박스로 톡의 작품 정보 가져오기 (이미 고아 박스로톡 필터링 완료)
       const boxroTalksWithDesignInfo = await Promise.all(
         userBoxroTalks.map(async (boxroTalk: any) => {
           let designTitle = '작품 정보 없음';
@@ -2703,6 +2761,22 @@ export default function AdminPage() {
                 console.log('스토어 작품 문서가 존재하지 않음 (고아 박스로톡):', boxroTalk.articleId);
                 isOrphaned = true;
               }
+            }
+            // 유튜브 박스로 톡인 경우
+            else if (boxroTalk.source === 'youtube') {
+              if (boxroTalk.youtubeId) {
+                const youtubeDoc = await getDoc(doc(db, 'youtubeItems', boxroTalk.youtubeId));
+                if (youtubeDoc.exists()) {
+                  const youtubeData = youtubeDoc.data();
+                  designTitle = youtubeData.title || '제목 없음';
+                  designAuthor = youtubeData.authorNickname || youtubeData.author || '작가 정보 없음';
+                  designThumbnail = youtubeData.thumbnail || youtubeData.cardThumbnail || null;
+                } else {
+                  isOrphaned = true;
+                }
+              } else {
+                isOrphaned = true;
+              }
             } else {
               console.log('박스로 톡에 source나 ID가 없음:', boxroTalk);
               isOrphaned = true;
@@ -2724,8 +2798,9 @@ export default function AdminPage() {
         })
       );
 
-      // 고아 박스로톡 필터링 (삭제된 게시글의 박스로톡 제외)
-      const validBoxroTalks = boxroTalksWithDesignInfo.filter((boxroTalk: any) => !boxroTalk.isOrphaned);
+      // 이미 filterOrphanedBoxroTalks로 고아 박스로톡 필터링 완료되었으므로
+      // 여기서는 작품 정보만 추가하면 됨 (고아 박스로톡은 이미 제외됨)
+      const validBoxroTalks = boxroTalksWithDesignInfo;
 
       // 모든 콘텐츠 가져오기 (사용자가 좋아요한 다른 사람의 콘텐츠 찾기 위해)
       if (!db) {
@@ -2746,67 +2821,80 @@ export default function AdminPage() {
       // 사용자가 좋아요한 콘텐츠 찾기 (다른 사람 콘텐츠에 누른 좋아요)
       const userLikes = [];
       
-      // 갤러리 작품에서 사용자가 좋아요한 것들
+      // 갤러리 작품에서 사용자가 좋아요한 것들 (여러 번 좋아요한 경우도 모두 카운트)
       allDesigns.forEach((design: any) => {
         const likedBy = design.likedBy || [];
-        if (likedBy.includes(currentUserUid)) {
-          userLikes.push({
-            type: 'gallery',
-            id: design.id,
-            title: design.title || design.name || '제목 없음',
-            cardThumbnail: design.thumbnail || design.thumbnailUrl,
-            author: design.authorNickname || design.author || design.authorName || design.creator || design.userId || '작가 정보 없음',
-            likes: design.likes || 0,
-            createdAt: design.createdAt
-          });
+        const likeCount = likedBy.filter((uid: string) => uid === currentUserUid).length;
+        if (likeCount > 0) {
+          // 같은 콘텐츠에 여러 번 좋아요한 경우 여러 번 추가
+          for (let i = 0; i < likeCount; i++) {
+            userLikes.push({
+              type: 'gallery',
+              id: design.id,
+              title: design.title || design.name || '제목 없음',
+              cardThumbnail: design.thumbnail || design.thumbnailUrl,
+              author: design.authorNickname || design.author || design.authorName || design.creator || design.userId || '작가 정보 없음',
+              likes: design.likes || 0,
+              createdAt: design.createdAt
+            });
+          }
         }
       });
 
-      // 스토리에서 사용자가 좋아요한 것들
+      // 스토리에서 사용자가 좋아요한 것들 (여러 번 좋아요한 경우도 모두 카운트)
       allStories.forEach((story: any) => {
         const likedBy = story.likedBy || [];
-        if (likedBy.includes(currentUserUid)) {
-          userLikes.push({
-            type: 'story',
-            id: story.id,
-            title: story.title || '제목 없음',
-            cardThumbnail: story.thumbnail || story.cardThumbnail,
-            author: story.authorNickname || story.author || story.authorName || story.creator || story.userId || '작가 정보 없음',
-            likes: story.likes || 0,
-            createdAt: story.createdAt
-          });
+        const likeCount = likedBy.filter((uid: string) => uid === currentUserUid).length;
+        if (likeCount > 0) {
+          for (let i = 0; i < likeCount; i++) {
+            userLikes.push({
+              type: 'story',
+              id: story.id,
+              title: story.title || '제목 없음',
+              cardThumbnail: story.thumbnail || story.cardThumbnail,
+              author: story.authorNickname || story.author || story.authorName || story.creator || story.userId || '작가 정보 없음',
+              likes: story.likes || 0,
+              createdAt: story.createdAt
+            });
+          }
         }
       });
 
-      // 스토어 아이템에서 사용자가 좋아요한 것들
+      // 스토어 아이템에서 사용자가 좋아요한 것들 (여러 번 좋아요한 경우도 모두 카운트)
       allStoreItems.forEach((storeItem: any) => {
         const likedBy = storeItem.likedBy || [];
-        if (likedBy.includes(currentUserUid)) {
-          userLikes.push({
-            type: 'store',
-            id: storeItem.id,
-            title: storeItem.title || '제목 없음',
-            cardThumbnail: storeItem.thumbnail || storeItem.cardThumbnail,
-            author: storeItem.authorNickname || storeItem.author || storeItem.authorName || storeItem.creator || storeItem.userId || '작가 정보 없음',
-            likes: storeItem.likes || 0,
-            createdAt: storeItem.createdAt
-          });
+        const likeCount = likedBy.filter((uid: string) => uid === currentUserUid).length;
+        if (likeCount > 0) {
+          for (let i = 0; i < likeCount; i++) {
+            userLikes.push({
+              type: 'store',
+              id: storeItem.id,
+              title: storeItem.title || '제목 없음',
+              cardThumbnail: storeItem.thumbnail || storeItem.cardThumbnail,
+              author: storeItem.authorNickname || storeItem.author || storeItem.authorName || storeItem.creator || storeItem.userId || '작가 정보 없음',
+              likes: storeItem.likes || 0,
+              createdAt: storeItem.createdAt
+            });
+          }
         }
       });
 
-      // 유튜브 아이템에서 사용자가 좋아요한 것들
+      // 유튜브 아이템에서 사용자가 좋아요한 것들 (여러 번 좋아요한 경우도 모두 카운트)
       allYoutubeItems.forEach((youtubeItem: any) => {
         const likedBy = youtubeItem.likedBy || [];
-        if (likedBy.includes(currentUserUid)) {
-          userLikes.push({
-            type: 'youtube',
-            id: youtubeItem.id,
-            title: youtubeItem.title || '제목 없음',
-            cardThumbnail: youtubeItem.thumbnail || youtubeItem.cardThumbnail,
-            author: youtubeItem.authorNickname || youtubeItem.author || youtubeItem.authorName || youtubeItem.creator || youtubeItem.userId || '작가 정보 없음',
-            likes: youtubeItem.likes || 0,
-            createdAt: youtubeItem.createdAt
-          });
+        const likeCount = likedBy.filter((uid: string) => uid === currentUserUid).length;
+        if (likeCount > 0) {
+          for (let i = 0; i < likeCount; i++) {
+            userLikes.push({
+              type: 'youtube',
+              id: youtubeItem.id,
+              title: youtubeItem.title || '제목 없음',
+              cardThumbnail: youtubeItem.thumbnail || youtubeItem.cardThumbnail,
+              author: youtubeItem.authorNickname || youtubeItem.author || youtubeItem.authorName || youtubeItem.creator || youtubeItem.userId || '작가 정보 없음',
+              likes: youtubeItem.likes || 0,
+              createdAt: youtubeItem.createdAt
+            });
+          }
         }
       });
 
@@ -2891,51 +2979,79 @@ export default function AdminPage() {
       // 사용자가 공유한 콘텐츠 찾기 (다른 사람 콘텐츠를 공유한 것)
       const userShares = [];
       
-      // 갤러리 작품에서 사용자가 공유한 것들
+      // 갤러리 작품에서 사용자가 공유한 것들 (여러 번 공유한 경우도 모두 카운트)
       allDesigns.forEach((design: any) => {
         const sharedBy = design.sharedBy || [];
-        if (sharedBy.includes(currentUserUid)) {
-          userShares.push({
-            type: 'gallery',
-            id: design.id,
-            title: design.title || design.name || '제목 없음',
-            cardThumbnail: design.thumbnail || design.thumbnailUrl,
-            author: design.authorNickname || design.author || design.authorName || design.creator || design.userId || '작가 정보 없음',
-            shares: design.shares || 0,
-            createdAt: design.createdAt
-          });
+        const shareCount = sharedBy.filter((uid: string) => uid === currentUserUid).length;
+        if (shareCount > 0) {
+          for (let i = 0; i < shareCount; i++) {
+            userShares.push({
+              type: 'gallery',
+              id: design.id,
+              title: design.title || design.name || '제목 없음',
+              cardThumbnail: design.thumbnail || design.thumbnailUrl,
+              author: design.authorNickname || design.author || design.authorName || design.creator || design.userId || '작가 정보 없음',
+              shares: design.shares || 0,
+              createdAt: design.createdAt
+            });
+          }
         }
       });
 
-      // 스토리에서 사용자가 공유한 것들
+      // 스토리에서 사용자가 공유한 것들 (여러 번 공유한 경우도 모두 카운트)
       allStories.forEach((story: any) => {
         const sharedBy = story.sharedBy || [];
-        if (sharedBy.includes(currentUserUid)) {
-          userShares.push({
-            type: 'story',
-            id: story.id,
-            title: story.title || '제목 없음',
-            cardThumbnail: story.thumbnail || story.cardThumbnail,
-            author: story.authorNickname || story.author || story.authorName || story.creator || story.userId || '작가 정보 없음',
-            shares: story.shares || 0,
-            createdAt: story.createdAt
-          });
+        const shareCount = sharedBy.filter((uid: string) => uid === currentUserUid).length;
+        if (shareCount > 0) {
+          for (let i = 0; i < shareCount; i++) {
+            userShares.push({
+              type: 'story',
+              id: story.id,
+              title: story.title || '제목 없음',
+              cardThumbnail: story.thumbnail || story.cardThumbnail,
+              author: story.authorNickname || story.author || story.authorName || story.creator || story.userId || '작가 정보 없음',
+              shares: story.shares || 0,
+              createdAt: story.createdAt
+            });
+          }
         }
       });
 
-      // 스토어 아이템에서 사용자가 공유한 것들
+      // 스토어 아이템에서 사용자가 공유한 것들 (여러 번 공유한 경우도 모두 카운트)
       allStoreItems.forEach((storeItem: any) => {
         const sharedBy = storeItem.sharedBy || [];
-        if (sharedBy.includes(currentUserUid)) {
-          userShares.push({
-            type: 'store',
-            id: storeItem.id,
-            title: storeItem.title || '제목 없음',
-            cardThumbnail: storeItem.thumbnail || storeItem.cardThumbnail,
-            author: storeItem.authorNickname || storeItem.author || storeItem.authorName || storeItem.creator || storeItem.userId || '작가 정보 없음',
-            shares: storeItem.shares || 0,
-            createdAt: storeItem.createdAt
-          });
+        const shareCount = sharedBy.filter((uid: string) => uid === currentUserUid).length;
+        if (shareCount > 0) {
+          for (let i = 0; i < shareCount; i++) {
+            userShares.push({
+              type: 'store',
+              id: storeItem.id,
+              title: storeItem.title || '제목 없음',
+              cardThumbnail: storeItem.thumbnail || storeItem.cardThumbnail,
+              author: storeItem.authorNickname || storeItem.author || storeItem.authorName || storeItem.creator || storeItem.userId || '작가 정보 없음',
+              shares: storeItem.shares || 0,
+              createdAt: storeItem.createdAt
+            });
+          }
+        }
+      });
+
+      // 유튜브 아이템에서 사용자가 공유한 것들 (여러 번 공유한 경우도 모두 카운트)
+      allYoutubeItems.forEach((youtubeItem: any) => {
+        const sharedBy = youtubeItem.sharedBy || [];
+        const shareCount = sharedBy.filter((uid: string) => uid === currentUserUid).length;
+        if (shareCount > 0) {
+          for (let i = 0; i < shareCount; i++) {
+            userShares.push({
+              type: 'youtube',
+              id: youtubeItem.id,
+              title: youtubeItem.title || '제목 없음',
+              cardThumbnail: youtubeItem.thumbnail || youtubeItem.cardThumbnail,
+              author: youtubeItem.authorNickname || youtubeItem.author || youtubeItem.authorName || youtubeItem.creator || youtubeItem.userId || '작가 정보 없음',
+              shares: youtubeItem.shares || 0,
+              createdAt: youtubeItem.createdAt
+            });
+          }
         }
       });
 
@@ -2960,51 +3076,60 @@ export default function AdminPage() {
       // 사용자가 조회한 콘텐츠 찾기 (다른 사람 콘텐츠를 조회한 것)
       const userViews = [];
       
-      // 갤러리 작품에서 사용자가 조회한 것들
+      // 갤러리 작품에서 사용자가 조회한 것들 (여러 번 조회한 경우도 모두 카운트)
       allDesigns.forEach((design: any) => {
         const viewedBy = design.viewedBy || [];
-        if (viewedBy.includes(currentUserUid)) {
-          userViews.push({
-            type: 'gallery',
-            id: design.id,
-            title: design.title || design.name || '제목 없음',
-            thumbnail: design.thumbnail || design.imageUrl,
-            author: design.authorNickname || design.author || design.authorName || design.creator || design.userId || '작가 정보 없음',
-            views: design.views || 0,
-            createdAt: design.createdAt
-          });
+        const viewCount = viewedBy.filter((uid: string) => uid === currentUserUid).length;
+        if (viewCount > 0) {
+          for (let i = 0; i < viewCount; i++) {
+            userViews.push({
+              type: 'gallery',
+              id: design.id,
+              title: design.title || design.name || '제목 없음',
+              thumbnail: design.thumbnail || design.imageUrl,
+              author: design.authorNickname || design.author || design.authorName || design.creator || design.userId || '작가 정보 없음',
+              views: design.views || 0,
+              createdAt: design.createdAt
+            });
+          }
         }
       });
 
-      // 스토리에서 사용자가 조회한 것들
+      // 스토리에서 사용자가 조회한 것들 (여러 번 조회한 경우도 모두 카운트)
       allStories.forEach((story: any) => {
         const viewedBy = story.viewedBy || [];
-        if (viewedBy.includes(currentUserUid)) {
-          userViews.push({
-            type: 'story',
-            id: story.id,
-            title: story.title || '제목 없음',
-            thumbnail: story.thumbnail || story.cardThumbnail,
-            author: story.authorNickname || story.author || story.authorName || story.creator || story.userId || '작가 정보 없음',
-            views: story.views || 0,
-            createdAt: story.createdAt
-          });
+        const viewCount = viewedBy.filter((uid: string) => uid === currentUserUid).length;
+        if (viewCount > 0) {
+          for (let i = 0; i < viewCount; i++) {
+            userViews.push({
+              type: 'story',
+              id: story.id,
+              title: story.title || '제목 없음',
+              thumbnail: story.thumbnail || story.cardThumbnail,
+              author: story.authorNickname || story.author || story.authorName || story.creator || story.userId || '작가 정보 없음',
+              views: story.views || 0,
+              createdAt: story.createdAt
+            });
+          }
         }
       });
 
-      // 스토어 아이템에서 사용자가 조회한 것들
+      // 스토어 아이템에서 사용자가 조회한 것들 (여러 번 조회한 경우도 모두 카운트)
       allStoreItems.forEach((storeItem: any) => {
         const viewedBy = storeItem.viewedBy || [];
-        if (viewedBy.includes(currentUserUid)) {
-          userViews.push({
-            type: 'store',
-            id: storeItem.id,
-            title: storeItem.title || '제목 없음',
-            thumbnail: storeItem.thumbnail || storeItem.cardThumbnail,
-            author: storeItem.authorNickname || storeItem.author || storeItem.authorName || storeItem.creator || storeItem.userId || '작가 정보 없음',
-            views: storeItem.views || 0,
-            createdAt: storeItem.createdAt
-          });
+        const viewCount = viewedBy.filter((uid: string) => uid === currentUserUid).length;
+        if (viewCount > 0) {
+          for (let i = 0; i < viewCount; i++) {
+            userViews.push({
+              type: 'store',
+              id: storeItem.id,
+              title: storeItem.title || '제목 없음',
+              thumbnail: storeItem.thumbnail || storeItem.cardThumbnail,
+              author: storeItem.authorNickname || storeItem.author || storeItem.authorName || storeItem.creator || storeItem.userId || '작가 정보 없음',
+              views: storeItem.views || 0,
+              createdAt: storeItem.createdAt
+            });
+          }
         }
       });
 
@@ -3020,23 +3145,28 @@ export default function AdminPage() {
         }))
       });
       
+      // 유튜브 아이템에서 사용자가 조회한 것들 (여러 번 조회한 경우도 모두 카운트)
       allYoutubeItems.forEach((youtubeItem: any) => {
         const viewedBy = youtubeItem.viewedBy || [];
-        if (viewedBy.includes(currentUserUid)) {
+        const viewCount = viewedBy.filter((uid: string) => uid === currentUserUid).length;
+        if (viewCount > 0) {
           console.log('✅ 유튜브 아이템 조회 발견:', {
             id: youtubeItem.id,
             title: youtubeItem.title,
-            viewedBy: viewedBy
+            viewedBy: viewedBy,
+            viewCount: viewCount
           });
-          userViews.push({
-            type: 'youtube',
-            id: youtubeItem.id,
-            title: youtubeItem.title || '제목 없음',
-            thumbnail: youtubeItem.thumbnail || youtubeItem.cardThumbnail,
-            author: youtubeItem.authorNickname || youtubeItem.author || youtubeItem.authorName || youtubeItem.creator || youtubeItem.userId || '작가 정보 없음',
-            views: youtubeItem.views || 0,
-            createdAt: youtubeItem.createdAt
-          });
+          for (let i = 0; i < viewCount; i++) {
+            userViews.push({
+              type: 'youtube',
+              id: youtubeItem.id,
+              title: youtubeItem.title || '제목 없음',
+              thumbnail: youtubeItem.thumbnail || youtubeItem.cardThumbnail,
+              author: youtubeItem.authorNickname || youtubeItem.author || youtubeItem.authorName || youtubeItem.creator || youtubeItem.userId || '작가 정보 없음',
+              views: youtubeItem.views || 0,
+              createdAt: youtubeItem.createdAt
+            });
+          }
         }
       });
 
@@ -3075,19 +3205,23 @@ export default function AdminPage() {
       // 사용자가 스토어 바로가기한 콘텐츠 찾기 (다른 사람 스토어 아이템을 바로가기한 것)
       const userStoreRedirects = [];
       
+      // 스토어 아이템에서 사용자가 바로가기한 것들 (여러 번 바로가기한 경우도 모두 카운트)
       allStoreItems.forEach((storeItem: any) => {
         const storeRedirectedBy = storeItem.storeRedirectedBy || [];
-        if (storeRedirectedBy.includes(currentUserUid)) {
-          userStoreRedirects.push({
-            type: 'store',
-            id: storeItem.id,
-            title: storeItem.title || '제목 없음',
-            thumbnail: storeItem.thumbnail || storeItem.cardThumbnail,
-            author: storeItem.authorNickname || storeItem.author || storeItem.authorName || storeItem.creator || storeItem.userId || '작가 정보 없음',
-            storeRedirects: storeItem.storeRedirects || 0,
-            createdAt: storeItem.createdAt,
-            redirectedAt: storeItem.createdAt // 실제 리다이렉트 날짜를 추적하려면 별도 컬렉션이 필요하므로 임시로 생성일 사용
-          });
+        const redirectCount = storeRedirectedBy.filter((uid: string) => uid === currentUserUid).length;
+        if (redirectCount > 0) {
+          for (let i = 0; i < redirectCount; i++) {
+            userStoreRedirects.push({
+              type: 'store',
+              id: storeItem.id,
+              title: storeItem.title || '제목 없음',
+              thumbnail: storeItem.thumbnail || storeItem.cardThumbnail,
+              author: storeItem.authorNickname || storeItem.author || storeItem.authorName || storeItem.creator || storeItem.userId || '작가 정보 없음',
+              storeRedirects: storeItem.storeRedirects || 0,
+              createdAt: storeItem.createdAt,
+              redirectedAt: storeItem.createdAt // 실제 리다이렉트 날짜를 추적하려면 별도 컬렉션이 필요하므로 임시로 생성일 사용
+            });
+          }
         }
       });
 
@@ -3141,17 +3275,29 @@ export default function AdminPage() {
       let isOrphaned = false;
       
       try {
-        if (source === 'gallery' && boxroTalk.designId) {
+        // 유튜브 박스로 톡 체크 (youtubeId가 있으면)
+        if (boxroTalk.youtubeId) {
+          const youtubeDoc = await getDoc(doc(db, 'youtubeItems', boxroTalk.youtubeId));
+          if (!youtubeDoc.exists()) {
+            isOrphaned = true;
+          }
+        }
+        // 갤러리 박스로 톡 체크
+        else if (source === 'gallery' && boxroTalk.designId) {
           const designDoc = await getDoc(doc(db, 'communityDesigns', boxroTalk.designId));
           if (!designDoc.exists()) {
             isOrphaned = true;
           }
-        } else if (source === 'story' && boxroTalk.articleId) {
+        }
+        // 스토리 박스로 톡 체크
+        else if (source === 'story' && boxroTalk.articleId) {
           const articleDoc = await getDoc(doc(db, 'storyArticles', boxroTalk.articleId));
           if (!articleDoc.exists()) {
             isOrphaned = true;
           }
-        } else if (source === 'store' && boxroTalk.articleId) {
+        }
+        // 스토어 박스로 톡 체크
+        else if (source === 'store' && boxroTalk.articleId) {
           const storeDoc = await getDoc(doc(db, 'storeItems', boxroTalk.articleId));
           if (!storeDoc.exists()) {
             isOrphaned = true;
@@ -3653,6 +3799,59 @@ export default function AdminPage() {
       
       // 3. 고아 박스로 톡 필터링
       const activeYoutubeBoxroTalks = await filterOrphanedBoxroTalks(youtubeBoxroTalks, 'gallery'); // 유튜브는 갤러리와 동일한 방식으로 처리
+      
+      // 유튜브 박스로 톡을 회원 통계에 카운트 (youtubeBoxroTalks 컬렉션)
+      activeYoutubeBoxroTalks.forEach((boxroTalk: any) => {
+        const email = boxroTalk.authorEmail || 'unknown';
+        if (!userStatsMap.has(email)) {
+          userStatsMap.set(email, {
+            email,
+            displayName: getDisplayName(boxroTalk.author || '', boxroTalk.authorNickname || '', email),
+            authorNickname: getDisplayName(boxroTalk.author || '', boxroTalk.authorNickname || '', email),
+            photoURL: '',
+            createdAt: boxroTalk.createdAt || '',
+            lastSignIn: '',
+            designsCount: 0,
+            boxroTalksCount: 0,
+            likesCount: 0,
+            downloadsCount: 0,
+            sharesCount: 0,
+            viewsCount: 0,
+            storeRedirectsCount: 0,
+            uid: boxroTalk.authorId || ''
+          });
+        }
+        
+        const userStat = userStatsMap.get(email)!;
+        userStat.boxroTalksCount++;
+      });
+      
+      // 유튜브 박스로 톡을 회원 통계에 카운트 (youtubeItems 내부)
+      youtubeBoxroTalksFromYoutube.forEach((boxroTalk: any) => {
+        const email = boxroTalk.authorEmail || 'unknown';
+        if (!userStatsMap.has(email)) {
+          userStatsMap.set(email, {
+            email,
+            displayName: getDisplayName(boxroTalk.author || '', boxroTalk.authorNickname || '', email),
+            authorNickname: getDisplayName(boxroTalk.author || '', boxroTalk.authorNickname || '', email),
+            photoURL: '',
+            createdAt: boxroTalk.createdAt || '',
+            lastSignIn: '',
+            designsCount: 0,
+            boxroTalksCount: 0,
+            likesCount: 0,
+            downloadsCount: 0,
+            sharesCount: 0,
+            viewsCount: 0,
+            storeRedirectsCount: 0,
+            uid: boxroTalk.authorId || ''
+          });
+        }
+        
+        const userStat = userStatsMap.get(email)!;
+        userStat.boxroTalksCount++;
+      });
+      
       const youtubeBoxroTalksCount = activeYoutubeBoxroTalks.length + youtubeBoxroTalksFromYoutube.length;
       
       // 디버깅: 유튜브 박스로 톡 통계 확인
@@ -3902,17 +4101,18 @@ export default function AdminPage() {
       // 전체 통계에는 회원 통계 테이블의 합산과 일치하는 값 사용
       const verifiedPWAInstallCount = pwaInstalledCountFromTable;
 
-      // 전체 통계 계산 (갤러리 + 스토리 통합)
+      // 전체 통계 계산 (회원 통계 테이블과 동일한 방식으로 계산)
+      // 회원 통계 테이블의 합산과 일치하도록 사용자 활동 합산 사용
       const activeUsers = finalUserStats.filter(user => user.designsCount > 0 || user.boxroTalksCount > 0).length;
       const inactiveUsers = finalUserStats.length - activeUsers;
       
-      // 갤러리 통계 (다운로드 제외)
+      // 갤러리 통계 (다운로드 제외) - 콘텐츠 필드 합산 (표시용)
       const galleryViews = designs.reduce((sum, design: any) => sum + (design.views || 0), 0);
       const galleryBoxroTalks = activeGalleryBoxroTalks.length;
       const galleryLikes = designs.reduce((sum, design: any) => sum + (design.likes || 0), 0);
       const galleryShares = designs.reduce((sum, design: any) => sum + (design.shares || 0), 0);
       
-      // 스토리 통계 (스토어 관련 박스로 톡 제외)
+      // 스토리 통계 (스토어 관련 박스로 톡 제외) - 콘텐츠 필드 합산 (표시용)
       const storyViews = stories.reduce((sum, story: any) => sum + (story.views || 0), 0);
       
       // 스토어 관련 박스로 톡을 제외한 순수 스토리 박스로 톡만 계산 (삭제되지 않은 것만 + 고아 박스로톡 제외)
@@ -3927,6 +4127,146 @@ export default function AdminPage() {
       
       const storyLikes = stories.reduce((sum, story: any) => sum + (story.likes || 0), 0);
       const storyShares = stories.reduce((sum, story: any) => sum + (story.shares || 0), 0);
+      
+      // 각 콘텐츠 타입별 사용자 활동 합산 계산 (회원 통계 테이블과 동일한 방식)
+      // 같은 콘텐츠에 대해 여러 번 활동한 경우도 모두 카운트 (배열 길이 사용)
+      // 갤러리 사용자 활동 합산
+      const galleryLikesFromUsers = finalUserStats.reduce((sum, user) => {
+        let userGalleryLikes = 0;
+        designs.forEach((design: any) => {
+          const likedBy = design.likedBy || [];
+          // 같은 사용자가 여러 번 좋아요한 경우도 모두 카운트
+          userGalleryLikes += likedBy.filter((uid: string) => uid === user.uid).length;
+        });
+        return sum + userGalleryLikes;
+      }, 0);
+      
+      const gallerySharesFromUsers = finalUserStats.reduce((sum, user) => {
+        let userGalleryShares = 0;
+        designs.forEach((design: any) => {
+          const sharedBy = design.sharedBy || [];
+          // 같은 사용자가 여러 번 공유한 경우도 모두 카운트
+          userGalleryShares += sharedBy.filter((uid: string) => uid === user.uid).length;
+        });
+        return sum + userGalleryShares;
+      }, 0);
+      
+      const galleryViewsFromUsers = finalUserStats.reduce((sum, user) => {
+        let userGalleryViews = 0;
+        designs.forEach((design: any) => {
+          const viewedBy = design.viewedBy || [];
+          // 같은 사용자가 여러 번 조회한 경우도 모두 카운트
+          userGalleryViews += viewedBy.filter((uid: string) => uid === user.uid).length;
+        });
+        return sum + userGalleryViews;
+      }, 0);
+      
+      // 스토리 사용자 활동 합산
+      const storyLikesFromUsers = finalUserStats.reduce((sum, user) => {
+        let userStoryLikes = 0;
+        stories.forEach((story: any) => {
+          const likedBy = story.likedBy || [];
+          userStoryLikes += likedBy.filter((uid: string) => uid === user.uid).length;
+        });
+        return sum + userStoryLikes;
+      }, 0);
+      
+      const storySharesFromUsers = finalUserStats.reduce((sum, user) => {
+        let userStoryShares = 0;
+        stories.forEach((story: any) => {
+          const sharedBy = story.sharedBy || [];
+          userStoryShares += sharedBy.filter((uid: string) => uid === user.uid).length;
+        });
+        return sum + userStoryShares;
+      }, 0);
+      
+      const storyViewsFromUsers = finalUserStats.reduce((sum, user) => {
+        let userStoryViews = 0;
+        stories.forEach((story: any) => {
+          const viewedBy = story.viewedBy || [];
+          userStoryViews += viewedBy.filter((uid: string) => uid === user.uid).length;
+        });
+        return sum + userStoryViews;
+      }, 0);
+      
+      // 스토어 사용자 활동 합산
+      const storeLikesFromUsers = finalUserStats.reduce((sum, user) => {
+        let userStoreLikes = 0;
+        storeItems.forEach((storeItem: any) => {
+          const likedBy = storeItem.likedBy || [];
+          userStoreLikes += likedBy.filter((uid: string) => uid === user.uid).length;
+        });
+        return sum + userStoreLikes;
+      }, 0);
+      
+      const storeSharesFromUsers = finalUserStats.reduce((sum, user) => {
+        let userStoreShares = 0;
+        storeItems.forEach((storeItem: any) => {
+          const sharedBy = storeItem.sharedBy || [];
+          userStoreShares += sharedBy.filter((uid: string) => uid === user.uid).length;
+        });
+        return sum + userStoreShares;
+      }, 0);
+      
+      const storeViewsFromUsers = finalUserStats.reduce((sum, user) => {
+        let userStoreViews = 0;
+        storeItems.forEach((storeItem: any) => {
+          const viewedBy = storeItem.viewedBy || [];
+          userStoreViews += viewedBy.filter((uid: string) => uid === user.uid).length;
+        });
+        return sum + userStoreViews;
+      }, 0);
+      
+      // 유튜브 사용자 활동 합산
+      const youtubeLikesFromUsers = finalUserStats.reduce((sum, user) => {
+        let userYoutubeLikes = 0;
+        youtubeItems.forEach((youtubeItem: any) => {
+          const likedBy = youtubeItem.likedBy || [];
+          userYoutubeLikes += likedBy.filter((uid: string) => uid === user.uid).length;
+        });
+        return sum + userYoutubeLikes;
+      }, 0);
+      
+      const youtubeSharesFromUsers = finalUserStats.reduce((sum, user) => {
+        let userYoutubeShares = 0;
+        youtubeItems.forEach((youtubeItem: any) => {
+          const sharedBy = youtubeItem.sharedBy || [];
+          userYoutubeShares += sharedBy.filter((uid: string) => uid === user.uid).length;
+        });
+        return sum + userYoutubeShares;
+      }, 0);
+      
+      const youtubeViewsFromUsers = finalUserStats.reduce((sum, user) => {
+        let userYoutubeViews = 0;
+        youtubeItems.forEach((youtubeItem: any) => {
+          const viewedBy = youtubeItem.viewedBy || [];
+          userYoutubeViews += viewedBy.filter((uid: string) => uid === user.uid).length;
+        });
+        return sum + userYoutubeViews;
+      }, 0);
+      
+      // 전체 통계용 사용자 활동 합산
+      const totalLikesFromUsers = galleryLikesFromUsers + storyLikesFromUsers + storeLikesFromUsers + youtubeLikesFromUsers;
+      const totalSharesFromUsers = gallerySharesFromUsers + storySharesFromUsers + storeSharesFromUsers + youtubeSharesFromUsers;
+      const totalViewsFromUsers = galleryViewsFromUsers + storyViewsFromUsers + storeViewsFromUsers + youtubeViewsFromUsers;
+      
+      console.log('📊 전체 통계 vs 회원 통계 테이블 합산 검증:', {
+        좋아요: {
+          전체통계_콘텐츠필드합산: galleryLikes + storyLikes + storeLikes + youtubeLikes,
+          회원통계테이블_합산: totalLikesFromUsers,
+          일치여부: (galleryLikes + storyLikes + storeLikes + youtubeLikes) === totalLikesFromUsers
+        },
+        공유: {
+          전체통계_콘텐츠필드합산: galleryShares + storyShares + storeShares + youtubeShares,
+          회원통계테이블_합산: totalSharesFromUsers,
+          일치여부: (galleryShares + storyShares + storeShares + youtubeShares) === totalSharesFromUsers
+        },
+        조회: {
+          전체통계_콘텐츠필드합산: galleryViews + storyViews + storeViews + youtubeViews,
+          회원통계테이블_합산: totalViewsFromUsers,
+          일치여부: (galleryViews + storyViews + storeViews + youtubeViews) === totalViewsFromUsers
+        }
+      });
       
       // 도안 다운로드 통계 가져오기
       const blueprintDownloadsQuery = query(collection(db, 'blueprintDownloads'));
@@ -3963,7 +4303,15 @@ export default function AdminPage() {
       });
       
       // 전체 통합 통계 (삭제되지 않은 박스로 톡만)
-      const totalBoxroTalks = activeGalleryBoxroTalks.length + storyBoxroTalksCount + storeBoxroTalksCount + youtubeBoxroTalksCount;
+      // 회원 통계 테이블의 합산과 일치하도록 사용자 활동 합산 사용
+      const totalBoxroTalksFromUsers = finalUserStats.reduce((sum, user) => sum + (user.boxroTalksCount || 0), 0);
+      const totalBoxroTalks = totalBoxroTalksFromUsers; // 회원 통계 테이블의 합산과 일치
+      
+      console.log('📊 박스로 톡 통계 검증:', {
+        전체통계_문서개수합산: activeGalleryBoxroTalks.length + storyBoxroTalksCount + storeBoxroTalksCount + youtubeBoxroTalksCount,
+        회원통계테이블_합산: totalBoxroTalksFromUsers,
+        일치여부: (activeGalleryBoxroTalks.length + storyBoxroTalksCount + storeBoxroTalksCount + youtubeBoxroTalksCount) === totalBoxroTalksFromUsers
+      });
       
       
       
@@ -3971,33 +4319,33 @@ export default function AdminPage() {
         totalUsers: userStatsMap.size,
         totalDesigns: designs.length,
         totalBoxroTalks: totalBoxroTalks, // 갤러리 + 스토리 + 스토어 + 유튜브 박스로 톡
-        totalLikes: galleryLikes + storyLikes + storeLikes + youtubeLikes, // 갤러리 + 스토리 + 스토어 + 유튜브 좋아요
+        totalLikes: totalLikesFromUsers, // 회원 통계 테이블의 합산과 일치 (사용자 활동 합산)
         totalDownloads: blueprintDownloads, // 도안 다운로드만
-        totalShares: galleryShares + storyShares + storeShares + youtubeShares, // 갤러리 + 스토리 + 스토어 + 유튜브 공유
-        totalViews: galleryViews + storyViews + storeViews + youtubeViews, // 갤러리 + 스토리 + 스토어 + 유튜브 조회
+        totalShares: totalSharesFromUsers, // 회원 통계 테이블의 합산과 일치 (사용자 활동 합산)
+        totalViews: totalViewsFromUsers, // 회원 통계 테이블의 합산과 일치 (사용자 활동 합산)
         activeUsers: activeUsers,
         inactiveUsers: inactiveUsers,
         totalStories: stories.length,
         totalStoreItems: storeItems.length,
         totalYoutubeItems: youtubeItems.length,
-        galleryViews: galleryViews,
+        galleryViews: galleryViewsFromUsers, // 회원 통계 테이블의 합산과 일치 (사용자 활동 합산)
         galleryBoxroTalks: galleryBoxroTalks,
-        galleryLikes: galleryLikes,
-        galleryShares: galleryShares,
-        storyViews: storyViews,
+        galleryLikes: galleryLikesFromUsers, // 회원 통계 테이블의 합산과 일치 (사용자 활동 합산)
+        galleryShares: gallerySharesFromUsers, // 회원 통계 테이블의 합산과 일치 (사용자 활동 합산)
+        storyViews: storyViewsFromUsers, // 회원 통계 테이블의 합산과 일치 (사용자 활동 합산)
         storyBoxroTalks: storyBoxroTalksCount,
-        storyLikes: storyLikes,
-        storyShares: storyShares,
-        storeViews: storeViews,
+        storyLikes: storyLikesFromUsers, // 회원 통계 테이블의 합산과 일치 (사용자 활동 합산)
+        storyShares: storySharesFromUsers, // 회원 통계 테이블의 합산과 일치 (사용자 활동 합산)
+        storeViews: storeViewsFromUsers, // 회원 통계 테이블의 합산과 일치 (사용자 활동 합산)
         storeRedirects: storeRedirects,
         storeBoxroTalks: storeBoxroTalksCount,
-        storeLikes: storeLikes,
-        storeShares: storeShares,
-        youtubeViews: youtubeViews,
+        storeLikes: storeLikesFromUsers, // 회원 통계 테이블의 합산과 일치 (사용자 활동 합산)
+        storeShares: storeSharesFromUsers, // 회원 통계 테이블의 합산과 일치 (사용자 활동 합산)
+        youtubeViews: youtubeViewsFromUsers, // 회원 통계 테이블의 합산과 일치 (사용자 활동 합산)
         youtubeRedirects: youtubeRedirects,
         youtubeBoxroTalks: youtubeBoxroTalksCount,
-        youtubeLikes: youtubeLikes,
-        youtubeShares: youtubeShares,
+        youtubeLikes: youtubeLikesFromUsers, // 회원 통계 테이블의 합산과 일치 (사용자 활동 합산)
+        youtubeShares: youtubeSharesFromUsers, // 회원 통계 테이블의 합산과 일치 (사용자 활동 합산)
         blueprintDownloads: blueprintDownloads,
         firebaseConnected: connectionStatus.firebaseConnected,
         dbConnected: connectionStatus.dbConnected,

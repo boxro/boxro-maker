@@ -306,14 +306,14 @@ export default function AdminDashboard({ adminStats, loading }: AdminDashboardPr
             &nbsp;&nbsp;- <strong>비활성 회원:</strong> 회원가입만 하고 아직 활동이 없는 회원<br/>
             &nbsp;&nbsp;- <strong>활동 사용자 수(최근 24시간):</strong> 작품을 만들거나 박스로톡을 작성한 사용자만 카운트(단순히 로그인만 한 사용자는 카운트 안 됨)<br/>
             &nbsp;&nbsp;- <strong>활동량(최근 24시간):</strong> 최근 24시간 동안의 작품 생성 + 박스로톡 작성 수(같은 사용자가 여러 번 활동하면 모두 카운트됨)<br/>
-          • <strong>통계 계산 기준:</strong><br/>
-            &nbsp;&nbsp;- <strong>조회수:</strong> 로그인한 사용자만 카운트 (여러 번 조회해도 매번 카운트)<br/>
-            &nbsp;&nbsp;- <strong>좋아요:</strong> 로그인한 사용자만 카운트 (1회만 카운트)<br/>
-            &nbsp;&nbsp;- <strong>공유:</strong> 로그인 + 비로그인 사용자 모두 카운트 (여러 번 공유해도 매번 카운트)<br/>
-            &nbsp;&nbsp;- <strong>박스로 톡:</strong> 로그인한 사용자만 카운트 (여러 번 작성 가능)<br/>
-            &nbsp;&nbsp;- <strong>다운로드:</strong> 로그인한 사용자만 카운트 (여러 번 다운로드해도 매번 카운트)<br/>
-            &nbsp;&nbsp;- <strong>스토어 바로가기:</strong> 로그인 + 비로그인 사용자 모두 카운트 (여러 번 바로가기해도 매번 카운트)<br/>
-            &nbsp;&nbsp;- <strong>통계 수치:</strong> 전체 합계(로그인 합계 + 비로그인 합계)
+          • <strong>통계 계산 기준 (모든 통계는 사용자 활동 합산 기준):</strong><br/>
+            &nbsp;&nbsp;- <strong>조회수:</strong> 각 사용자가 조회한 콘텐츠 수의 합산 (같은 콘텐츠를 여러 번 조회해도 매번 카운트)<br/>
+            &nbsp;&nbsp;- <strong>좋아요:</strong> 각 사용자가 좋아요한 콘텐츠 수의 합산 (같은 콘텐츠에 여러 번 좋아요해도 매번 카운트)<br/>
+            &nbsp;&nbsp;- <strong>공유:</strong> 각 사용자가 공유한 콘텐츠 수의 합산 (같은 콘텐츠를 여러 번 공유해도 매번 카운트)<br/>
+            &nbsp;&nbsp;- <strong>박스로 톡:</strong> 각 사용자가 작성한 박스로 톡 수의 합산<br/>
+            &nbsp;&nbsp;- <strong>다운로드:</strong> 각 사용자가 다운로드한 도안 수의 합산 (같은 도안을 여러 번 다운로드해도 매번 카운트)<br/>
+            &nbsp;&nbsp;- <strong>스토어 바로가기:</strong> 각 사용자가 클릭한 스토어 바로가기 수의 합산 (같은 아이템을 여러 번 클릭해도 매번 카운트)<br/>
+            &nbsp;&nbsp;- <strong>전체 통계 수치:</strong> 회원 통계 테이블의 각 항목 합산과 일치 (사용자 활동 합산 기준)
         </p>
       </div>
     </div>
