@@ -16,6 +16,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useStory } from "@/contexts/StoryContext";
 import CommonHeader from "@/components/CommonHeader";
 import CommonBackground from "@/components/CommonBackground";
+import PageHeader from "@/components/PageHeader";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
@@ -330,9 +331,36 @@ export default function EditStoryPage() {
 
   if (loading) {
     return (
-      <CommonBackground className="flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-white">도안을 불러오는 중...</p>
+      <CommonBackground>
+        <CommonHeader />
+        <div className="max-w-7xl mx-auto px-4 md:px-8">
+          <div className="mt-10 px-0 md:px-0">
+            <PageHeader 
+              title="Boxro 스토어"
+              description="아이들과 함께 만들고 즐기는 박스카 도안을 만나보세요!"
+            />
+          </div>
+          <Card className="bg-transparent border-0 shadow-none transition-all duration-300 overflow-hidden py-5 w-full rounded-2xl">
+            <CardContent className="text-center py-12">
+              {/* 점프 애니메이션 (더 역동적인 뛰는 효과) */}
+              <div className="w-24 h-24 mx-auto mb-6 flex items-center justify-center">
+                <img 
+                  src="/logo_remoteonly.png" 
+                  alt="박스로 로고" 
+                  className="w-20 h-20 animate-bounce"
+                  style={{ 
+                    animationDuration: '0.6s',
+                    animationIterationCount: 'infinite',
+                    animationTimingFunction: 'cubic-bezier(0.68, -0.55, 0.265, 1.55)'
+                  }}
+                />
+              </div>
+              <h3 className="text-lg font-semibold text-white mb-2">
+                Boxro 스토어를 불러오는 중...
+              </h3>
+              <p className="text-sm text-white/80">멋진 박스카 도안들을 준비하고 있어요! ✨</p>
+            </CardContent>
+          </Card>
         </div>
       </CommonBackground>
     );

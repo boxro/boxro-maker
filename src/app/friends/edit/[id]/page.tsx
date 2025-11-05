@@ -325,8 +325,8 @@ export default function EditFriendsPage() {
       
       // 인덱스 캐시 무효화 (수정된 카드가 인덱스에 반영되도록)
       if (typeof window !== 'undefined') {
-        (window as any).__youtubeIndexLoaded = false;
-        (window as any).__youtubeIndexCache = new Map();
+        (window as any).__friendsIndexLoaded = false;
+        (window as any).__friendsIndexCache = new Map();
       }
       
       setSuccessMessage('프렌즈가 성공적으로 수정되었습니다!');
@@ -363,9 +363,9 @@ export default function EditFriendsPage() {
                   />
                 </div>
                 <h3 className="text-lg font-semibold text-white mb-2">
-                  Boxro 프렌즈 영상을 불러오는 중...
+                  Boxro 프렌즈를 불러오는 중...
                 </h3>
-                <p className="text-sm text-white/80">멋진 Boxro 프렌즈 영상을 준비하고 있어요!</p>
+                <p className="text-sm text-white/80">Boxro의 부캐릭터들을 준비하고 있어요! ✨</p>
               </CardContent>
             </Card>
           </div>

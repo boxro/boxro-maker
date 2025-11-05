@@ -1193,9 +1193,9 @@ export default function StorePageClient() {
                 />
               </div>
               <h3 className="text-lg font-semibold text-white mb-2">
-                박스로 스토어를 불러오는 중...
+                Boxro 스토어를 불러오는 중...
               </h3>
-              <p className="text-sm text-white/80">멋진 박스카 도안들을 준비하고 있어요!</p>
+              <p className="text-sm text-white/80">멋진 박스카 도안들을 준비하고 있어요! ✨</p>
             </CardContent>
           </Card>
         </div>

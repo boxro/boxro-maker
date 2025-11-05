@@ -246,13 +246,13 @@ export default function WriteFriendsPage() {
       
       // Firebase에 저장
       const docRef = await addDoc(collection(db, 'friendsItems'), articleData);
-      console.log('유튜브 아이템 저장 완료, ID:', docRef.id);
+      console.log('프렌즈 아이템 저장 완료, ID:', docRef.id);
       
       
       // 인덱스 캐시 무효화 (새 카드가 인덱스에 포함되도록)
       if (typeof window !== 'undefined') {
-        (window as any).__youtubeIndexLoaded = false;
-        (window as any).__youtubeIndexCache = new Map();
+        (window as any).__friendsIndexLoaded = false;
+        (window as any).__friendsIndexCache = new Map();
       }
       
       setSuccessMessage('프렌즈가 성공적으로 등록되었습니다!');

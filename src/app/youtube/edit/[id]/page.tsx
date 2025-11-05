@@ -325,9 +325,9 @@ export default function EditYoutubePage() {
                   />
                 </div>
                 <h3 className="text-lg font-semibold text-white mb-2">
-                  박스로 유튜브 영상을 불러오는 중...
+                  Boxro 유튜브를 불러오는 중...
                 </h3>
-                <p className="text-sm text-white/80">멋진 박스로 유튜브 영상을 준비하고 있어요!</p>
+                <p className="text-sm text-white/80">멋진 박스카 영상들을 준비하고 있어요! 🎬✨</p>
               </CardContent>
             </Card>
           </div>

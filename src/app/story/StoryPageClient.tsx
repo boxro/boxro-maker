@@ -1191,7 +1191,7 @@ export default function StoryPageClient() {
               <h3 className="text-lg font-semibold text-white mb-2">
                 박스카 이야기를 불러오는 중...
               </h3>
-              <p className="text-sm text-white/80">재미있는 박스카 이야기들을 준비하고 있어요!</p>
+              <p className="text-sm text-white/80">재미있는 박스카 이야기들을 준비하고 있어요! ✨</p>
             </CardContent>
           </Card>
         </div>

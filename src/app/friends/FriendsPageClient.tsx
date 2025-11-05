@@ -962,7 +962,7 @@ export default function FriendsPageClient() {
               <h3 className="text-lg font-semibold text-white mb-2">
                 Boxro 프렌즈를 불러오는 중...
               </h3>
-              <p className="text-sm text-white/80">Boxro의 부캐릭터를 준비하고 있어요! ✨</p>
+              <p className="text-sm text-white/80">Boxro의 부캐릭터들을 준비하고 있어요! ✨</p>
             </CardContent>
           </Card>
         </div>
