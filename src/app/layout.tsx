@@ -12,9 +12,10 @@ import KakaoInAppRedirect from "@/components/KakaoInAppRedirect";
 
 const inter = Inter({ subsets: ["latin"] });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || (process.env.NODE_ENV === 'production' ? 'https://boxro.kr' : 'http://localhost:3000');
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || (process.env.NODE_ENV === 'production' ? 'https://boxro.kr' : 'http://localhost:3000')),
+  metadataBase: new URL(siteUrl),
   title: "박스로 Boxro | AI가 아이의 그림을 박스카 도안으로!",
   description: "아이가 그린 자동차를 AI가 도안으로 만들어줘요. 상상한 그림이 진짜 박스카로 변신하는 즐거운 창작 놀이터! 🚗✨",
   alternates: {
@@ -28,7 +29,7 @@ export const metadata: Metadata = {
     locale: "ko_KR",
     images: [
       {
-        url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://boxro.kr'}/og-image.png`,
+        url: `${siteUrl}/og-image.png`,
         width: 1200,
         height: 630,
         alt: '박스로 Boxro | Eco-Friendly Maker Project',
@@ -39,17 +40,17 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "박스로 Boxro | AI가 아이의 그림을 박스카 도안으로!",
     description: "아이가 그린 자동차를 AI가 도안으로 만들어줘요. 상상한 그림이 진짜 박스카로 변신하는 즐거운 창작 놀이터! 🚗✨",
-    images: [`${process.env.NEXT_PUBLIC_SITE_URL || 'https://boxro.kr'}/og-image.png`],
+    images: [`${siteUrl}/og-image.png`],
   },
   icons: {
     icon: [
-      { url: '/favicon.ico', sizes: 'any' },
-      { url: '/icons/icon-128x128.png', type: 'image/png', sizes: '128x128' },
-      { url: '/icons/icon-192x192.png', type: 'image/png', sizes: '192x192' },
-      { url: '/icons/icon-512x512.png', type: 'image/png', sizes: '512x512' },
+      { url: `${siteUrl}/favicon.ico`, sizes: 'any' },
+      { url: `${siteUrl}/icons/icon-128x128.png`, type: 'image/png', sizes: '128x128' },
+      { url: `${siteUrl}/icons/icon-192x192.png`, type: 'image/png', sizes: '192x192' },
+      { url: `${siteUrl}/icons/icon-512x512.png`, type: 'image/png', sizes: '512x512' },
     ],
-    shortcut: '/favicon.ico',
-    apple: '/icons/icon-192x192.png',
+    shortcut: `${siteUrl}/favicon.ico`,
+    apple: `${siteUrl}/icons/icon-192x192.png`,
   },
 };
 
@@ -67,14 +68,17 @@ export default function RootLayout({
         />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="naver-site-verification" content="d96b54fb49ebbab9eaf8915453de40c5e1501e5a" />
-        {/* 파비콘 설정 - 구글 검색 최적화 */}
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-128x128.png" />
-        <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png" />
-        <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512x512.png" />
-        <link rel="shortcut icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
-        <link rel="manifest" href="/manifest.json" />
+        {/* 파비콘 설정 - 구글 검색 최적화 (절대 URL 사용) */}
+        <link rel="icon" href={siteUrl + '/favicon.ico'} sizes="any" />
+        <link rel="icon" type="image/png" sizes="16x16" href={siteUrl + '/icons/icon-128x128.png'} />
+        <link rel="icon" type="image/png" sizes="32x32" href={siteUrl + '/icons/icon-128x128.png'} />
+        <link rel="icon" type="image/png" sizes="48x48" href={siteUrl + '/icons/icon-128x128.png'} />
+        <link rel="icon" type="image/png" sizes="128x128" href={siteUrl + '/icons/icon-128x128.png'} />
+        <link rel="icon" type="image/png" sizes="192x192" href={siteUrl + '/icons/icon-192x192.png'} />
+        <link rel="icon" type="image/png" sizes="512x512" href={siteUrl + '/icons/icon-512x512.png'} />
+        <link rel="shortcut icon" href={siteUrl + '/favicon.ico'} />
+        <link rel="apple-touch-icon" href={siteUrl + '/icons/icon-192x192.png'} />
+        <link rel="manifest" href={siteUrl + '/manifest.json'} />
         <meta name="theme-color" content="#2563eb" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
