@@ -14,6 +14,7 @@ export default function robots(): MetadataRoute.Robots {
           '/auth/',
           '/profile/',
           '/my-designs/',
+          '/gallery', // 리디렉션 경로 - 직접 크롤링 방지 (리디렉션만 따름)
         ],
       },
     ],

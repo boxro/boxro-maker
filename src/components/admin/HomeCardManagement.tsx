@@ -337,7 +337,7 @@ const HomeCardManagement: React.FC<HomeCardManagementProps> = ({
                       type="url" 
                       value={homeCardUrl || ''}
                       onChange={(e) => setHomeCardUrl(e.target.value)}
-                      placeholder="예: /gallery, /story, https://example.com"
+                      placeholder="예: /community, /story, https://example.com"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px] bg-white"
                     />
                   </div>
